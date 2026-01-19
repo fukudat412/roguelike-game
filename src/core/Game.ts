@@ -10,10 +10,12 @@ import { eventBus, GameEvents } from './EventBus';
 import { UIManager } from '@/ui/UIManager';
 import { InventoryUI } from '@/ui/InventoryUI';
 import { GameMap } from '@/world/Map';
+import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
 import { Player } from '@/entities/Player';
 import { Enemy, EnemyTemplates } from '@/entities/Enemy';
 import { Item, ItemType } from '@/entities/Item';
+import { Stairs, StairsDirection } from '@/entities/Stairs';
 import { Equipment as EquipmentComponent } from '@/entities/components/Equipment';
 import { CombatEntity } from '@/entities/Entity';
 import { CombatSystem } from '@/combat/CombatSystem';
@@ -28,10 +30,12 @@ export class Game {
   private uiManager: UIManager;
   private inventoryUI: InventoryUI;
 
+  private world!: World;
   private map!: GameMap;
   private player!: Player;
   private enemies: Enemy[] = [];
   private items: Item[] = [];
+  private stairs!: Stairs;
 
   private lastFrameTime: number = 0;
   private running: boolean = false;
@@ -73,27 +77,35 @@ export class Game {
    * ゲーム初期化
    */
   initialize(): void {
-    // マップ生成
-    this.map = RoomGenerator.generate(80, 60, {
-      minRoomSize: 5,
-      maxRoomSize: 12,
-      maxRooms: 20,
-    });
+    // ワールド生成
+    this.world = new World();
+    this.map = this.world.getCurrentMap();
 
     // プレイヤー配置
-    const startCell = this.map.getRandomWalkableCell();
-    if (startCell) {
-      this.player = new Player(startCell.position.x, startCell.position.y);
-    } else {
-      // フォールバック
-      this.player = new Player(40, 30);
-    }
+    const startPos = this.world.getRandomStartPosition();
+    this.player = new Player(startPos.x, startPos.y);
 
-    // 敵を配置
-    this.spawnEnemies(10);
+    // 階層をセットアップ
+    this.setupFloor();
+  }
+
+  /**
+   * 階層をセットアップ
+   */
+  private setupFloor(): void {
+    // 既存のエンティティをクリア
+    this.enemies = [];
+    this.items = [];
+
+    // 敵数は階層に応じて増加
+    const enemyCount = 8 + this.world.getCurrentFloor() * 2;
+    this.spawnEnemies(enemyCount);
 
     // アイテムを配置
     this.spawnItems(15);
+
+    // 階段を配置
+    this.spawnStairs();
 
     // インベントリUIの設定
     this.inventoryUI.setInventory(this.player.inventory);
@@ -114,8 +126,30 @@ export class Game {
     // プレイヤーターン開始
     this.gameState.startPlayerTurn();
 
-    // ウェルカムメッセージ
-    this.uiManager.addMessage('ダンジョンに入った。冒険を開始しよう！', MessageType.INFO);
+    // 初回のみウェルカムメッセージ
+    if (this.world.getCurrentFloor() === 1) {
+      this.uiManager.addMessage('ダンジョンに入った。冒険を開始しよう！', MessageType.INFO);
+    }
+  }
+
+  /**
+   * 階段を配置
+   */
+  private spawnStairs(): void {
+    const cell = this.map.getRandomWalkableCell();
+    if (!cell) return;
+
+    const pos = cell.position;
+
+    // プレイヤーから離れた位置に配置
+    if (this.player.getPosition().distanceTo(pos) < 10) {
+      this.spawnStairs(); // 再試行
+      return;
+    }
+
+    // 下り階段を配置
+    const targetFloor = this.world.getCurrentFloor() + 1;
+    this.stairs = new Stairs(pos.x, pos.y, StairsDirection.DOWN, targetFloor);
   }
 
   /**
@@ -214,6 +248,11 @@ export class Game {
       turnEnded = this.pickupItem();
     }
 
+    // 階段を使う
+    if (action === Action.STAIRS) {
+      turnEnded = this.useStairs();
+    }
+
     // 移動アクション
     const direction = Input.actionToDirection(action);
     if (direction) {
@@ -224,6 +263,45 @@ export class Game {
     if (turnEnded) {
       this.gameState.advanceTurn();
     }
+  }
+
+  /**
+   * 階段を使う
+   */
+  private useStairs(): boolean {
+    const playerPos = this.player.getPosition();
+
+    // プレイヤーの位置に階段があるかチェック
+    if (!this.stairs.getPosition().equals(playerPos)) {
+      this.uiManager.addMessage('ここには階段がない', MessageType.INFO);
+      return false;
+    }
+
+    // 次の階層へ
+    this.descendToNextFloor();
+    return true;
+  }
+
+  /**
+   * 次の階層へ降りる
+   */
+  private descendToNextFloor(): void {
+    const nextFloor = this.world.getCurrentFloor() + 1;
+
+    this.uiManager.addMessage(
+      `階段を降りて${nextFloor}階へ進んだ`,
+      MessageType.INFO
+    );
+
+    // 新しい階層を生成
+    this.map = this.world.descendFloor();
+
+    // プレイヤーを新しい開始位置に配置
+    const startPos = this.world.getRandomStartPosition();
+    this.player.setPosition(startPos);
+
+    // 階層をセットアップ
+    this.setupFloor();
   }
 
   /**
@@ -535,6 +613,40 @@ export class Game {
    * エンティティ描画
    */
   private renderEntities(): void {
+    // 階段を描画
+    if (this.stairs) {
+      const pos = this.stairs.getPosition();
+      const cell = this.map.getCellAt(pos);
+
+      if (cell && cell.visible) {
+        const screenPos = this.renderer.gridToScreen(pos.x, pos.y);
+        const tileSize = this.renderer.getTileSize();
+        const renderInfo = this.stairs.getRenderInfo();
+
+        // 背景
+        this.renderer.drawRect(
+          screenPos.x,
+          screenPos.y,
+          tileSize,
+          tileSize,
+          { fillColor: '#3a3a1a' }
+        );
+
+        // 階段
+        this.renderer.drawText(
+          renderInfo.char,
+          screenPos.x + tileSize / 2,
+          screenPos.y + tileSize / 2,
+          {
+            color: renderInfo.color,
+            font: 'bold 28px monospace',
+            align: 'center',
+            baseline: 'middle',
+          }
+        );
+      }
+    }
+
     // アイテムを描画
     for (const item of this.items) {
       const pos = item.getPosition();
@@ -642,7 +754,7 @@ export class Game {
   private updateUI(): void {
     const stats = this.player.stats.getInfo();
     this.uiManager.updatePlayerStats(stats);
-    this.uiManager.updateFloor(this.gameState.getCurrentFloor());
+    this.uiManager.updateFloor(this.world.getCurrentFloor());
   }
 
   /**

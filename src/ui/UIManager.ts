@@ -67,16 +67,19 @@ export class UIManager {
     maxHp: number;
     attack: number;
     defense: number;
+    gold?: number;
   }): void {
     const hpElement = document.getElementById('player-hp');
     const maxHpElement = document.getElementById('player-max-hp');
     const attackElement = document.getElementById('player-attack');
     const defenseElement = document.getElementById('player-defense');
+    const goldElement = document.getElementById('player-gold');
 
     if (hpElement) hpElement.textContent = stats.hp.toString();
     if (maxHpElement) maxHpElement.textContent = stats.maxHp.toString();
     if (attackElement) attackElement.textContent = stats.attack.toString();
     if (defenseElement) defenseElement.textContent = stats.defense.toString();
+    if (goldElement && stats.gold !== undefined) goldElement.textContent = stats.gold.toString();
   }
 
   /**

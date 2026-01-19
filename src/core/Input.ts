@@ -16,6 +16,7 @@ export enum Action {
   USE = 'USE',
   DROP = 'DROP',
   STAIRS = 'STAIRS',
+  SHOP = 'SHOP',
   CANCEL = 'CANCEL',
 }
 
@@ -58,6 +59,7 @@ export class Input {
     this.keyMap.set('u', Action.USE);
     this.keyMap.set('q', Action.DROP);
     this.keyMap.set('>', Action.STAIRS);
+    this.keyMap.set('t', Action.SHOP);
     this.keyMap.set('Escape', Action.CANCEL);
   }
 

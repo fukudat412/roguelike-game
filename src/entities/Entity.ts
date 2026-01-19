@@ -6,6 +6,7 @@
 import { Position } from './components/Position';
 import { Stats } from './components/Stats';
 import { Vector2D } from '@/utils/Vector2D';
+import { StatusEffectManager } from '@/combat/StatusEffect';
 
 export enum EntityType {
   PLAYER = 'PLAYER',
@@ -101,6 +102,7 @@ export abstract class Entity {
  */
 export abstract class CombatEntity extends Entity {
   public stats: Stats;
+  public statusEffects: StatusEffectManager;
 
   constructor(
     name: string,
@@ -112,6 +114,7 @@ export abstract class CombatEntity extends Entity {
   ) {
     super(name, type, x, y, renderInfo);
     this.stats = stats;
+    this.statusEffects = new StatusEffectManager();
     this.blocksMovement = true;
   }
 
@@ -125,22 +128,31 @@ export abstract class CombatEntity extends Entity {
   /**
    * ダメージを受ける
    */
-  takeDamage(amount: number): number {
+  takeDamage(amount: number, attacker?: string): number {
     return this.stats.takeDamage(amount);
   }
 
   /**
-   * 攻撃力を取得
+   * 攻撃力を取得（ステータス効果込み）
    */
   getAttack(): number {
-    return this.stats.attack;
+    const modifiers = this.statusEffects.getTotalModifiers();
+    return this.stats.attack + modifiers.attack;
   }
 
   /**
-   * 防御力を取得
+   * 防御力を取得（ステータス効果込み）
    */
   getDefense(): number {
-    return this.stats.defense;
+    const modifiers = this.statusEffects.getTotalModifiers();
+    return this.stats.defense + modifiers.defense;
+  }
+
+  /**
+   * ステータス効果のターン処理
+   */
+  processStatusEffects(): void {
+    this.statusEffects.tick(this);
   }
 
   /**

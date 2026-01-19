@@ -13,6 +13,7 @@ export class Player extends CombatEntity {
   public level: number = 1;
   public experience: number = 0;
   public experienceToNextLevel: number = 100;
+  public gold: number = 50; // 初期ゴールド
   public inventory: Inventory;
   public equipment: Equipment;
   private baseStats: Stats;
@@ -134,6 +135,7 @@ export class Player extends CombatEntity {
     defense: number;
     experience: number;
     experienceToNextLevel: number;
+    gold: number;
   } {
     return {
       name: this.name,
@@ -141,6 +143,27 @@ export class Player extends CombatEntity {
       ...this.stats.getInfo(),
       experience: this.experience,
       experienceToNextLevel: this.experienceToNextLevel,
+      gold: this.gold,
     };
+  }
+
+  /**
+   * ゴールドを追加
+   */
+  addGold(amount: number): void {
+    this.gold += amount;
+    eventBus.emit(GameEvents.UI_UPDATE);
+  }
+
+  /**
+   * ゴールドを消費
+   */
+  spendGold(amount: number): boolean {
+    if (this.gold < amount) {
+      return false;
+    }
+    this.gold -= amount;
+    eventBus.emit(GameEvents.UI_UPDATE);
+    return true;
   }
 }

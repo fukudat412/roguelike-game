@@ -12,10 +12,13 @@ import { InventoryUI } from '@/ui/InventoryUI';
 import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
+import { CaveGenerator } from '@/world/generators/CaveGenerator';
+import { BSPGenerator } from '@/world/generators/BSPGenerator';
 import { Player } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { Item, ItemType } from '@/entities/Item';
 import { Stairs, StairsDirection } from '@/entities/Stairs';
+import { Shop } from '@/entities/Shop';
 import { Equipment as EquipmentComponent } from '@/entities/components/Equipment';
 import { CombatEntity } from '@/entities/Entity';
 import { CombatSystem } from '@/combat/CombatSystem';
@@ -24,6 +27,8 @@ import { MessageType } from '@/ui/MessageLog';
 import { rollRandomItem, getItemData } from '@/data/items';
 import { getRandomEnemyForFloor } from '@/data/enemies';
 import { AStar } from '@/ai/pathfinding/AStar';
+import { ItemAffixManager } from '@/items/ItemAffix';
+import { StatusEffectType } from '@/combat/StatusEffect';
 
 export class Game {
   private renderer: Renderer;
@@ -38,6 +43,7 @@ export class Game {
   private enemies: Enemy[] = [];
   private items: Item[] = [];
   private stairs!: Stairs;
+  private shop!: Shop | null;
 
   private lastFrameTime: number = 0;
   private running: boolean = false;
@@ -56,8 +62,11 @@ export class Game {
    * イベントリスナー設定
    */
   private setupEventListeners(): void {
-    // 敵死亡時に配列から削除
-    eventBus.on(GameEvents.ENEMY_DEATH, (data: { name: string }) => {
+    // 敵死亡時に配列から削除とゴールドドロップ
+    eventBus.on(GameEvents.ENEMY_DEATH, (data: { name: string; enemy?: Enemy }) => {
+      if (data.enemy) {
+        this.handleEnemyDeath(data.enemy);
+      }
       this.enemies = this.enemies.filter(e => e.isAlive());
     });
 
@@ -98,6 +107,7 @@ export class Game {
     // 既存のエンティティをクリア
     this.enemies = [];
     this.items = [];
+    this.shop = null;
 
     // 敵数は階層に応じて増加
     const enemyCount = 8 + this.world.getCurrentFloor() * 2;
@@ -108,6 +118,11 @@ export class Game {
 
     // 階段を配置
     this.spawnStairs();
+
+    // 店を配置（30%の確率）
+    if (Math.random() < 0.3) {
+      this.spawnShop();
+    }
 
     // インベントリUIの設定
     this.inventoryUI.setInventory(this.player.inventory);
@@ -152,6 +167,26 @@ export class Game {
     // 下り階段を配置
     const targetFloor = this.world.getCurrentFloor() + 1;
     this.stairs = new Stairs(pos.x, pos.y, StairsDirection.DOWN, targetFloor);
+  }
+
+  /**
+   * 店を配置
+   */
+  private spawnShop(): void {
+    const cell = this.map.getRandomWalkableCell();
+    if (!cell) return;
+
+    const pos = cell.position;
+
+    // プレイヤーから離れた位置に配置
+    if (this.player.getPosition().distanceTo(pos) < 15) {
+      this.spawnShop(); // 再試行
+      return;
+    }
+
+    // 店を配置
+    this.shop = new Shop(pos.x, pos.y);
+    this.uiManager.addMessage('この階には商人がいるようだ', MessageType.INFO);
   }
 
   /**
@@ -256,6 +291,11 @@ export class Game {
       turnEnded = this.useStairs();
     }
 
+    // 店で取引
+    if (action === Action.SHOP) {
+      turnEnded = this.interactWithShop();
+    }
+
     // 移動アクション
     const direction = Input.actionToDirection(action);
     if (direction) {
@@ -264,6 +304,8 @@ export class Game {
 
     // ターン終了
     if (turnEnded) {
+      // プレイヤーのステータス効果を処理
+      this.player.processStatusEffects();
       this.gameState.advanceTurn();
     }
   }
@@ -283,6 +325,48 @@ export class Game {
     // 次の階層へ
     this.descendToNextFloor();
     return true;
+  }
+
+  /**
+   * 店で取引
+   */
+  private interactWithShop(): boolean {
+    const playerPos = this.player.getPosition();
+
+    // 店が存在しないか、隣接していない
+    if (!this.shop) {
+      this.uiManager.addMessage('近くに商人がいない', MessageType.INFO);
+      return false;
+    }
+
+    const shopPos = this.shop.getPosition();
+    const distance = playerPos.distanceTo(shopPos);
+
+    if (distance > 1.5) {
+      this.uiManager.addMessage('商人に近づく必要がある', MessageType.INFO);
+      return false;
+    }
+
+    // 店のインベントリを表示（簡易版：最初のアイテムを購入）
+    if (this.shop.inventory.length === 0) {
+      this.uiManager.addMessage('商人は売り物を持っていない', MessageType.INFO);
+      return false;
+    }
+
+    const item = this.shop.inventory[0];
+    const price = this.shop.getItemPrice(item);
+
+    const result = this.shop.buyItem(item, this.player.gold);
+
+    if (result.success) {
+      this.player.spendGold(price);
+      this.player.inventory.addItem(item);
+      this.uiManager.addMessage(result.message, MessageType.INFO);
+      return true;
+    } else {
+      this.uiManager.addMessage(result.message, MessageType.WARNING);
+      return false;
+    }
   }
 
   /**
@@ -357,6 +441,15 @@ export class Game {
     for (const enemy of this.enemies) {
       if (!enemy.isAlive()) continue;
 
+      // ステータス効果を処理
+      enemy.processStatusEffects();
+
+      // 死亡チェック（ステータス効果で死亡した場合）
+      if (!enemy.isAlive()) {
+        this.handleEnemyDeath(enemy);
+        continue;
+      }
+
       // シンプルなAI: プレイヤーに近づく
       this.moveEnemyTowardsPlayer(enemy);
     }
@@ -383,6 +476,28 @@ export class Game {
       // ランダムなアイテムを生成
       const itemData = rollRandomItem();
       const item = new Item(pos.x, pos.y, itemData);
+
+      // 装備の場合、接頭辞/接尾辞を付与（30%の確率）
+      if (item.itemType === ItemType.EQUIPMENT && Math.random() < 0.3) {
+        const prefix = ItemAffixManager.getRandomPrefix();
+        const suffix = ItemAffixManager.getRandomSuffix();
+
+        if (prefix || suffix) {
+          // 名前を更新
+          const newName = ItemAffixManager.generateName(item.name, prefix, suffix);
+          item.name = newName;
+
+          // 説明を更新
+          const newDesc = ItemAffixManager.generateDescription(item.description, prefix, suffix);
+          item.description = newDesc;
+
+          // レア度を更新
+          const newRarity = ItemAffixManager.calculateRarity(item.rarity, prefix, suffix);
+          item.rarity = newRarity;
+
+          // ボーナスステータスを反映（表示用に説明に追加済み）
+        }
+      }
 
       this.items.push(item);
     }
@@ -507,6 +622,20 @@ export class Game {
 
       this.uiManager.addMessage(`${item.name}を捨てた`, MessageType.INFO);
     }
+  }
+
+  /**
+   * 敵の死亡処理
+   */
+  private handleEnemyDeath(enemy: Enemy): void {
+    // ゴールドをドロップ
+    const goldDrop = 5 + Math.floor(Math.random() * 10) + this.world.getCurrentFloor() * 2;
+    this.player.addGold(goldDrop);
+
+    this.uiManager.addMessage(
+      `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
+      MessageType.SUCCESS
+    );
   }
 
   /**
@@ -683,6 +812,40 @@ export class Game {
       }
     }
 
+    // 店を描画
+    if (this.shop) {
+      const pos = this.shop.getPosition();
+      const cell = this.map.getCellAt(pos);
+
+      if (cell && cell.visible) {
+        const screenPos = this.renderer.gridToScreen(pos.x, pos.y);
+        const tileSize = this.renderer.getTileSize();
+        const renderInfo = this.shop.getRenderInfo();
+
+        // 背景
+        this.renderer.drawRect(
+          screenPos.x,
+          screenPos.y,
+          tileSize,
+          tileSize,
+          { fillColor: '#4a3a1a' }
+        );
+
+        // 商人
+        this.renderer.drawText(
+          renderInfo.char,
+          screenPos.x + tileSize / 2,
+          screenPos.y + tileSize / 2,
+          {
+            color: renderInfo.color,
+            font: 'bold 28px monospace',
+            align: 'center',
+            baseline: 'middle',
+          }
+        );
+      }
+    }
+
     // アイテムを描画
     for (const item of this.items) {
       const pos = item.getPosition();
@@ -789,7 +952,10 @@ export class Game {
    */
   private updateUI(): void {
     const stats = this.player.stats.getInfo();
-    this.uiManager.updatePlayerStats(stats);
+    this.uiManager.updatePlayerStats({
+      ...stats,
+      gold: this.player.gold,
+    });
     this.uiManager.updateFloor(this.world.getCurrentFloor());
   }
 

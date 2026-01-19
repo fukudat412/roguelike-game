@@ -56,6 +56,7 @@ export class Enemy extends CombatEntity {
         name: this.name,
         experienceValue: this.experienceValue,
         position: this.getPosition(),
+        enemy: this,
       });
     }
 

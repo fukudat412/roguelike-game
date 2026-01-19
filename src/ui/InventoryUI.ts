@@ -118,7 +118,7 @@ export class InventoryUI {
       emptyDiv.style.textAlign = 'center';
       emptyDiv.style.padding = '20px';
       emptyDiv.style.color = '#888';
-      this.listElement.appendChild(emptyDiv);
+      this.listElement!.appendChild(emptyDiv);
       this.updateButtons();
       return;
     }
@@ -157,7 +157,7 @@ export class InventoryUI {
         this.selectItem(index);
       });
 
-      this.listElement.appendChild(itemDiv);
+      this.listElement!.appendChild(itemDiv);
     });
 
     this.updateButtons();

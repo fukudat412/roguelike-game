@@ -5,6 +5,8 @@
 
 import { GameMap } from './Map';
 import { RoomGenerator } from './generators/RoomGenerator';
+import { CaveGenerator } from './generators/CaveGenerator';
+import { BSPGenerator } from './generators/BSPGenerator';
 import { Vector2D } from '@/utils/Vector2D';
 
 export class World {
@@ -25,12 +27,34 @@ export class World {
       return this.floors.get(floorNumber)!;
     }
 
-    // 新しい階層を生成
-    const map = RoomGenerator.generate(80, 60, {
-      minRoomSize: 5,
-      maxRoomSize: 12,
-      maxRooms: 15 + floorNumber * 2, // 階層が深いほど部屋が多い
-    });
+    // マップ生成アルゴリズムをランダムに選択
+    const generatorType = Math.random();
+    let map: GameMap;
+
+    if (generatorType < 0.4) {
+      // 40%: ルームベース
+      map = RoomGenerator.generate(80, 60, {
+        minRoomSize: 5,
+        maxRoomSize: 12,
+        maxRooms: 15 + floorNumber * 2,
+      });
+    } else if (generatorType < 0.7) {
+      // 30%: 洞窟型
+      map = CaveGenerator.generate(80, 60, {
+        fillProbability: 0.45,
+        smoothIterations: 5,
+        deathLimit: 3,
+        birthLimit: 4,
+      });
+    } else {
+      // 30%: BSP分割型
+      map = BSPGenerator.generate(80, 60, {
+        minRoomSize: 4,
+        maxRoomSize: 10,
+        minPartitionSize: 8,
+        maxDepth: 4,
+      });
+    }
 
     this.floors.set(floorNumber, map);
     return map;

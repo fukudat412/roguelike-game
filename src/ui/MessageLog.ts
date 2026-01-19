@@ -9,6 +9,8 @@ export enum MessageType {
   DEATH = 'death',
   ITEM = 'item',
   SYSTEM = 'system',
+  WARNING = 'warning',
+  SUCCESS = 'success',
 }
 
 export interface Message {

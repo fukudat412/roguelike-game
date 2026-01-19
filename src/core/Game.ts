@@ -13,7 +13,7 @@ import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
 import { Player } from '@/entities/Player';
-import { Enemy, EnemyTemplates } from '@/entities/Enemy';
+import { Enemy } from '@/entities/Enemy';
 import { Item, ItemType } from '@/entities/Item';
 import { Stairs, StairsDirection } from '@/entities/Stairs';
 import { Equipment as EquipmentComponent } from '@/entities/components/Equipment';
@@ -22,6 +22,7 @@ import { CombatSystem } from '@/combat/CombatSystem';
 import { Vector2D } from '@/utils/Vector2D';
 import { MessageType } from '@/ui/MessageLog';
 import { rollRandomItem, getItemData } from '@/data/items';
+import { getRandomEnemyForFloor } from '@/data/enemies';
 
 export class Game {
   private renderer: Renderer;
@@ -156,6 +157,8 @@ export class Game {
    * 敵を配置
    */
   private spawnEnemies(count: number): void {
+    const currentFloor = this.world.getCurrentFloor();
+
     for (let i = 0; i < count; i++) {
       const cell = this.map.getRandomWalkableCell();
       if (!cell) continue;
@@ -171,9 +174,8 @@ export class Game {
       const occupied = this.enemies.some(e => e.getPosition().equals(pos));
       if (occupied) continue;
 
-      // ランダムな敵を生成
-      const templates = Object.values(EnemyTemplates);
-      const template = templates[Math.floor(Math.random() * templates.length)];
+      // 階層に応じた敵を生成
+      const template = getRandomEnemyForFloor(currentFloor);
       const enemy = new Enemy(pos.x, pos.y, template);
 
       this.enemies.push(enemy);

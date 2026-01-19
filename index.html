@@ -116,6 +116,104 @@
     #game-over button:hover {
       background-color: #555;
     }
+
+    /* インベントリUI */
+    #inventory-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(30, 30, 30, 0.95);
+      border: 3px solid #666;
+      border-radius: 8px;
+      padding: 20px;
+      width: 500px;
+      max-height: 600px;
+      z-index: 100;
+    }
+
+    #inventory-panel h2 {
+      color: #4ecdc4;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    #inventory-list {
+      max-height: 450px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .inventory-item {
+      padding: 8px;
+      margin: 4px 0;
+      background-color: #3a3a3a;
+      border: 1px solid #555;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .inventory-item:hover {
+      background-color: #4a4a4a;
+      border-color: #4ecdc4;
+    }
+
+    .inventory-item.selected {
+      background-color: #4a5a5a;
+      border-color: #4ecdc4;
+    }
+
+    .item-name {
+      font-weight: bold;
+    }
+
+    .item-common { color: #ffffff; }
+    .item-uncommon { color: #00ff00; }
+    .item-rare { color: #0080ff; }
+    .item-epic { color: #a335ee; }
+    .item-legendary { color: #ff8000; }
+
+    .item-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      padding-top: 10px;
+      border-top: 1px solid #555;
+    }
+
+    .item-actions button {
+      padding: 8px 16px;
+      font-family: 'Courier New', monospace;
+      background-color: #444;
+      color: #e0e0e0;
+      border: 1px solid #666;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .item-actions button:hover {
+      background-color: #555;
+    }
+
+    .item-actions button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #inventory-help {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    .message.item {
+      color: #ffdd57;
+    }
   </style>
 </head>
 <body>
@@ -136,6 +234,19 @@
     <h1>Game Over</h1>
     <p id="death-message"></p>
     <button id="restart-button">もう一度プレイ</button>
+  </div>
+
+  <div id="inventory-panel">
+    <h2>インベントリ</h2>
+    <div id="inventory-list"></div>
+    <div class="item-actions">
+      <button id="use-item-btn">使う (U)</button>
+      <button id="drop-item-btn">捨てる (Q)</button>
+      <button id="close-inventory-btn">閉じる (I/ESC)</button>
+    </div>
+    <div id="inventory-help">
+      拾う: G | 使う: U | 捨てる: Q | 閉じる: I/ESC
+    </div>
   </div>
 
   <script type="module" src="/src/main.ts"></script>

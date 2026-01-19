@@ -8,24 +8,29 @@ import { GameState, GamePhase } from './GameState';
 import { Input, Action } from './Input';
 import { eventBus, GameEvents } from './EventBus';
 import { UIManager } from '@/ui/UIManager';
+import { InventoryUI } from '@/ui/InventoryUI';
 import { GameMap } from '@/world/Map';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
 import { Player } from '@/entities/Player';
 import { Enemy, EnemyTemplates } from '@/entities/Enemy';
+import { Item, ItemType } from '@/entities/Item';
 import { CombatEntity } from '@/entities/Entity';
 import { CombatSystem } from '@/combat/CombatSystem';
 import { Vector2D } from '@/utils/Vector2D';
 import { MessageType } from '@/ui/MessageLog';
+import { rollRandomItem, getItemData } from '@/data/items';
 
 export class Game {
   private renderer: Renderer;
   private gameState: GameState;
   private input: Input;
   private uiManager: UIManager;
+  private inventoryUI: InventoryUI;
 
   private map!: GameMap;
   private player!: Player;
   private enemies: Enemy[] = [];
+  private items: Item[] = [];
 
   private lastFrameTime: number = 0;
   private running: boolean = false;
@@ -35,6 +40,7 @@ export class Game {
     this.gameState = new GameState();
     this.input = new Input();
     this.uiManager = new UIManager();
+    this.inventoryUI = new InventoryUI();
 
     this.setupEventListeners();
   }
@@ -84,6 +90,16 @@ export class Game {
 
     // 敵を配置
     this.spawnEnemies(10);
+
+    // アイテムを配置
+    this.spawnItems(15);
+
+    // インベントリUIの設定
+    this.inventoryUI.setInventory(this.player.inventory);
+    this.inventoryUI.setCallbacks(
+      (item) => this.useItem(item),
+      (item) => this.dropItem(item)
+    );
 
     // カメラをプレイヤーに追従
     this.renderer.setCameraPosition(this.player.getPosition());
@@ -186,6 +202,17 @@ export class Game {
 
     let turnEnded = false;
 
+    // インベントリアクション
+    if (action === Action.INVENTORY) {
+      this.inventoryUI.toggle();
+      return;
+    }
+
+    // アイテム拾う
+    if (action === Action.PICKUP) {
+      turnEnded = this.pickupItem();
+    }
+
     // 移動アクション
     const direction = Input.actionToDirection(action);
     if (direction) {
@@ -254,6 +281,113 @@ export class Game {
 
     // プレイヤーターンに戻す
     this.gameState.advanceTurn();
+  }
+
+  /**
+   * アイテムを配置
+   */
+  private spawnItems(count: number): void {
+    for (let i = 0; i < count; i++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
+
+      const pos = cell.position;
+
+      // プレイヤーとの距離をチェック
+      if (this.player.getPosition().distanceTo(pos) < 5) {
+        continue;
+      }
+
+      // ランダムなアイテムを生成
+      const itemData = rollRandomItem();
+      const item = new Item(pos.x, pos.y, itemData);
+
+      this.items.push(item);
+    }
+  }
+
+  /**
+   * アイテムを拾う
+   */
+  private pickupItem(): boolean {
+    const playerPos = this.player.getPosition();
+
+    // プレイヤーの位置にあるアイテムを検索
+    const itemAtPosition = this.items.find(item =>
+      item.getPosition().equals(playerPos)
+    );
+
+    if (!itemAtPosition) {
+      this.uiManager.addMessage('ここにはアイテムがない', MessageType.INFO);
+      return false;
+    }
+
+    // インベントリに追加
+    const success = this.player.inventory.addItem(itemAtPosition);
+
+    if (success) {
+      // マップからアイテムを削除
+      this.items = this.items.filter(item => item !== itemAtPosition);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * アイテムを使う
+   */
+  private useItem(item: Item): void {
+    if (item.itemType === ItemType.CONSUMABLE) {
+      // 消費アイテムの処理
+      if (item.name.includes('回復ポーション')) {
+        const healAmount = this.getHealAmount(item.name);
+        const actualHeal = this.player.stats.heal(healAmount);
+
+        this.uiManager.addMessage(
+          `${item.name}を使った！HPが${actualHeal}回復した`,
+          MessageType.INFO
+        );
+
+        // スタックから削除
+        item.removeFromStack(1);
+        if (item.stackCount === 0) {
+          this.player.inventory.removeItem(item);
+        }
+
+        this.updateUI();
+      }
+    } else if (item.itemType === ItemType.EQUIPMENT) {
+      this.uiManager.addMessage(
+        '装備システムは未実装です',
+        MessageType.INFO
+      );
+    }
+  }
+
+  /**
+   * 回復量を取得
+   */
+  private getHealAmount(itemName: string): number {
+    if (itemName.includes('小さな')) return 30;
+    if (itemName.includes('大きな')) return 100;
+    return 60;
+  }
+
+  /**
+   * アイテムを捨てる
+   */
+  private dropItem(item: Item): void {
+    const success = this.player.inventory.removeItem(item);
+
+    if (success) {
+      // プレイヤーの位置に配置
+      const playerPos = this.player.getPosition();
+      item.setPosition(playerPos);
+      this.items.push(item);
+
+      this.uiManager.addMessage(`${item.name}を捨てた`, MessageType.INFO);
+    }
   }
 
   /**
@@ -363,6 +497,41 @@ export class Game {
    * エンティティ描画
    */
   private renderEntities(): void {
+    // アイテムを描画
+    for (const item of this.items) {
+      const pos = item.getPosition();
+      const cell = this.map.getCellAt(pos);
+
+      // 可視範囲内のみ描画
+      if (cell && cell.visible) {
+        const screenPos = this.renderer.gridToScreen(pos.x, pos.y);
+        const tileSize = this.renderer.getTileSize();
+        const renderInfo = item.getRenderInfo();
+
+        // 背景
+        this.renderer.drawRect(
+          screenPos.x,
+          screenPos.y,
+          tileSize,
+          tileSize,
+          { fillColor: '#1a3a1a' }
+        );
+
+        // アイテム
+        this.renderer.drawText(
+          renderInfo.char,
+          screenPos.x + tileSize / 2,
+          screenPos.y + tileSize / 2,
+          {
+            color: renderInfo.color,
+            font: 'bold 22px monospace',
+            align: 'center',
+            baseline: 'middle',
+          }
+        );
+      }
+    }
+
     // 敵を描画
     for (const enemy of this.enemies) {
       if (!enemy.isAlive()) continue;
@@ -445,11 +614,13 @@ export class Game {
     // 状態リセット
     this.gameState.reset();
     this.enemies = [];
+    this.items = [];
     this.input.clearActionQueue();
 
     // UI非表示
     this.uiManager.hideGameOver();
     this.uiManager.getMessageLog().clear();
+    this.inventoryUI.close();
 
     // 再初期化
     this.initialize();

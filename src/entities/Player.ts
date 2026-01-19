@@ -5,15 +5,20 @@
 
 import { CombatEntity, EntityType } from './Entity';
 import { Stats } from './components/Stats';
+import { Inventory } from './components/Inventory';
 import { eventBus, GameEvents } from '@/core/EventBus';
 
 export class Player extends CombatEntity {
   public level: number = 1;
   public experience: number = 0;
   public experienceToNextLevel: number = 100;
+  public inventory: Inventory;
 
   constructor(x: number, y: number) {
     const stats = new Stats(100, 10, 5);
+
+    // インベントリを初期化
+    const inventory = new Inventory(20);
 
     super(
       'プレイヤー',
@@ -26,6 +31,8 @@ export class Player extends CombatEntity {
       },
       stats
     );
+
+    this.inventory = inventory;
   }
 
   /**

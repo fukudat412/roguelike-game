@@ -14,6 +14,7 @@ import { RoomGenerator } from '@/world/generators/RoomGenerator';
 import { Player } from '@/entities/Player';
 import { Enemy, EnemyTemplates } from '@/entities/Enemy';
 import { Item, ItemType } from '@/entities/Item';
+import { Equipment as EquipmentComponent } from '@/entities/components/Equipment';
 import { CombatEntity } from '@/entities/Entity';
 import { CombatSystem } from '@/combat/CombatSystem';
 import { Vector2D } from '@/utils/Vector2D';
@@ -358,11 +359,48 @@ export class Game {
         this.updateUI();
       }
     } else if (item.itemType === ItemType.EQUIPMENT) {
+      // 装備アイテムの処理
+      this.equipItem(item);
+    }
+  }
+
+  /**
+   * アイテムを装備
+   */
+  private equipItem(item: Item): void {
+    const slot = EquipmentComponent.getSlotForItem(item);
+
+    if (!slot) {
       this.uiManager.addMessage(
-        '装備システムは未実装です',
+        `${item.name}は装備できません`,
+        MessageType.INFO
+      );
+      return;
+    }
+
+    // 既存の装備を外す
+    const previousItem = this.player.equipment.equip(slot, item);
+
+    // インベントリから削除
+    this.player.inventory.removeItem(item);
+
+    // 外した装備をインベントリに戻す
+    if (previousItem) {
+      this.player.inventory.addItem(previousItem);
+      this.uiManager.addMessage(
+        `${previousItem.name}を外して${item.name}を装備した`,
+        MessageType.INFO
+      );
+    } else {
+      this.uiManager.addMessage(
+        `${item.name}を装備した`,
         MessageType.INFO
       );
     }
+
+    // ステータスを更新
+    this.player.updateEquipmentStats();
+    this.updateUI();
   }
 
   /**

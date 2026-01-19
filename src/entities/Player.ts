@@ -6,6 +6,7 @@
 import { CombatEntity, EntityType } from './Entity';
 import { Stats } from './components/Stats';
 import { Inventory } from './components/Inventory';
+import { Equipment } from './components/Equipment';
 import { eventBus, GameEvents } from '@/core/EventBus';
 
 export class Player extends CombatEntity {
@@ -13,12 +14,15 @@ export class Player extends CombatEntity {
   public experience: number = 0;
   public experienceToNextLevel: number = 100;
   public inventory: Inventory;
+  public equipment: Equipment;
+  private baseStats: Stats;
 
   constructor(x: number, y: number) {
     const stats = new Stats(100, 10, 5);
 
-    // インベントリを初期化
+    // インベントリと装備を初期化
     const inventory = new Inventory(20);
+    const equipment = new Equipment();
 
     super(
       'プレイヤー',
@@ -32,7 +36,9 @@ export class Player extends CombatEntity {
       stats
     );
 
+    this.baseStats = stats.clone();
     this.inventory = inventory;
+    this.equipment = equipment;
   }
 
   /**
@@ -84,11 +90,36 @@ export class Player extends CombatEntity {
     this.stats.increaseAttack(2);
     this.stats.increaseDefense(1);
 
+    // ベースステータスを更新
+    this.updateBaseStats();
+    this.updateEquipmentStats();
+
     eventBus.emit(GameEvents.PLAYER_LEVEL_UP, { level: this.level });
     eventBus.emit(GameEvents.MESSAGE_LOG, {
       text: `レベルアップ！レベル${this.level}になった！`,
       type: 'info',
     });
+  }
+
+  /**
+   * 装備によるステータスを再計算
+   */
+  updateEquipmentStats(): void {
+    const equipBonus = this.equipment.getTotalBonus();
+
+    // ベースステータスから再計算
+    this.stats.attack = this.baseStats.attack + equipBonus.attack;
+    this.stats.defense = this.baseStats.defense + equipBonus.defense;
+    this.stats.speed = this.baseStats.speed + equipBonus.speed;
+
+    eventBus.emit(GameEvents.UI_UPDATE);
+  }
+
+  /**
+   * ベースステータスを更新（レベルアップ時）
+   */
+  updateBaseStats(): void {
+    this.baseStats = this.stats.clone();
   }
 
   /**

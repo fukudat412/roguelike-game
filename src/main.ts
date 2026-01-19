@@ -4,10 +4,11 @@
  */
 
 import { Game } from './core/Game';
+import { Logger } from './utils/Logger';
 
 // グローバルエラーハンドリング
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+  Logger.error('Global error:', event.error);
 });
 
 // DOM読み込み完了後にゲームを開始
@@ -15,7 +16,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 
   if (!canvas) {
-    console.error('Canvas element not found');
+    Logger.error('Canvas element not found');
     return;
   }
 
@@ -34,6 +35,8 @@ window.addEventListener('DOMContentLoaded', () => {
   console.log('  攻撃: 敵に向かって移動');
   console.log('  待機: スペースキー');
 
-  // グローバルに公開（デバッグ用）
-  (window as any).game = game;
+  // グローバルに公開（開発環境のみ）
+  if (import.meta.env.DEV) {
+    (window as any).game = game;
+  }
 });

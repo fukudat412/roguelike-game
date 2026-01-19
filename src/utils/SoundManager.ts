@@ -3,6 +3,8 @@
  * Web Audio APIを使用して効果音を生成
  */
 
+import { Logger } from './Logger';
+
 export enum SoundType {
   ATTACK = 'ATTACK',
   DAMAGE = 'DAMAGE',
@@ -27,7 +29,17 @@ export class SoundManager {
    */
   private initAudioContext(): void {
     if (!this.audioContext) {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      // 型安全なAudioContext取得
+      const AudioContextClass =
+        (window as any).AudioContext ||
+        (window as any).webkitAudioContext;
+
+      if (!AudioContextClass) {
+        Logger.error('AudioContext is not supported in this browser');
+        return;
+      }
+
+      this.audioContext = new AudioContextClass();
     }
   }
 
@@ -81,7 +93,7 @@ export class SoundManager {
           break;
       }
     } catch (error) {
-      console.error('Failed to play sound:', error);
+      Logger.error('Failed to play sound:', error);
     }
   }
 

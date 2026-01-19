@@ -25,6 +25,10 @@ export class Input {
   private keyMap: Map<string, Action> = new Map();
   private actionQueue: Action[] = [];
 
+  // イベントハンドラの参照を保持
+  private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  private keyupHandler: ((e: KeyboardEvent) => void) | null = null;
+
   constructor() {
     this.setupDefaultKeyBindings();
     this.attachEventListeners();
@@ -69,8 +73,11 @@ export class Input {
    * イベントリスナーをアタッチ
    */
   private attachEventListeners(): void {
-    window.addEventListener('keydown', (e) => this.handleKeyDown(e));
-    window.addEventListener('keyup', (e) => this.handleKeyUp(e));
+    this.keydownHandler = (e: KeyboardEvent) => this.handleKeyDown(e);
+    this.keyupHandler = (e: KeyboardEvent) => this.handleKeyUp(e);
+
+    window.addEventListener('keydown', this.keydownHandler);
+    window.addEventListener('keyup', this.keyupHandler);
   }
 
   /**
@@ -159,7 +166,19 @@ export class Input {
    * クリーンアップ
    */
   destroy(): void {
+    // イベントリスナーを削除
+    if (this.keydownHandler) {
+      window.removeEventListener('keydown', this.keydownHandler);
+      this.keydownHandler = null;
+    }
+
+    if (this.keyupHandler) {
+      window.removeEventListener('keyup', this.keyupHandler);
+      this.keyupHandler = null;
+    }
+
     this.keysPressed.clear();
     this.actionQueue = [];
+    this.keyMap.clear();
   }
 }

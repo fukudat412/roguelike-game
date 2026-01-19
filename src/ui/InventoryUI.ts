@@ -19,6 +19,7 @@ export class InventoryUI {
 
   private onUseCallback: ((item: Item) => void) | null = null;
   private onDropCallback: ((item: Item) => void) | null = null;
+  private listClickHandler: ((e: Event) => void) | null = null;
 
   constructor() {
     this.panel = document.getElementById('inventory-panel');
@@ -44,6 +45,21 @@ export class InventoryUI {
 
     if (this.closeButton) {
       this.closeButton.addEventListener('click', () => this.close());
+    }
+
+    // イベント委譲でリスト全体にリスナーを1つだけ設定
+    if (this.listElement) {
+      this.listClickHandler = (e: Event) => {
+        const target = e.target as HTMLElement;
+        const itemDiv = target.closest('.inventory-item') as HTMLElement;
+        if (itemDiv) {
+          const index = Array.from(this.listElement!.children).indexOf(itemDiv);
+          if (index !== -1) {
+            this.selectItem(index);
+          }
+        }
+      };
+      this.listElement.addEventListener('click', this.listClickHandler);
     }
   }
 
@@ -153,9 +169,7 @@ export class InventoryUI {
 
       itemDiv.appendChild(leftDiv);
 
-      itemDiv.addEventListener('click', () => {
-        this.selectItem(index);
-      });
+      // addEventListener削除（イベント委譲を使用）
 
       this.listElement!.appendChild(itemDiv);
     });
@@ -228,5 +242,21 @@ export class InventoryUI {
   clearSelection(): void {
     this.selectedIndex = -1;
     this.render();
+  }
+
+  /**
+   * クリーンアップ
+   */
+  destroy(): void {
+    // リストのクリックハンドラ削除
+    if (this.listElement && this.listClickHandler) {
+      this.listElement.removeEventListener('click', this.listClickHandler);
+      this.listClickHandler = null;
+    }
+
+    // 参照をクリア
+    this.onUseCallback = null;
+    this.onDropCallback = null;
+    this.inventory = null;
   }
 }

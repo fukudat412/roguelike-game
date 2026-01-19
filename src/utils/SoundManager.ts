@@ -103,6 +103,12 @@ export class SoundManager {
     gain.gain.value = this.volume;
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
 
+    // リソースのクリーンアップ
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+
     osc.start(startTime);
     osc.stop(startTime + 0.1);
   }
@@ -126,6 +132,12 @@ export class SoundManager {
     gain.gain.value = this.volume;
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
 
+    // リソースのクリーンアップ
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+
     osc.start(startTime);
     osc.stop(startTime + 0.2);
   }
@@ -148,6 +160,12 @@ export class SoundManager {
     gain.gain.value = this.volume * 0.5;
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.1);
 
+    // リソースのクリーンアップ
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+
     osc.start(startTime);
     osc.stop(startTime + 0.1);
   }
@@ -169,6 +187,12 @@ export class SoundManager {
 
     gain.gain.value = this.volume * 0.6;
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+
+    // リソースのクリーンアップ
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
 
     osc.start(startTime);
     osc.stop(startTime + 0.3);
@@ -194,6 +218,12 @@ export class SoundManager {
       gain.gain.value = this.volume * 0.3;
       gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
 
+      // リソースのクリーンアップ
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
+
       osc.start(time);
       osc.stop(time + 0.2);
     });
@@ -217,6 +247,12 @@ export class SoundManager {
     gain.gain.value = this.volume * 0.5;
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
 
+    // リソースのクリーンアップ
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+
     osc.start(startTime);
     osc.stop(startTime + 0.15);
   }
@@ -239,7 +275,23 @@ export class SoundManager {
     gain.gain.value = this.volume * 0.4;
     gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
 
+    // リソースのクリーンアップ
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+
     osc.start(startTime);
     osc.stop(startTime + 0.15);
+  }
+
+  /**
+   * AudioContextをクリーンアップ
+   */
+  async destroy(): Promise<void> {
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      await this.audioContext.close();
+    }
+    this.audioContext = null;
   }
 }

@@ -19,6 +19,8 @@ export class ShopUI {
   private isOpen: boolean = false;
 
   private onBuyCallback: ((item: Item) => void) | null = null;
+  private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  private listClickHandler: ((e: Event) => void) | null = null;
 
   constructor() {
     this.panel = document.getElementById('shop-panel');
@@ -42,13 +44,29 @@ export class ShopUI {
       this.closeButton.addEventListener('click', () => this.close());
     }
 
-    // ESCキーで閉じる
-    window.addEventListener('keydown', (e) => {
+    // ESCキーで閉じる（参照を保持）
+    this.keydownHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && this.isOpen) {
         e.preventDefault();
         this.close();
       }
-    });
+    };
+    window.addEventListener('keydown', this.keydownHandler);
+
+    // イベント委譲でリスト全体にリスナーを1つだけ設定
+    if (this.listElement) {
+      this.listClickHandler = (e: Event) => {
+        const target = e.target as HTMLElement;
+        const itemDiv = target.closest('.shop-item') as HTMLElement;
+        if (itemDiv) {
+          const index = Array.from(this.listElement!.children).indexOf(itemDiv);
+          if (index !== -1) {
+            this.selectItem(index);
+          }
+        }
+      };
+      this.listElement.addEventListener('click', this.listClickHandler);
+    }
   }
 
   /**
@@ -123,6 +141,7 @@ export class ShopUI {
     items.forEach((item, index) => {
       const itemDiv = document.createElement('div');
       itemDiv.className = 'shop-item';
+      itemDiv.dataset.index = String(index); // 識別用
 
       if (index === this.selectedIndex) {
         itemDiv.classList.add('selected');
@@ -159,9 +178,7 @@ export class ShopUI {
       itemDiv.appendChild(leftDiv);
       itemDiv.appendChild(priceDiv);
 
-      itemDiv.addEventListener('click', () => {
-        this.selectItem(index);
-      });
+      // addEventListener削除（イベント委譲を使用）
 
       this.listElement!.appendChild(itemDiv);
     });
@@ -214,5 +231,26 @@ export class ShopUI {
   updatePlayerGold(gold: number): void {
     this.playerGold = gold;
     this.render();
+  }
+
+  /**
+   * クリーンアップ
+   */
+  destroy(): void {
+    // リストのクリックハンドラ削除
+    if (this.listElement && this.listClickHandler) {
+      this.listElement.removeEventListener('click', this.listClickHandler);
+      this.listClickHandler = null;
+    }
+
+    // キーボードハンドラ削除
+    if (this.keydownHandler) {
+      window.removeEventListener('keydown', this.keydownHandler);
+      this.keydownHandler = null;
+    }
+
+    // 参照をクリア
+    this.onBuyCallback = null;
+    this.shop = null;
   }
 }

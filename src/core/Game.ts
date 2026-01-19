@@ -1178,9 +1178,12 @@ export class Game {
   /**
    * クリーンアップ
    */
-  destroy(): void {
+  async destroy(): Promise<void> {
     this.stop();
     this.input.destroy();
+    this.inventoryUI.destroy();
+    this.shopUI.destroy();
+    await this.soundManager.destroy();
     eventBus.clear();
   }
 }

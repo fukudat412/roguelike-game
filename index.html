@@ -81,6 +81,88 @@
       font-size: 14px;
     }
 
+    /* ステータス効果表示 */
+    #status-effects-panel {
+      display: none;
+      margin-bottom: 10px;
+      padding: 8px;
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+
+    #status-effects-panel.has-effects {
+      display: block;
+    }
+
+    .status-effects-title {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .status-effects-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .status-effect {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .status-effect.poison {
+      background-color: #2d4a2d;
+      color: #7cfc00;
+      border: 1px solid #4a7c0f;
+    }
+
+    .status-effect.paralysis {
+      background-color: #3a3a2a;
+      color: #ffd700;
+      border: 1px solid #aa8800;
+    }
+
+    .status-effect.confusion {
+      background-color: #4a2d4a;
+      color: #da70d6;
+      border: 1px solid #8b008b;
+    }
+
+    .status-effect.regeneration {
+      background-color: #2d4a3a;
+      color: #00ff7f;
+      border: 1px solid #00aa55;
+    }
+
+    .status-effect.strength {
+      background-color: #4a2d2d;
+      color: #ff6b6b;
+      border: 1px solid #cc0000;
+    }
+
+    .status-effect.weakness {
+      background-color: #3a3a3a;
+      color: #888888;
+      border: 1px solid #555555;
+    }
+
+    .status-effect.speed_up {
+      background-color: #2d3a4a;
+      color: #87ceeb;
+      border: 1px solid #4682b4;
+    }
+
+    .status-effect.speed_down {
+      background-color: #3a2d2d;
+      color: #cd853f;
+      border: 1px solid #8b4513;
+    }
+
     #game-over {
       display: none;
       position: fixed;
@@ -269,6 +351,179 @@
       flex: 1;
       margin-left: 8px;
     }
+
+    /* 店UI */
+    #shop-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(30, 30, 30, 0.95);
+      border: 3px solid #ffd700;
+      border-radius: 8px;
+      padding: 20px;
+      width: 500px;
+      max-height: 600px;
+      z-index: 100;
+    }
+
+    #shop-panel h2 {
+      color: #ffd700;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    #shop-gold-display {
+      text-align: center;
+      color: #ffd700;
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    #shop-list {
+      max-height: 450px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    .shop-item {
+      padding: 8px;
+      margin: 4px 0;
+      background-color: #3a3a3a;
+      border: 1px solid #555;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .shop-item:hover {
+      background-color: #4a4a4a;
+      border-color: #ffd700;
+    }
+
+    .shop-item.selected {
+      background-color: #4a5a5a;
+      border-color: #ffd700;
+    }
+
+    .shop-price {
+      font-weight: bold;
+      color: #ffd700;
+      font-size: 16px;
+      min-width: 70px;
+      text-align: right;
+    }
+
+    .shop-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      padding-top: 10px;
+      border-top: 1px solid #555;
+    }
+
+    .shop-actions button {
+      padding: 8px 16px;
+      font-family: 'Courier New', monospace;
+      background-color: #444;
+      color: #e0e0e0;
+      border: 1px solid #666;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .shop-actions button:hover {
+      background-color: #555;
+    }
+
+    .shop-actions button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ミニマップ */
+    #minimap-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: rgba(0, 0, 0, 0.8);
+      border: 2px solid #444;
+      border-radius: 4px;
+      padding: 8px;
+      z-index: 50;
+    }
+
+    #minimap-title {
+      color: #888;
+      font-size: 11px;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    #minimap-canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* セーブ/ロードボタン */
+    #save-load-panel {
+      position: fixed;
+      top: 300px;
+      right: 20px;
+      background-color: rgba(30, 30, 30, 0.9);
+      border: 2px solid #444;
+      border-radius: 8px;
+      padding: 10px;
+      width: 250px;
+      z-index: 50;
+    }
+
+    #save-load-panel h3 {
+      color: #4ecdc4;
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+
+    .save-load-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .save-load-buttons button {
+      padding: 8px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background-color: #444;
+      color: #e0e0e0;
+      border: 1px solid #666;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .save-load-buttons button:hover {
+      background-color: #555;
+    }
+
+    .save-load-buttons button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #save-info {
+      font-size: 10px;
+      color: #888;
+      margin-top: 8px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -281,6 +536,10 @@
         <div class="stat">防御力: <span id="player-defense">5</span></div>
         <div class="stat">ゴールド: <span id="player-gold">50</span></div>
         <div class="stat">階層: <span id="current-floor">1</span></div>
+      </div>
+      <div id="status-effects-panel">
+        <div class="status-effects-title">状態:</div>
+        <div class="status-effects-list" id="status-effects-list"></div>
       </div>
       <div id="message-log"></div>
     </div>
@@ -303,6 +562,31 @@
     <div id="inventory-help">
       拾う: G | 使う: U | 捨てる: Q | 閉じる: I/ESC
     </div>
+  </div>
+
+  <div id="shop-panel">
+    <h2>商人の店</h2>
+    <div id="shop-gold-display">所持金: 0G</div>
+    <div id="shop-list"></div>
+    <div class="shop-actions">
+      <button id="buy-item-btn">購入</button>
+      <button id="close-shop-btn">閉じる (ESC)</button>
+    </div>
+  </div>
+
+  <div id="minimap-container">
+    <div id="minimap-title">MAP</div>
+    <canvas id="minimap-canvas" width="160" height="120"></canvas>
+  </div>
+
+  <div id="save-load-panel">
+    <h3>セーブ/ロード</h3>
+    <div class="save-load-buttons">
+      <button id="save-button">ゲームを保存</button>
+      <button id="load-button">ゲームを読込</button>
+      <button id="delete-save-button">セーブ削除</button>
+    </div>
+    <div id="save-info"></div>
   </div>
 
   <div id="controls-panel">

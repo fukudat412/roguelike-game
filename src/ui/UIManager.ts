@@ -125,4 +125,45 @@ export class UIManager {
   addMessage(text: string, type: MessageType = MessageType.INFO): void {
     this.messageLog.add(text, type);
   }
+
+  /**
+   * ステータス効果を更新
+   */
+  updateStatusEffects(effects: Array<{ type: string; duration: number }>): void {
+    const panel = document.getElementById('status-effects-panel');
+    const list = document.getElementById('status-effects-list');
+
+    if (!panel || !list) return;
+
+    // エフェクトがない場合は非表示
+    if (effects.length === 0) {
+      panel.classList.remove('has-effects');
+      list.textContent = '';
+      return;
+    }
+
+    // エフェクトがある場合は表示
+    panel.classList.add('has-effects');
+    list.textContent = '';
+
+    // 日本語名マッピング
+    const effectNames: Record<string, string> = {
+      POISON: '毒',
+      PARALYSIS: '麻痺',
+      CONFUSION: '混乱',
+      REGENERATION: '再生',
+      STRENGTH: '強化',
+      WEAKNESS: '弱体',
+      SPEED_UP: '加速',
+      SPEED_DOWN: '減速',
+    };
+
+    effects.forEach(effect => {
+      const effectDiv = document.createElement('div');
+      effectDiv.className = `status-effect ${effect.type.toLowerCase()}`;
+      const name = effectNames[effect.type] || effect.type;
+      effectDiv.textContent = `${name} (${effect.duration})`;
+      list.appendChild(effectDiv);
+    });
+  }
 }

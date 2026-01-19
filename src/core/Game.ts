@@ -9,6 +9,8 @@ import { Input, Action } from './Input';
 import { eventBus, GameEvents } from './EventBus';
 import { UIManager } from '@/ui/UIManager';
 import { InventoryUI } from '@/ui/InventoryUI';
+import { ShopUI } from '@/ui/ShopUI';
+import { Minimap } from '@/ui/Minimap';
 import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
@@ -29,6 +31,8 @@ import { getRandomEnemyForFloor } from '@/data/enemies';
 import { AStar } from '@/ai/pathfinding/AStar';
 import { ItemAffixManager } from '@/items/ItemAffix';
 import { StatusEffectType } from '@/combat/StatusEffect';
+import { SaveManager, GameSaveData } from '@/utils/SaveManager';
+import { SoundManager, SoundType } from '@/utils/SoundManager';
 
 export class Game {
   private renderer: Renderer;
@@ -36,6 +40,9 @@ export class Game {
   private input: Input;
   private uiManager: UIManager;
   private inventoryUI: InventoryUI;
+  private shopUI: ShopUI;
+  private minimap: Minimap;
+  private soundManager: SoundManager;
 
   private world!: World;
   private map!: GameMap;
@@ -54,6 +61,9 @@ export class Game {
     this.input = new Input();
     this.uiManager = new UIManager();
     this.inventoryUI = new InventoryUI();
+    this.shopUI = new ShopUI();
+    this.minimap = new Minimap();
+    this.soundManager = new SoundManager();
 
     this.setupEventListeners();
   }
@@ -70,6 +80,16 @@ export class Game {
       this.enemies = this.enemies.filter(e => e.isAlive());
     });
 
+    // プレイヤーダメージ時にサウンド
+    eventBus.on(GameEvents.PLAYER_DAMAGE, () => {
+      this.soundManager.play(SoundType.DAMAGE);
+    });
+
+    // レベルアップ時にサウンド
+    eventBus.on(GameEvents.PLAYER_LEVEL_UP, () => {
+      this.soundManager.play(SoundType.LEVEL_UP);
+    });
+
     // UI更新
     eventBus.on(GameEvents.UI_UPDATE, () => {
       this.updateUI();
@@ -82,6 +102,37 @@ export class Game {
         this.restart();
       });
     }
+
+    // セーブボタン
+    const saveButton = document.getElementById('save-button');
+    if (saveButton) {
+      saveButton.addEventListener('click', () => {
+        this.saveGame();
+      });
+    }
+
+    // ロードボタン
+    const loadButton = document.getElementById('load-button');
+    if (loadButton) {
+      loadButton.addEventListener('click', () => {
+        this.loadGame();
+      });
+    }
+
+    // セーブ削除ボタン
+    const deleteSaveButton = document.getElementById('delete-save-button');
+    if (deleteSaveButton) {
+      deleteSaveButton.addEventListener('click', () => {
+        if (confirm('セーブデータを削除しますか？')) {
+          SaveManager.deleteSave();
+          this.updateSaveInfo();
+          this.uiManager.addMessage('セーブデータを削除しました', MessageType.INFO);
+        }
+      });
+    }
+
+    // セーブ情報を更新
+    this.updateSaveInfo();
   }
 
   /**
@@ -324,6 +375,7 @@ export class Game {
     }
 
     // 次の階層へ
+    this.soundManager.play(SoundType.STAIRS);
     this.descendToNextFloor();
   }
 
@@ -347,25 +399,49 @@ export class Game {
       return false;
     }
 
-    // 店のインベントリを表示（簡易版：最初のアイテムを購入）
+    // 店のインベントリを表示
     if (this.shop.inventory.length === 0) {
       this.uiManager.addMessage('商人は売り物を持っていない', MessageType.INFO);
       return false;
     }
 
-    const item = this.shop.inventory[0];
-    const price = this.shop.getItemPrice(item);
+    // 店のUIを開く
+    this.shopUI.setShop(this.shop, this.player.gold);
+    this.shopUI.setCallback((item) => this.buyItemFromShop(item));
+    this.shopUI.open();
 
+    return false; // UIを開くだけなのでターン消費しない
+  }
+
+  /**
+   * 店からアイテムを購入
+   */
+  private buyItemFromShop(item: Item): void {
+    if (!this.shop) return;
+
+    const price = this.shop.getItemPrice(item);
     const result = this.shop.buyItem(item, this.player.gold);
 
     if (result.success) {
       this.player.spendGold(price);
-      this.player.inventory.addItem(item);
-      this.uiManager.addMessage(result.message, MessageType.INFO);
-      return true;
+      const added = this.player.inventory.addItem(item);
+
+      if (added) {
+        this.soundManager.play(SoundType.PURCHASE);
+        this.uiManager.addMessage(result.message, MessageType.SUCCESS);
+        // 店のUIを更新
+        this.shopUI.updatePlayerGold(this.player.gold);
+        this.updateUI();
+      } else {
+        // インベントリがいっぱいの場合、購入をキャンセル
+        this.player.addGold(price);
+        this.shop.inventory.unshift(item);
+        this.soundManager.play(SoundType.ERROR);
+        this.uiManager.addMessage('インベントリがいっぱいです', MessageType.WARNING);
+      }
     } else {
+      this.soundManager.play(SoundType.ERROR);
       this.uiManager.addMessage(result.message, MessageType.WARNING);
-      return false;
     }
   }
 
@@ -415,6 +491,7 @@ export class Game {
 
     if (enemyAtPosition) {
       // 攻撃
+      this.soundManager.play(SoundType.ATTACK);
       CombatSystem.attack(this.player, enemyAtPosition);
       return true;
     }
@@ -530,6 +607,7 @@ export class Game {
     if (success) {
       // マップからアイテムを削除
       this.items = this.items.filter(item => item !== itemAtPosition);
+      this.soundManager.play(SoundType.PICKUP);
       return true;
     }
 
@@ -738,6 +816,9 @@ export class Game {
 
     // エンティティ描画
     this.renderEntities();
+
+    // ミニマップ描画
+    this.minimap.render(this.map, this.player.getPosition());
 
     // デバッグ情報（オプション）
     // this.renderDebugInfo();
@@ -962,6 +1043,13 @@ export class Game {
       gold: this.player.gold,
     });
     this.uiManager.updateFloor(this.world.getCurrentFloor());
+
+    // ステータス効果を更新
+    const effects = this.player.statusEffects.getEffects().map(effect => ({
+      type: effect.type,
+      duration: effect.turnsRemaining,
+    }));
+    this.uiManager.updateStatusEffects(effects);
   }
 
   /**
@@ -988,6 +1076,103 @@ export class Game {
    */
   stop(): void {
     this.running = false;
+  }
+
+  /**
+   * ゲームを保存
+   */
+  private saveGame(): void {
+    const saveData: GameSaveData = {
+      version: '1.0',
+      timestamp: Date.now(),
+      player: {
+        position: { x: this.player.getPosition().x, y: this.player.getPosition().y },
+        level: this.player.level,
+        experience: this.player.experience,
+        experienceToNextLevel: this.player.experienceToNextLevel,
+        gold: this.player.gold,
+        hp: this.player.stats.hp,
+        maxHp: this.player.stats.maxHp,
+        attack: this.player.stats.attack,
+        defense: this.player.stats.defense,
+        speed: this.player.stats.speed,
+        inventory: this.player.inventory.getItems().map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          type: item.itemType,
+          rarity: item.rarity,
+          stackable: item.stackable,
+          stackCount: item.stackCount,
+        })),
+        equipment: {
+          weapon: null,
+          armor: null,
+          accessory: null,
+        },
+      },
+      world: {
+        currentFloor: this.world.getCurrentFloor(),
+      },
+    };
+
+    const success = SaveManager.save(saveData);
+    if (success) {
+      this.uiManager.addMessage('ゲームを保存しました', MessageType.SUCCESS);
+      this.updateSaveInfo();
+    } else {
+      this.uiManager.addMessage('保存に失敗しました', MessageType.WARNING);
+    }
+  }
+
+  /**
+   * ゲームを読み込み（簡易版：現在の階層とゴールドのみ復元）
+   */
+  private loadGame(): void {
+    const saveData = SaveManager.load();
+    if (!saveData) {
+      this.uiManager.addMessage('セーブデータがありません', MessageType.WARNING);
+      return;
+    }
+
+    // プレイヤーステータスを復元
+    this.player.level = saveData.player.level;
+    this.player.experience = saveData.player.experience;
+    this.player.experienceToNextLevel = saveData.player.experienceToNextLevel;
+    this.player.gold = saveData.player.gold;
+    this.player.stats.hp = saveData.player.hp;
+    this.player.stats.maxHp = saveData.player.maxHp;
+
+    // 階層を変更
+    const targetFloor = saveData.world.currentFloor;
+    this.map = this.world.changeFloor(targetFloor);
+
+    // プレイヤー位置を復元
+    const savedPos = saveData.player.position;
+    this.player.setPosition(new Vector2D(savedPos.x, savedPos.y));
+
+    // 階層をセットアップ
+    this.setupFloor();
+
+    this.uiManager.addMessage('ゲームを読み込みました', MessageType.SUCCESS);
+    this.updateSaveInfo();
+  }
+
+  /**
+   * セーブ情報を更新
+   */
+  private updateSaveInfo(): void {
+    const saveInfo = document.getElementById('save-info');
+    if (!saveInfo) return;
+
+    const info = SaveManager.getSaveInfo();
+    if (info) {
+      const date = new Date(info.timestamp);
+      const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
+      saveInfo.textContent = `${dateStr} (${info.floor}階)`;
+    } else {
+      saveInfo.textContent = 'セーブなし';
+    }
   }
 
   /**

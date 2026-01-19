@@ -1,0 +1,97 @@
+/**
+ * 敵クラス
+ * AIによって制御される敵対エンティティ
+ */
+
+import { CombatEntity, EntityType } from './Entity';
+import { Stats } from './components/Stats';
+import { eventBus, GameEvents } from '@/core/EventBus';
+
+export interface EnemyTemplate {
+  name: string;
+  char: string;
+  color: string;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  experienceValue: number;
+}
+
+export class Enemy extends CombatEntity {
+  public experienceValue: number;
+
+  constructor(x: number, y: number, template: EnemyTemplate) {
+    const stats = new Stats(template.maxHp, template.attack, template.defense);
+
+    super(
+      template.name,
+      EntityType.ENEMY,
+      x,
+      y,
+      {
+        char: template.char,
+        color: template.color,
+      },
+      stats
+    );
+
+    this.experienceValue = template.experienceValue;
+  }
+
+  /**
+   * 更新処理（AI行動）
+   */
+  update(deltaTime: number): void {
+    // AI行動は別のシステムで処理
+  }
+
+  /**
+   * ダメージを受ける（オーバーライド）
+   */
+  takeDamage(amount: number, attacker?: string): number {
+    const actualDamage = super.takeDamage(amount);
+
+    if (this.stats.isDead()) {
+      eventBus.emit(GameEvents.ENEMY_DEATH, {
+        name: this.name,
+        experienceValue: this.experienceValue,
+        position: this.getPosition(),
+      });
+    }
+
+    return actualDamage;
+  }
+}
+
+/**
+ * 敵テンプレート定義
+ */
+export const EnemyTemplates: Record<string, EnemyTemplate> = {
+  GOBLIN: {
+    name: 'ゴブリン',
+    char: 'g',
+    color: '#00ff00',
+    maxHp: 20,
+    attack: 5,
+    defense: 2,
+    experienceValue: 10,
+  },
+  ORC: {
+    name: 'オーク',
+    char: 'o',
+    color: '#ff6b6b',
+    maxHp: 40,
+    attack: 8,
+    defense: 3,
+    experienceValue: 25,
+  },
+  TROLL: {
+    name: 'トロール',
+    char: 'T',
+    color: '#8b4513',
+    maxHp: 80,
+    attack: 12,
+    defense: 5,
+    experienceValue: 50,
+  },
+};

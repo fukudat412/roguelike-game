@@ -214,6 +214,61 @@
     .message.item {
       color: #ffdd57;
     }
+
+    /* キー操作表 */
+    #controls-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: rgba(30, 30, 30, 0.9);
+      border: 2px solid #444;
+      border-radius: 8px;
+      padding: 15px;
+      width: 250px;
+      z-index: 50;
+    }
+
+    #controls-panel h3 {
+      color: #4ecdc4;
+      margin: 0 0 10px 0;
+      font-size: 16px;
+      text-align: center;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+
+    .control-group {
+      margin-bottom: 12px;
+    }
+
+    .control-group-title {
+      color: #ffdd57;
+      font-size: 13px;
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+
+    .control-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 3px 0;
+      font-size: 12px;
+      color: #b0b0b0;
+    }
+
+    .control-key {
+      background-color: #3a3a3a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      color: #4ecdc4;
+      border: 1px solid #555;
+    }
+
+    .control-desc {
+      flex: 1;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -247,6 +302,48 @@
     </div>
     <div id="inventory-help">
       拾う: G | 使う: U | 捨てる: Q | 閉じる: I/ESC
+    </div>
+  </div>
+
+  <div id="controls-panel">
+    <h3>操作方法</h3>
+    <div class="control-group">
+      <div class="control-group-title">移動</div>
+      <div class="control-item">
+        <span class="control-key">WASD</span>
+        <span class="control-desc">上下左右</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">矢印</span>
+        <span class="control-desc">上下左右</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">テンキー</span>
+        <span class="control-desc">8246</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="control-group-title">アクション</div>
+      <div class="control-item">
+        <span class="control-key">G</span>
+        <span class="control-desc">アイテムを拾う</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">I</span>
+        <span class="control-desc">インベントリ</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">&gt;</span>
+        <span class="control-desc">階段を使う</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">T</span>
+        <span class="control-desc">商人と取引</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">Space</span>
+        <span class="control-desc">待機</span>
+      </div>
     </div>
   </div>
 

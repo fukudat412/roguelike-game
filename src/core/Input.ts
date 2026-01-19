@@ -76,17 +76,34 @@ export class Input {
    */
   private handleKeyDown(event: KeyboardEvent): void {
     const key = event.key.toLowerCase();
+    const action = this.keyMap.get(event.key) || this.keyMap.get(key);
 
-    // すでに押されている場合は無視（リピート防止）
-    if (this.keysPressed.has(key)) return;
+    // アクションが登録されていない場合は何もしない
+    if (!action) return;
+
+    // 移動アクションかどうかチェック
+    const isMoveAction = this.isMoveAction(action);
+
+    // 移動アクション以外はリピートを防止
+    if (!isMoveAction && this.keysPressed.has(key)) {
+      return;
+    }
 
     this.keysPressed.add(key);
+    event.preventDefault();
+    this.actionQueue.push(action);
+  }
 
-    const action = this.keyMap.get(event.key) || this.keyMap.get(key);
-    if (action) {
-      event.preventDefault();
-      this.actionQueue.push(action);
-    }
+  /**
+   * 移動アクションかどうかを判定
+   */
+  private isMoveAction(action: Action): boolean {
+    return (
+      action === Action.MOVE_UP ||
+      action === Action.MOVE_DOWN ||
+      action === Action.MOVE_LEFT ||
+      action === Action.MOVE_RIGHT
+    );
   }
 
   /**

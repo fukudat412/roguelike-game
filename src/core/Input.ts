@@ -59,6 +59,8 @@ export class Input {
     this.keyMap.set('u', Action.USE);
     this.keyMap.set('q', Action.DROP);
     this.keyMap.set('>', Action.STAIRS);
+    this.keyMap.set('.', Action.STAIRS); // より入力しやすいキー
+    this.keyMap.set('Enter', Action.STAIRS); // Enterキーでも階段を使える
     this.keyMap.set('t', Action.SHOP);
     this.keyMap.set('Escape', Action.CANCEL);
   }

@@ -288,7 +288,8 @@ export class Game {
 
     // 階段を使う
     if (action === Action.STAIRS) {
-      turnEnded = this.useStairs();
+      this.useStairs(); // 階層移動はターンを消費しない
+      return;
     }
 
     // 店で取引
@@ -313,18 +314,17 @@ export class Game {
   /**
    * 階段を使う
    */
-  private useStairs(): boolean {
+  private useStairs(): void {
     const playerPos = this.player.getPosition();
 
     // プレイヤーの位置に階段があるかチェック
     if (!this.stairs.getPosition().equals(playerPos)) {
       this.uiManager.addMessage('ここには階段がない', MessageType.INFO);
-      return false;
+      return;
     }
 
     // 次の階層へ
     this.descendToNextFloor();
-    return true;
   }
 
   /**
@@ -427,6 +427,11 @@ export class Game {
 
     // FOV更新
     this.map.updateFOV(newPos, 8);
+
+    // 階段の上に立った時にメッセージを表示
+    if (this.stairs && this.stairs.getPosition().equals(newPos)) {
+      this.uiManager.addMessage('階段を発見した！(Enterで次の階へ)', MessageType.INFO);
+    }
 
     // UI更新
     this.updateUI();

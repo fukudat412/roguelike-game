@@ -6,6 +6,7 @@
 import { Cell } from './Cell';
 import { Tile, TileFactory } from './Tile';
 import { Vector2D } from '@/utils/Vector2D';
+import { FOV } from '@/utils/FOV';
 
 export class GameMap {
   private cells: Cell[][] = [];
@@ -178,27 +179,24 @@ export class GameMap {
   }
 
   /**
-   * FOV（視界）を更新（シンプルな円形視界）
+   * FOV（視界）を更新（シャドウキャスティング）
    */
   updateFOV(center: Vector2D, radius: number): void {
     // すべてのセルを非可視に
     this.getAllCells().forEach(cell => cell.setVisible(false));
 
-    // 中心から半径内のセルを可視に
-    for (let dy = -radius; dy <= radius; dy++) {
-      for (let dx = -radius; dx <= radius; dx++) {
-        const x = center.x + dx;
-        const y = center.y + dy;
+    // シャドウキャスティングで可視セルを計算
+    const visibleCells = FOV.calculate(
+      center,
+      radius,
+      (x, y) => !this.isTransparent(x, y)
+    );
 
-        if (!this.isInBounds(x, y)) continue;
-
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= radius) {
-          const cell = this.getCell(x, y);
-          if (cell) {
-            cell.setVisible(true);
-          }
-        }
+    // 可視セルをマークしてexploredにする
+    for (const pos of visibleCells) {
+      const cell = this.getCell(pos.x, pos.y);
+      if (cell) {
+        cell.setVisible(true);
       }
     }
   }

@@ -23,6 +23,7 @@ import { Vector2D } from '@/utils/Vector2D';
 import { MessageType } from '@/ui/MessageLog';
 import { rollRandomItem, getItemData } from '@/data/items';
 import { getRandomEnemyForFloor } from '@/data/enemies';
+import { AStar } from '@/ai/pathfinding/AStar';
 
 export class Game {
   private renderer: Renderer;
@@ -509,13 +510,13 @@ export class Game {
   }
 
   /**
-   * 敵をプレイヤーに近づける
+   * 敵をプレイヤーに近づける（A*パスファインディング使用）
    */
   private moveEnemyTowardsPlayer(enemy: Enemy): void {
     const enemyPos = enemy.getPosition();
     const playerPos = this.player.getPosition();
 
-    // プレイヤーが視界内かチェック（簡易版）
+    // プレイヤーが視界内かチェック
     const distance = enemyPos.distanceTo(playerPos);
     if (distance > 10) return; // 視界外
 
@@ -526,11 +527,49 @@ export class Game {
       return;
     }
 
-    // プレイヤーに近づく方向を計算
+    // A*でパスを計算
+    const nextPos = AStar.getNextMove(
+      enemyPos,
+      playerPos,
+      (x, y) => {
+        // マップ境界チェック
+        if (!this.map.isInBounds(x, y)) return false;
+
+        // 壁チェック
+        if (!this.map.isWalkableAt(new Vector2D(x, y))) return false;
+
+        // 他の敵と重ならないかチェック（ただし目的地は除く）
+        if (x === playerPos.x && y === playerPos.y) return true;
+
+        const occupied = this.enemies.some(e =>
+          e !== enemy && e.isAlive() && e.getPosition().equals(new Vector2D(x, y))
+        );
+
+        return !occupied;
+      }
+    );
+
+    // パスが見つからない、または移動先がない場合
+    if (!nextPos) {
+      // フォールバック: シンプルな追跡
+      this.simpleEnemyMove(enemy);
+      return;
+    }
+
+    // 移動
+    enemy.setPosition(nextPos);
+  }
+
+  /**
+   * シンプルな敵の移動（A*のフォールバック）
+   */
+  private simpleEnemyMove(enemy: Enemy): void {
+    const enemyPos = enemy.getPosition();
+    const playerPos = this.player.getPosition();
+
     const dx = playerPos.x - enemyPos.x;
     const dy = playerPos.y - enemyPos.y;
 
-    // 移動方向を決定（シンプルなアプローチ）
     let moveX = 0;
     let moveY = 0;
 
@@ -542,20 +581,15 @@ export class Game {
 
     const newPos = enemyPos.add(new Vector2D(moveX, moveY));
 
-    // 移動可能かチェック
-    if (!this.map.isWalkableAt(newPos)) return;
+    if (this.map.isWalkableAt(newPos)) {
+      const occupied = this.enemies.some(e =>
+        e !== enemy && e.isAlive() && e.getPosition().equals(newPos)
+      );
 
-    // 他の敵と重ならないかチェック
-    const occupied = this.enemies.some(e =>
-      e !== enemy && e.isAlive() && e.getPosition().equals(newPos)
-    );
-    if (occupied) return;
-
-    // プレイヤーと重ならないかチェック
-    if (this.player.getPosition().equals(newPos)) return;
-
-    // 移動
-    enemy.setPosition(newPos);
+      if (!occupied && !this.player.getPosition().equals(newPos)) {
+        enemy.setPosition(newPos);
+      }
+    }
   }
 
   /**

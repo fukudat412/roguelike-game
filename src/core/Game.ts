@@ -37,6 +37,8 @@ import { SaveManager, GameSaveData } from '@/utils/SaveManager';
 import { SoundManager, SoundType } from '@/utils/SoundManager';
 import { MetaProgression } from '@/character/MetaProgression';
 import { DailyChallenge, ChallengeType } from './DailyChallenge';
+import { DungeonType } from '@/world/DungeonType';
+import { EnemyDatabase } from '@/data/enemies';
 
 export class Game {
   private renderer: Renderer;
@@ -255,7 +257,7 @@ export class Game {
   /**
    * ゲーム初期化
    */
-  initialize(): void {
+  initialize(dungeonType: DungeonType = DungeonType.CAVE): void {
     // 統計をリセット
     this.statistics = {
       enemiesKilled: 0,
@@ -266,8 +268,8 @@ export class Game {
       turnsPlayed: 0,
     };
 
-    // ワールド生成
-    this.world = new World();
+    // ワールド生成（ダンジョンタイプ指定）
+    this.world = new World(dungeonType);
     this.map = this.world.getCurrentMap();
 
     // プレイヤー配置
@@ -302,19 +304,23 @@ export class Game {
     const currentFloor = this.world.getCurrentFloor();
 
     // ボスフロアチェック
-    if (isBossFloor(currentFloor)) {
-      // ボス戦
-      this.spawnBoss();
+    const dungeonConfig = this.world.getDungeonConfig();
+    if (dungeonConfig.bosses[currentFloor]) {
+      // ボス戦（ダンジョン設定に基づく）
+      this.spawnDungeonBoss();
       this.uiManager.addMessage(
         `【警告】ボス階層に到達した！`,
         MessageType.WARNING
       );
     } else {
-      // 通常フロア：敵数は階層に応じて増加（緩やかな曲線）
+      // 通常フロア：敵数は階層に応じて増加（ダンジョン設定の倍率適用）
       const baseCount = 5;
       const growthRate = Math.floor(currentFloor * 1.2);
-      const enemyCount = Math.min(baseCount + growthRate, 18); // 上限18体
-      this.spawnEnemies(enemyCount);
+      const rawCount = baseCount + growthRate;
+      const enemyCount = Math.floor(rawCount * dungeonConfig.enemies.spawnMultiplier);
+      const finalCount = Math.min(enemyCount, 20); // 上限20体
+
+      this.spawnEnemiesForDungeon(finalCount);
 
       // 店を配置（30%の確率）
       if (Math.random() < 0.3) {
@@ -424,6 +430,83 @@ export class Game {
 
       this.enemies.push(enemy);
     }
+  }
+
+  /**
+   * ダンジョン設定に基づいて敵を配置
+   */
+  private spawnEnemiesForDungeon(count: number): void {
+    const currentFloor = this.world.getCurrentFloor();
+    const dungeonConfig = this.world.getDungeonConfig();
+
+    for (let i = 0; i < count; i++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
+
+      const pos = cell.position;
+
+      // プレイヤーとの距離をチェック（近すぎない位置に配置）
+      if (this.player.getPosition().distanceTo(pos) < 10) {
+        continue;
+      }
+
+      // 既存の敵と重ならないようにチェック
+      const occupied = this.enemies.some(e => e.getPosition().equals(pos));
+      if (occupied) continue;
+
+      // ダンジョン設定の敵プールからランダムに選択
+      const enemyKey = dungeonConfig.enemies.pool[
+        Math.floor(Math.random() * dungeonConfig.enemies.pool.length)
+      ];
+
+      const template = EnemyDatabase[enemyKey];
+      if (!template) continue;
+
+      // エリート判定
+      const isElite = Math.random() < dungeonConfig.enemies.eliteChance;
+
+      const enemy = new Enemy(pos.x, pos.y, template, isElite);
+
+      this.enemies.push(enemy);
+    }
+  }
+
+  /**
+   * ダンジョン設定に基づいてボスを配置
+   */
+  private spawnDungeonBoss(): void {
+    const currentFloor = this.world.getCurrentFloor();
+    const dungeonConfig = this.world.getDungeonConfig();
+    const bossKey = dungeonConfig.bosses[currentFloor];
+
+    if (!bossKey) return;
+
+    const bossTemplate = EnemyDatabase[bossKey];
+    if (!bossTemplate) return;
+
+    // ボスを配置
+    const bossCell = this.map.getRandomWalkableCell();
+    if (!bossCell) return;
+
+    const bossPos = bossCell.position;
+
+    // プレイヤーから離れた位置に配置
+    if (this.player.getPosition().distanceTo(bossPos) < 15) {
+      this.spawnDungeonBoss(); // 再試行
+      return;
+    }
+
+    const boss = new Enemy(bossPos.x, bossPos.y, bossTemplate);
+    this.enemies.push(boss);
+
+    this.uiManager.addMessage(
+      `${boss.name}が現れた！`,
+      MessageType.WARNING
+    );
+
+    // ボスの周りに少数の雑魚敵も配置（3-5体）
+    const minionCount = 3 + Math.floor(Math.random() * 3);
+    this.spawnEnemiesForDungeon(minionCount);
   }
 
   /**
@@ -632,11 +715,49 @@ export class Game {
       // デイリーチャレンジ進捗を更新
       this.dailyChallenge.updateProgress(ChallengeType.SURVIVE_TURNS, 1);
 
+      // 環境効果を処理
+      this.processEnvironmentalEffects();
+
       // プレイヤーのステータス効果を処理
       this.player.processStatusEffects();
       // スキルクールダウンを更新
       this.player.updateSkillCooldowns();
       this.gameState.advanceTurn();
+    }
+  }
+
+  /**
+   * 環境効果を処理
+   */
+  private processEnvironmentalEffects(): void {
+    const effect = this.map.environmentalEffect;
+    if (!effect) return;
+
+    // プレイヤーへの効果
+    if (effect.playerEffect) {
+      if (effect.playerEffect.hpPerTurn) {
+        const hpChange = effect.playerEffect.hpPerTurn;
+        if (hpChange < 0) {
+          this.player.takeDamage(Math.abs(hpChange));
+          this.uiManager.addMessage(
+            `${effect.name}により${Math.abs(hpChange)}ダメージを受けた`,
+            MessageType.COMBAT
+          );
+        } else {
+          this.player.stats.heal(hpChange);
+          this.uiManager.addMessage(
+            `${effect.name}により${hpChange}回復した`,
+            MessageType.SUCCESS
+          );
+        }
+      }
+
+      if (effect.playerEffect.mpPerTurn) {
+        const mpChange = effect.playerEffect.mpPerTurn;
+        if (mpChange > 0) {
+          this.player.stats.restoreMp(mpChange);
+        }
+      }
     }
   }
 

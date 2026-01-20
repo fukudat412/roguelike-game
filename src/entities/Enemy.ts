@@ -30,12 +30,25 @@ export class Enemy extends CombatEntity {
   public experienceValue: number;
   public specialAttack?: SpecialAttack;
   public isBoss: boolean;
+  public isElite: boolean;
 
-  constructor(x: number, y: number, template: EnemyTemplate) {
-    const stats = new Stats(template.maxHp, template.attack, template.defense);
+  constructor(x: number, y: number, template: EnemyTemplate, isElite: boolean = false) {
+    // エリートの場合はステータスを強化
+    const hpMultiplier = isElite ? 1.5 : 1.0;
+    const attackMultiplier = isElite ? 1.3 : 1.0;
+    const defenseMultiplier = isElite ? 1.3 : 1.0;
+
+    const stats = new Stats(
+      Math.floor(template.maxHp * hpMultiplier),
+      Math.floor(template.attack * attackMultiplier),
+      Math.floor(template.defense * defenseMultiplier)
+    );
+
+    // エリートの場合は名前に星印を追加
+    const displayName = isElite ? `★${template.name}` : template.name;
 
     super(
-      template.name,
+      displayName,
       EntityType.ENEMY,
       x,
       y,
@@ -46,9 +59,11 @@ export class Enemy extends CombatEntity {
       stats
     );
 
-    this.experienceValue = template.experienceValue;
+    // エリートの場合は報酬を2倍に
+    this.experienceValue = Math.floor(template.experienceValue * (isElite ? 2 : 1));
     this.specialAttack = template.specialAttack;
     this.isBoss = template.isBoss || false;
+    this.isElite = isElite;
   }
 
   /**

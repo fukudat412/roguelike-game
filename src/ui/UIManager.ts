@@ -34,7 +34,7 @@ export class UIManager {
     // プレイヤー死亡
     eventBus.on(GameEvents.PLAYER_DEATH, () => {
       this.messageLog.add('あなたは死んでしまった...', MessageType.DEATH);
-      this.showGameOver();
+      // showGameOver()はGame.tsで統計情報と共に呼ばれる
     });
 
     // 戦闘ヒット
@@ -205,11 +205,81 @@ export class UIManager {
   /**
    * ゲームオーバー画面を表示
    */
-  showGameOver(): void {
+  showGameOver(statistics?: {
+    floor: number;
+    enemiesKilled: number;
+    bossesDefeated: number;
+    itemsCollected: number;
+    chestsOpened: number;
+    goldEarned: number;
+    turnsPlayed: number;
+  }): void {
     const gameOverElement = document.getElementById('game-over');
-    if (gameOverElement) {
-      gameOverElement.style.display = 'block';
+    if (!gameOverElement) return;
+
+    // 統計情報を表示
+    if (statistics) {
+      const score = this.calculateScore(statistics);
+
+      const finalFloor = document.getElementById('final-floor');
+      const enemiesKilled = document.getElementById('enemies-killed');
+      const bossesDefeated = document.getElementById('bosses-defeated');
+      const itemsCollected = document.getElementById('items-collected');
+      const chestsOpened = document.getElementById('chests-opened');
+      const goldEarned = document.getElementById('gold-earned');
+      const turnsPlayed = document.getElementById('turns-played');
+      const finalScore = document.getElementById('final-score');
+
+      if (finalFloor) finalFloor.textContent = statistics.floor.toString();
+      if (enemiesKilled) enemiesKilled.textContent = statistics.enemiesKilled.toString();
+      if (bossesDefeated) bossesDefeated.textContent = statistics.bossesDefeated.toString();
+      if (itemsCollected) itemsCollected.textContent = statistics.itemsCollected.toString();
+      if (chestsOpened) chestsOpened.textContent = statistics.chestsOpened.toString();
+      if (goldEarned) goldEarned.textContent = statistics.goldEarned.toString();
+      if (turnsPlayed) turnsPlayed.textContent = statistics.turnsPlayed.toString();
+      if (finalScore) finalScore.textContent = score.toLocaleString();
     }
+
+    gameOverElement.style.display = 'block';
+  }
+
+  /**
+   * スコアを計算
+   */
+  private calculateScore(statistics: {
+    floor: number;
+    enemiesKilled: number;
+    bossesDefeated: number;
+    itemsCollected: number;
+    chestsOpened: number;
+    goldEarned: number;
+    turnsPlayed: number;
+  }): number {
+    // スコア計算式:
+    // - 到達階層 × 1000
+    // - 倒した敵 × 100
+    // - ボス撃破 × 5000
+    // - アイテム収集 × 50
+    // - 宝箱開封 × 200
+    // - 獲得ゴールド × 1
+    // - ターン効率ボーナス（敵を早く倒すほど高い）
+
+    let score = 0;
+    score += statistics.floor * 1000;
+    score += statistics.enemiesKilled * 100;
+    score += statistics.bossesDefeated * 5000;
+    score += statistics.itemsCollected * 50;
+    score += statistics.chestsOpened * 200;
+    score += statistics.goldEarned;
+
+    // ターン効率ボーナス（少ないターンで多くの敵を倒した場合）
+    if (statistics.turnsPlayed > 0 && statistics.enemiesKilled > 0) {
+      const efficiency = statistics.enemiesKilled / statistics.turnsPlayed;
+      const efficiencyBonus = Math.floor(efficiency * 10000);
+      score += efficiencyBonus;
+    }
+
+    return Math.max(0, score);
   }
 
   /**

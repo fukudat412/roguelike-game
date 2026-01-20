@@ -301,18 +301,82 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background-color: rgba(0, 0, 0, 0.9);
+      background-color: rgba(0, 0, 0, 0.95);
       padding: 40px;
       border: 3px solid #ff4444;
       border-radius: 8px;
       text-align: center;
       z-index: 1000;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
     }
 
     #game-over h1 {
       color: #ff4444;
       font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    #game-over #death-message {
+      color: #e0e0e0;
+      font-size: 16px;
       margin-bottom: 20px;
+    }
+
+    #game-stats {
+      margin: 20px 0;
+      padding: 20px;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+    }
+
+    #game-stats h2 {
+      color: #ffaa00;
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      text-align: left;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-radius: 4px;
+    }
+
+    .stat-label {
+      color: #aaaaaa;
+      font-size: 14px;
+    }
+
+    .stat-value {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .stat-score {
+      grid-column: 1 / -1;
+      background-color: rgba(255, 170, 0, 0.15);
+      border: 1px solid #ffaa00;
+    }
+
+    .stat-score .stat-label {
+      color: #ffaa00;
+      font-size: 18px;
+    }
+
+    .stat-score .stat-value {
+      color: #ffaa00;
+      font-size: 20px;
     }
 
     #game-over button {
@@ -895,6 +959,45 @@
   <div id="game-over">
     <h1>Game Over</h1>
     <p id="death-message"></p>
+
+    <div id="game-stats">
+      <h2>冒険の記録</h2>
+      <div class="stats-grid">
+        <div class="stat-item">
+          <span class="stat-label">到達階層:</span>
+          <span class="stat-value" id="final-floor">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">倒した敵:</span>
+          <span class="stat-value" id="enemies-killed">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">ボス撃破:</span>
+          <span class="stat-value" id="bosses-defeated">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">アイテム収集:</span>
+          <span class="stat-value" id="items-collected">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">宝箱開封:</span>
+          <span class="stat-value" id="chests-opened">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">獲得ゴールド:</span>
+          <span class="stat-value" id="gold-earned">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">プレイターン:</span>
+          <span class="stat-value" id="turns-played">0</span>
+        </div>
+        <div class="stat-item stat-score">
+          <span class="stat-label">スコア:</span>
+          <span class="stat-value" id="final-score">0</span>
+        </div>
+      </div>
+    </div>
+
     <button id="restart-button">もう一度プレイ</button>
   </div>
 

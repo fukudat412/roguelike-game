@@ -58,6 +58,16 @@ export class Game {
   private shop!: Shop | null;
   private chests: Chest[] = [];
 
+  // ゲーム統計
+  private statistics = {
+    enemiesKilled: 0,
+    itemsCollected: 0,
+    goldEarned: 0,
+    bossesDefeated: 0,
+    chestsOpened: 0,
+    turnsPlayed: 0,
+  };
+
   private lastFrameTime: number = 0;
   private running: boolean = false;
 
@@ -97,6 +107,27 @@ export class Game {
     // レベルアップ時にサウンド
     eventBus.on(GameEvents.PLAYER_LEVEL_UP, () => {
       this.soundManager.play(SoundType.LEVEL_UP);
+    });
+
+    // プレイヤー死亡時に統計表示
+    eventBus.on(GameEvents.PLAYER_DEATH, () => {
+      this.soundManager.play(SoundType.DAMAGE);
+
+      // 統計情報を収集して表示
+      const stats = {
+        floor: this.world.getCurrentFloor(),
+        enemiesKilled: this.statistics.enemiesKilled,
+        bossesDefeated: this.statistics.bossesDefeated,
+        itemsCollected: this.statistics.itemsCollected,
+        chestsOpened: this.statistics.chestsOpened,
+        goldEarned: this.statistics.goldEarned,
+        turnsPlayed: this.statistics.turnsPlayed,
+      };
+
+      // 少し遅延させてゲームオーバー画面を表示
+      setTimeout(() => {
+        this.uiManager.showGameOver(stats);
+      }, 500);
     });
 
     // UI更新
@@ -222,6 +253,16 @@ export class Game {
    * ゲーム初期化
    */
   initialize(): void {
+    // 統計をリセット
+    this.statistics = {
+      enemiesKilled: 0,
+      itemsCollected: 0,
+      goldEarned: 0,
+      bossesDefeated: 0,
+      chestsOpened: 0,
+      turnsPlayed: 0,
+    };
+
     // ワールド生成
     this.world = new World();
     this.map = this.world.getCurrentMap();
@@ -582,6 +623,9 @@ export class Game {
 
     // ターン終了
     if (turnEnded) {
+      // 統計を更新
+      this.statistics.turnsPlayed++;
+
       // プレイヤーのステータス効果を処理
       this.player.processStatusEffects();
       // スキルクールダウンを更新
@@ -880,6 +924,9 @@ export class Game {
     const success = this.player.inventory.addItem(itemAtPosition);
 
     if (success) {
+      // 統計を更新
+      this.statistics.itemsCollected++;
+
       // マップからアイテムを削除
       this.items = this.items.filter(item => item !== itemAtPosition);
       this.soundManager.play(SoundType.PICKUP);
@@ -909,6 +956,9 @@ export class Game {
 
     // 宝箱を開ける
     chest.open();
+
+    // 統計を更新
+    this.statistics.chestsOpened++;
 
     // アイテムを生成
     const playerPos = this.player.getPosition();
@@ -1163,6 +1213,9 @@ export class Game {
    * 敵の死亡処理
    */
   private handleEnemyDeath(enemy: Enemy): void {
+    // 統計を更新
+    this.statistics.enemiesKilled++;
+
     // メタプログレッションに記録
     this.metaProgression.recordKill(enemy.isBoss);
 
@@ -1174,6 +1227,7 @@ export class Game {
       const goldDrop = 5 + Math.floor(Math.random() * 10) + this.world.getCurrentFloor() * 2;
       this.player.addGold(goldDrop);
       this.metaProgression.recordGoldEarned(goldDrop);
+      this.statistics.goldEarned += goldDrop;
 
       this.uiManager.addMessage(
         `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
@@ -1186,10 +1240,14 @@ export class Game {
    * ボス撃破時の処理
    */
   private handleBossDefeat(boss: Enemy): void {
+    // 統計を更新
+    this.statistics.bossesDefeated++;
+
     // 大量のゴールド（通常の10倍）
     const goldDrop = (50 + Math.floor(Math.random() * 50)) * 10;
     this.player.addGold(goldDrop);
     this.metaProgression.recordGoldEarned(goldDrop);
+    this.statistics.goldEarned += goldDrop;
 
     // 全回復（HP + MP）
     this.player.stats.heal(this.player.stats.maxHp);

@@ -7,6 +7,13 @@ import { CombatEntity, EntityType } from './Entity';
 import { Stats } from './components/Stats';
 import { eventBus, GameEvents } from '@/core/EventBus';
 
+export interface SpecialAttack {
+  type: 'poison' | 'paralyze' | 'vampiric' | 'weaken';
+  chance: number; // 0.0 - 1.0
+  duration?: number; // ターン数（ステータス効果の場合）
+  strength?: number; // 効果の強さ（吸血の場合は吸収率など）
+}
+
 export interface EnemyTemplate {
   name: string;
   char: string;
@@ -15,10 +22,12 @@ export interface EnemyTemplate {
   attack: number;
   defense: number;
   experienceValue: number;
+  specialAttack?: SpecialAttack;
 }
 
 export class Enemy extends CombatEntity {
   public experienceValue: number;
+  public specialAttack?: SpecialAttack;
 
   constructor(x: number, y: number, template: EnemyTemplate) {
     const stats = new Stats(template.maxHp, template.attack, template.defense);
@@ -36,6 +45,7 @@ export class Enemy extends CombatEntity {
     );
 
     this.experienceValue = template.experienceValue;
+    this.specialAttack = template.specialAttack;
   }
 
   /**

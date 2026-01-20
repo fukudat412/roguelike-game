@@ -7,6 +7,7 @@ import { CombatEntity } from '@/entities/Entity';
 import { Player } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { eventBus, GameEvents } from '@/core/EventBus';
+import { StatusEffectType, StatusEffect } from './StatusEffect';
 
 export class CombatSystem {
   /**
@@ -41,6 +42,70 @@ export class CombatSystem {
     // 敵が倒れた場合の経験値付与（プレイヤーが攻撃者の場合）
     if (defender.stats.isDead() && attacker instanceof Player && defender instanceof Enemy) {
       attacker.gainExperience(defender.experienceValue);
+    }
+
+    // 特殊攻撃の処理（敵がプレイヤーに攻撃する場合）
+    if (attacker instanceof Enemy && defender instanceof Player && attacker.specialAttack) {
+      this.processSpecialAttack(attacker, defender, actualDamage);
+    }
+  }
+
+  /**
+   * 特殊攻撃を処理
+   */
+  private static processSpecialAttack(
+    attacker: Enemy,
+    defender: Player,
+    damage: number
+  ): void {
+    const special = attacker.specialAttack!;
+
+    // 確率判定
+    if (Math.random() > special.chance) return;
+
+    switch (special.type) {
+      case 'poison':
+        // 毒付与
+        defender.statusEffects.addEffect(
+          new StatusEffect(StatusEffectType.POISON, special.duration || 3)
+        );
+        eventBus.emit(GameEvents.MESSAGE_LOG, {
+          text: `${attacker.name}の攻撃で毒を受けた！`,
+          type: 'warning',
+        });
+        break;
+
+      case 'paralyze':
+        // 麻痺付与
+        defender.statusEffects.addEffect(
+          new StatusEffect(StatusEffectType.PARALYSIS, special.duration || 2)
+        );
+        eventBus.emit(GameEvents.MESSAGE_LOG, {
+          text: `${attacker.name}の攻撃で体が痺れた！`,
+          type: 'warning',
+        });
+        break;
+
+      case 'weaken':
+        // 脆弱付与
+        defender.statusEffects.addEffect(
+          new StatusEffect(StatusEffectType.WEAKNESS, special.duration || 3)
+        );
+        eventBus.emit(GameEvents.MESSAGE_LOG, {
+          text: `${attacker.name}の攻撃で防御力が下がった！`,
+          type: 'warning',
+        });
+        break;
+
+      case 'vampiric':
+        // HP吸収
+        const healAmount = Math.floor(damage * (special.strength || 0.3));
+        attacker.stats.heal(healAmount);
+        eventBus.emit(GameEvents.MESSAGE_LOG, {
+          text: `${attacker.name}が${healAmount}HP吸収した！`,
+          type: 'warning',
+        });
+        break;
     }
   }
 

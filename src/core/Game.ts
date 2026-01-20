@@ -95,6 +95,43 @@ export class Game {
       this.updateUI();
     });
 
+    // 戦闘ヒット時にダメージ数字表示
+    eventBus.on(GameEvents.COMBAT_HIT, (data: { attacker: string; target: string; damage: number }) => {
+      // ターゲットの位置を探す
+      let targetPos: Vector2D | null = null;
+
+      if (data.target === this.player.name) {
+        targetPos = this.player.getPosition();
+      } else {
+        const enemy = this.enemies.find(e => e.name === data.target);
+        if (enemy) {
+          targetPos = enemy.getPosition();
+        }
+      }
+
+      if (targetPos) {
+        this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, false, false);
+      }
+    });
+
+    // クリティカルヒット時にダメージ数字表示
+    eventBus.on(GameEvents.COMBAT_CRITICAL, (data: { attacker: string; target: string; damage: number }) => {
+      let targetPos: Vector2D | null = null;
+
+      if (data.target === this.player.name) {
+        targetPos = this.player.getPosition();
+      } else {
+        const enemy = this.enemies.find(e => e.name === data.target);
+        if (enemy) {
+          targetPos = enemy.getPosition();
+        }
+      }
+
+      if (targetPos) {
+        this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, true, false);
+      }
+    });
+
     // リスタートボタン
     const restartButton = document.getElementById('restart-button');
     if (restartButton) {
@@ -301,6 +338,9 @@ export class Game {
    * 更新処理
    */
   private update(deltaTime: number): void {
+    // ダメージ数字の更新
+    this.renderer.updateDamageNumbers(deltaTime);
+
     // ゲームオーバーなら何もしない
     if (this.gameState.isGameOver()) {
       return;
@@ -636,6 +676,12 @@ export class Game {
         }
 
         this.updateUI();
+      } else if (item.name.includes('テレポート')) {
+        // テレポートの巻物
+        this.useTeleportScroll(item);
+      } else if (item.name.includes('火球')) {
+        // 火球の巻物
+        this.useFireballScroll(item);
       }
     } else if (item.itemType === ItemType.EQUIPMENT) {
       // 装備アイテムの処理
@@ -689,6 +735,100 @@ export class Game {
     if (itemName.includes('小さな')) return 30;
     if (itemName.includes('大きな')) return 100;
     return 60;
+  }
+
+  /**
+   * テレポートの巻物を使用
+   */
+  private useTeleportScroll(item: Item): void {
+    const randomCell = this.map.getRandomWalkableCell();
+
+    if (!randomCell) {
+      this.uiManager.addMessage(
+        'テレポートに失敗した！',
+        MessageType.WARNING
+      );
+      return;
+    }
+
+    // プレイヤーを移動
+    const oldPos = this.player.getPosition();
+    this.player.setPosition(randomCell.position);
+
+    // カメラ追従
+    this.renderer.setCameraPosition(randomCell.position);
+
+    // FOV更新
+    this.map.updateFOV(randomCell.position, 8);
+
+    this.soundManager.play(SoundType.STAIRS);
+    this.uiManager.addMessage(
+      'テレポートの巻物を使った！別の場所に移動した',
+      MessageType.INFO
+    );
+
+    // スタックから削除
+    item.removeFromStack(1);
+    if (item.stackCount === 0) {
+      this.player.inventory.removeItem(item);
+    }
+
+    this.updateUI();
+  }
+
+  /**
+   * 火球の巻物を使用
+   */
+  private useFireballScroll(item: Item): void {
+    const playerPos = this.player.getPosition();
+    const radius = 3;
+    const damage = 50;
+    let hitCount = 0;
+
+    // プレイヤーの周囲3x3範囲の敵にダメージ
+    for (const enemy of this.enemies) {
+      if (!enemy.isAlive()) continue;
+
+      const enemyPos = enemy.getPosition();
+      const distance = Math.max(
+        Math.abs(enemyPos.x - playerPos.x),
+        Math.abs(enemyPos.y - playerPos.y)
+      );
+
+      if (distance <= radius) {
+        enemy.stats.takeDamage(damage);
+        hitCount++;
+
+        if (!enemy.isAlive()) {
+          this.handleEnemyDeath(enemy);
+        }
+      }
+    }
+
+    this.soundManager.play(SoundType.ATTACK);
+
+    if (hitCount > 0) {
+      this.uiManager.addMessage(
+        `火球の巻物を使った！${hitCount}体の敵に${damage}ダメージ！`,
+        MessageType.SUCCESS
+      );
+    } else {
+      this.uiManager.addMessage(
+        '火球の巻物を使ったが、範囲内に敵がいなかった',
+        MessageType.INFO
+      );
+    }
+
+    // スタックから削除
+    item.removeFromStack(1);
+    if (item.stackCount === 0) {
+      this.player.inventory.removeItem(item);
+    }
+
+    // 敵配列を更新
+    this.enemies = this.enemies.filter(e => e.isAlive());
+
+    this.updateUI();
   }
 
   /**
@@ -816,6 +956,9 @@ export class Game {
 
     // エンティティ描画
     this.renderEntities();
+
+    // ダメージ数字描画
+    this.renderer.renderDamageNumbers();
 
     // ミニマップ描画
     this.minimap.render(this.map, this.player.getPosition());

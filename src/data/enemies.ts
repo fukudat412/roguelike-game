@@ -35,6 +35,11 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 4,
     defense: 1,
     experienceValue: 8,
+    specialAttack: {
+      type: 'poison',
+      chance: 0.3,
+      duration: 3,
+    },
   },
 
   // 中盤の敵（階層 4-7）
@@ -56,6 +61,11 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 7,
     defense: 4,
     experienceValue: 20,
+    specialAttack: {
+      type: 'paralyze',
+      chance: 0.1,
+      duration: 2,
+    },
   },
 
   WOLF: {
@@ -76,6 +86,11 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 6,
     defense: 2,
     experienceValue: 22,
+    specialAttack: {
+      type: 'poison',
+      chance: 0.2,
+      duration: 5,
+    },
   },
 
   // 後半の敵（階層 8-12）
@@ -107,6 +122,11 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 15,
     defense: 3,
     experienceValue: 55,
+    specialAttack: {
+      type: 'weaken',
+      chance: 0.15,
+      duration: 3,
+    },
   },
 
   VAMPIRE: {
@@ -117,6 +137,11 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 13,
     defense: 5,
     experienceValue: 65,
+    specialAttack: {
+      type: 'vampiric',
+      chance: 1.0,
+      strength: 0.3, // 30%吸収
+    },
   },
 
   // 終盤の敵（階層 13+）

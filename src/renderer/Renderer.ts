@@ -4,6 +4,7 @@
  */
 
 import { Vector2D } from '@/utils/Vector2D';
+import { DamageNumber, DamageNumberOptions } from './DamageNumber';
 
 export interface RenderOptions {
   fillColor?: string;
@@ -51,6 +52,7 @@ export class Renderer {
   private ctx: CanvasRenderingContext2D;
   private camera: Camera;
   private tileSize: number = 32;
+  private damageNumbers: DamageNumber[] = [];
 
   constructor(private canvas: HTMLCanvasElement) {
     const ctx = canvas.getContext('2d');
@@ -212,5 +214,68 @@ export class Renderer {
    */
   getContext(): CanvasRenderingContext2D {
     return this.ctx;
+  }
+
+  /**
+   * ダメージ数字を追加
+   */
+  addDamageNumber(gridX: number, gridY: number, value: number, isCritical: boolean = false, isHeal: boolean = false): void {
+    const screenPos = this.gridToScreen(gridX, gridY);
+    this.damageNumbers.push(new DamageNumber({
+      value,
+      x: screenPos.x + this.tileSize / 2,
+      y: screenPos.y,
+      isCritical,
+      isHeal,
+    }));
+  }
+
+  /**
+   * ダメージ数字を更新
+   */
+  updateDamageNumbers(deltaTime: number): void {
+    for (const damageNumber of this.damageNumbers) {
+      damageNumber.update(deltaTime);
+    }
+
+    // 期限切れのダメージ数字を削除
+    this.damageNumbers = this.damageNumbers.filter(dn => !dn.isExpired());
+  }
+
+  /**
+   * ダメージ数字を描画
+   */
+  renderDamageNumbers(): void {
+    for (const damageNumber of this.damageNumbers) {
+      const alpha = damageNumber.getAlpha();
+
+      // 色を決定
+      let color = '#ffffff';
+      let fontSize = 20;
+
+      if (damageNumber.isHeal) {
+        color = '#00ff00'; // 回復は緑
+      } else if (damageNumber.isCritical) {
+        color = '#ff0000'; // クリティカルは赤
+        fontSize = 28; // 大きめ
+      }
+
+      const oldAlpha = this.ctx.globalAlpha;
+      this.ctx.globalAlpha = alpha;
+
+      this.ctx.fillStyle = color;
+      this.ctx.font = `bold ${fontSize}px monospace`;
+      this.ctx.textAlign = 'center';
+      this.ctx.textBaseline = 'middle';
+
+      // 縁取り
+      this.ctx.strokeStyle = '#000000';
+      this.ctx.lineWidth = 3;
+      this.ctx.strokeText(damageNumber.value.toString(), damageNumber.x, damageNumber.y);
+
+      this.ctx.fillText(damageNumber.value.toString(), damageNumber.x, damageNumber.y);
+
+      this.ctx.globalAlpha = oldAlpha;
+    }
   }
 }

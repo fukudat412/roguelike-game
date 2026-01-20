@@ -604,6 +604,199 @@
       margin-top: 8px;
       text-align: center;
     }
+
+    /* メタプログレッションUI */
+    #meta-progression-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(30, 30, 30, 0.98);
+      border: 3px solid #9933ff;
+      border-radius: 8px;
+      padding: 20px;
+      width: 600px;
+      max-height: 700px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    #meta-progression-panel h2 {
+      color: #9933ff;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #meta-progression-panel h3 {
+      color: #ffdd57;
+      margin: 15px 0 10px 0;
+      font-size: 18px;
+    }
+
+    #meta-stats {
+      background-color: #2a2a2a;
+      padding: 15px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+
+    .meta-stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      font-size: 14px;
+    }
+
+    .meta-stat-label {
+      color: #b0b0b0;
+    }
+
+    .meta-stat-value {
+      color: #4ecdc4;
+      font-weight: bold;
+    }
+
+    .meta-bonuses {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #444;
+    }
+
+    .meta-bonuses h4 {
+      color: #ffdd57;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .meta-bonus-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .meta-bonus {
+      background-color: #3a4a3a;
+      color: #00ff7f;
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-size: 12px;
+      border: 1px solid #00aa55;
+    }
+
+    .meta-bonus-none {
+      color: #888;
+      font-size: 12px;
+    }
+
+    #meta-upgrades-list {
+      max-height: 350px;
+      overflow-y: auto;
+    }
+
+    .meta-upgrade-section {
+      margin-bottom: 20px;
+    }
+
+    .meta-upgrade-section h4 {
+      color: #ffdd57;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .meta-upgrade-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin: 8px 0;
+      background-color: #3a3a3a;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+
+    .meta-upgrade-item.affordable {
+      border-color: #9933ff;
+      background-color: #3a2d4a;
+    }
+
+    .meta-upgrade-item.locked {
+      opacity: 0.6;
+    }
+
+    .meta-upgrade-item.unlocked {
+      border-color: #00aa55;
+      background-color: #2d4a3a;
+    }
+
+    .meta-upgrade-info {
+      flex: 1;
+    }
+
+    .meta-upgrade-name {
+      color: #4ecdc4;
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .meta-upgrade-desc {
+      color: #b0b0b0;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .meta-upgrade-cost {
+      color: #888;
+      font-size: 11px;
+    }
+
+    .meta-upgrade-btn {
+      padding: 8px 16px;
+      font-family: 'Courier New', monospace;
+      background-color: #9933ff;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .meta-upgrade-btn:hover:not(:disabled) {
+      background-color: #aa44ff;
+    }
+
+    .meta-upgrade-btn:disabled {
+      background-color: #555;
+      color: #888;
+      cursor: not-allowed;
+    }
+
+    .meta-no-upgrades {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+    }
+
+    #meta-btn {
+      position: fixed;
+      bottom: 160px;
+      right: 20px;
+      padding: 10px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      background-color: #9933ff;
+      color: #ffffff;
+      border: 2px solid #aa44ff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      z-index: 50;
+    }
+
+    #meta-btn:hover {
+      background-color: #aa44ff;
+    }
   </style>
 </head>
 <body>
@@ -713,6 +906,10 @@
         <span class="control-key">Space</span>
         <span class="control-desc">待機</span>
       </div>
+      <div class="control-item">
+        <span class="control-key">M</span>
+        <span class="control-desc">永続強化</span>
+      </div>
     </div>
     <div class="control-group">
       <div class="control-group-title">スキル</div>
@@ -730,6 +927,17 @@
       </div>
     </div>
   </div>
+
+  <div id="meta-progression-panel">
+    <h2>永続アップグレード</h2>
+    <h3>統計情報</h3>
+    <div id="meta-stats"></div>
+    <h3>アップグレード</h3>
+    <div id="meta-upgrades-list"></div>
+    <button id="close-meta-btn" style="width: 100%; padding: 10px; margin-top: 15px; font-family: 'Courier New', monospace; background-color: #444; color: #e0e0e0; border: 1px solid #666; border-radius: 4px; cursor: pointer;">閉じる (ESC)</button>
+  </div>
+
+  <button id="meta-btn">永続強化</button>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

@@ -11,6 +11,7 @@ import { UIManager } from '@/ui/UIManager';
 import { InventoryUI } from '@/ui/InventoryUI';
 import { ShopUI } from '@/ui/ShopUI';
 import { Minimap } from '@/ui/Minimap';
+import { MetaProgressionUI } from '@/ui/MetaProgressionUI';
 import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
@@ -34,6 +35,7 @@ import { ItemAffixManager } from '@/items/ItemAffix';
 import { StatusEffectType } from '@/combat/StatusEffect';
 import { SaveManager, GameSaveData } from '@/utils/SaveManager';
 import { SoundManager, SoundType } from '@/utils/SoundManager';
+import { MetaProgression } from '@/character/MetaProgression';
 
 export class Game {
   private renderer: Renderer;
@@ -43,7 +45,9 @@ export class Game {
   private inventoryUI: InventoryUI;
   private shopUI: ShopUI;
   private minimap: Minimap;
+  private metaProgressionUI: MetaProgressionUI;
   private soundManager: SoundManager;
+  private metaProgression: MetaProgression;
 
   private world!: World;
   private map!: GameMap;
@@ -66,8 +70,11 @@ export class Game {
     this.shopUI = new ShopUI();
     this.minimap = new Minimap();
     this.soundManager = new SoundManager();
+    this.metaProgression = new MetaProgression();
+    this.metaProgressionUI = new MetaProgressionUI();
 
     this.setupEventListeners();
+    this.setupMetaProgressionUI();
   }
 
   /**
@@ -175,6 +182,43 @@ export class Game {
   }
 
   /**
+   * メタプログレッションUI設定
+   */
+  private setupMetaProgressionUI(): void {
+    // メタプログレッション画面を開くボタン
+    const metaBtn = document.getElementById('meta-btn');
+    if (metaBtn) {
+      metaBtn.addEventListener('click', () => {
+        this.metaProgressionUI.setMetaProgression(
+          this.metaProgression,
+          (upgrade) => this.handleUpgradePurchase(upgrade)
+        );
+        this.metaProgressionUI.toggle();
+      });
+    }
+  }
+
+  /**
+   * アップグレード購入処理
+   */
+  private handleUpgradePurchase(upgrade: any): void {
+    const success = this.metaProgression.purchaseUpgrade(upgrade.type);
+    if (success) {
+      this.soundManager.play(SoundType.PURCHASE);
+      this.uiManager.addMessage(
+        `${upgrade.name}を購入しました！`,
+        MessageType.SUCCESS
+      );
+    } else {
+      this.soundManager.play(SoundType.ERROR);
+      this.uiManager.addMessage(
+        'アップグレードを購入できませんでした',
+        MessageType.WARNING
+      );
+    }
+  }
+
+  /**
    * ゲーム初期化
    */
   initialize(): void {
@@ -185,6 +229,17 @@ export class Game {
     // プレイヤー配置
     const startPos = this.world.getRandomStartPosition();
     this.player = new Player(startPos.x, startPos.y);
+
+    // メタプログレッションの永続ボーナスを適用
+    const bonuses = this.metaProgression.getPermanentBonuses();
+    if (bonuses.hp > 0) this.player.stats.increaseMaxHp(bonuses.hp);
+    if (bonuses.mp > 0) this.player.stats.increaseMaxMp(bonuses.mp);
+    if (bonuses.attack > 0) this.player.stats.increaseAttack(bonuses.attack);
+    if (bonuses.defense > 0) this.player.stats.increaseDefense(bonuses.defense);
+    if (bonuses.gold > 0) this.player.addGold(bonuses.gold);
+
+    // 新規ラン記録
+    this.metaProgression.recordNewRun();
 
     // 階層をセットアップ
     this.setupFloor();
@@ -465,6 +520,16 @@ export class Game {
       return;
     }
 
+    // メタプログレッション
+    if (action === Action.META_PROGRESSION) {
+      this.metaProgressionUI.setMetaProgression(
+        this.metaProgression,
+        (upgrade) => this.handleUpgradePurchase(upgrade)
+      );
+      this.metaProgressionUI.toggle();
+      return;
+    }
+
     // アイテム拾う / 宝箱を開く
     if (action === Action.PICKUP) {
       turnEnded = this.pickupOrOpenChest();
@@ -631,6 +696,9 @@ export class Game {
    */
   private descendToNextFloor(): void {
     const nextFloor = this.world.getCurrentFloor() + 1;
+
+    // メタプログレッションに記録
+    this.metaProgression.recordFloor(nextFloor);
 
     this.uiManager.addMessage(
       `階段を降りて${nextFloor}階へ進んだ`,
@@ -1078,6 +1146,9 @@ export class Game {
    * 敵の死亡処理
    */
   private handleEnemyDeath(enemy: Enemy): void {
+    // メタプログレッションに記録
+    this.metaProgression.recordKill(enemy.isBoss);
+
     if (enemy.isBoss) {
       // ボス撃破時の特別報酬
       this.handleBossDefeat(enemy);
@@ -1085,6 +1156,7 @@ export class Game {
       // 通常の敵
       const goldDrop = 5 + Math.floor(Math.random() * 10) + this.world.getCurrentFloor() * 2;
       this.player.addGold(goldDrop);
+      this.metaProgression.recordGoldEarned(goldDrop);
 
       this.uiManager.addMessage(
         `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
@@ -1100,6 +1172,7 @@ export class Game {
     // 大量のゴールド（通常の10倍）
     const goldDrop = (50 + Math.floor(Math.random() * 50)) * 10;
     this.player.addGold(goldDrop);
+    this.metaProgression.recordGoldEarned(goldDrop);
 
     // 全回復
     this.player.stats.heal(this.player.stats.maxHp);

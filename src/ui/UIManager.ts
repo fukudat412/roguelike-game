@@ -346,4 +346,45 @@ export class UIManager {
       list.appendChild(effectDiv);
     });
   }
+
+  /**
+   * デイリーチャレンジを更新
+   */
+  updateDailyChallenges(challenges: Array<{
+    description: string;
+    current: number;
+    target: number;
+    completed: boolean;
+    reward: { metaPoints: number; gold: number };
+  }>): void {
+    const listElement = document.getElementById('daily-challenge-list');
+    if (!listElement) return;
+
+    listElement.innerHTML = '';
+
+    for (const challenge of challenges) {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = challenge.completed ? 'challenge-item completed' : 'challenge-item';
+
+      // 説明
+      const descSpan = document.createElement('span');
+      descSpan.className = 'challenge-desc';
+      descSpan.textContent = challenge.description;
+      itemDiv.appendChild(descSpan);
+
+      // 進捗
+      const progressSpan = document.createElement('span');
+      progressSpan.className = challenge.completed ? 'challenge-progress completed' : 'challenge-progress';
+      progressSpan.textContent = `${challenge.current}/${challenge.target}`;
+      itemDiv.appendChild(progressSpan);
+
+      // 報酬
+      const rewardSpan = document.createElement('span');
+      rewardSpan.className = 'challenge-reward';
+      rewardSpan.textContent = `+${challenge.reward.metaPoints}MP`;
+      itemDiv.appendChild(rewardSpan);
+
+      listElement.appendChild(itemDiv);
+    }
+  }
 }

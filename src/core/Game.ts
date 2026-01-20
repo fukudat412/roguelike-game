@@ -36,6 +36,7 @@ import { StatusEffectType } from '@/combat/StatusEffect';
 import { SaveManager, GameSaveData } from '@/utils/SaveManager';
 import { SoundManager, SoundType } from '@/utils/SoundManager';
 import { MetaProgression } from '@/character/MetaProgression';
+import { DailyChallenge, ChallengeType } from './DailyChallenge';
 
 export class Game {
   private renderer: Renderer;
@@ -48,6 +49,7 @@ export class Game {
   private metaProgressionUI: MetaProgressionUI;
   private soundManager: SoundManager;
   private metaProgression: MetaProgression;
+  private dailyChallenge: DailyChallenge;
 
   private world!: World;
   private map!: GameMap;
@@ -82,6 +84,7 @@ export class Game {
     this.soundManager = new SoundManager();
     this.metaProgression = new MetaProgression();
     this.metaProgressionUI = new MetaProgressionUI();
+    this.dailyChallenge = new DailyChallenge();
 
     this.setupEventListeners();
     this.setupMetaProgressionUI();
@@ -626,6 +629,9 @@ export class Game {
       // 統計を更新
       this.statistics.turnsPlayed++;
 
+      // デイリーチャレンジ進捗を更新
+      this.dailyChallenge.updateProgress(ChallengeType.SURVIVE_TURNS, 1);
+
       // プレイヤーのステータス効果を処理
       this.player.processStatusEffects();
       // スキルクールダウンを更新
@@ -760,6 +766,9 @@ export class Game {
 
     // メタプログレッションに記録
     this.metaProgression.recordFloor(nextFloor);
+
+    // デイリーチャレンジ進捗を更新
+    this.dailyChallenge.updateProgress(ChallengeType.REACH_FLOOR, nextFloor);
 
     this.uiManager.addMessage(
       `階段を降りて${nextFloor}階へ進んだ`,
@@ -927,6 +936,9 @@ export class Game {
       // 統計を更新
       this.statistics.itemsCollected++;
 
+      // デイリーチャレンジ進捗を更新
+      this.dailyChallenge.updateProgress(ChallengeType.COLLECT_ITEMS, 1);
+
       // マップからアイテムを削除
       this.items = this.items.filter(item => item !== itemAtPosition);
       this.soundManager.play(SoundType.PICKUP);
@@ -959,6 +971,9 @@ export class Game {
 
     // 統計を更新
     this.statistics.chestsOpened++;
+
+    // デイリーチャレンジ進捗を更新
+    this.dailyChallenge.updateProgress(ChallengeType.OPEN_CHESTS, 1);
 
     // アイテムを生成
     const playerPos = this.player.getPosition();
@@ -1216,6 +1231,9 @@ export class Game {
     // 統計を更新
     this.statistics.enemiesKilled++;
 
+    // デイリーチャレンジ進捗を更新
+    this.dailyChallenge.updateProgress(ChallengeType.KILL_ENEMIES, 1);
+
     // メタプログレッションに記録
     this.metaProgression.recordKill(enemy.isBoss);
 
@@ -1228,6 +1246,9 @@ export class Game {
       this.player.addGold(goldDrop);
       this.metaProgression.recordGoldEarned(goldDrop);
       this.statistics.goldEarned += goldDrop;
+
+      // デイリーチャレンジ進捗を更新
+      this.dailyChallenge.updateProgress(ChallengeType.EARN_GOLD, goldDrop);
 
       this.uiManager.addMessage(
         `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
@@ -1243,11 +1264,17 @@ export class Game {
     // 統計を更新
     this.statistics.bossesDefeated++;
 
+    // デイリーチャレンジ進捗を更新
+    this.dailyChallenge.updateProgress(ChallengeType.KILL_BOSSES, 1);
+
     // 大量のゴールド（通常の10倍）
     const goldDrop = (50 + Math.floor(Math.random() * 50)) * 10;
     this.player.addGold(goldDrop);
     this.metaProgression.recordGoldEarned(goldDrop);
     this.statistics.goldEarned += goldDrop;
+
+    // デイリーチャレンジ進捗を更新
+    this.dailyChallenge.updateProgress(ChallengeType.EARN_GOLD, goldDrop);
 
     // 全回復（HP + MP）
     this.player.stats.heal(this.player.stats.maxHp);
@@ -1715,6 +1742,10 @@ export class Game {
       } : null,
     };
     this.uiManager.updateEquipment(equipment);
+
+    // デイリーチャレンジを更新
+    const challenges = this.dailyChallenge.getChallenges();
+    this.uiManager.updateDailyChallenges(challenges);
   }
 
   /**

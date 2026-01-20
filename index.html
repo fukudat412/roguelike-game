@@ -81,6 +81,64 @@
       font-size: 14px;
     }
 
+    /* デイリーチャレンジ表示 */
+    #daily-challenge-panel {
+      display: block;
+      margin-bottom: 10px;
+      padding: 8px;
+      background-color: #2a2a2a;
+      border: 1px solid #ffaa00;
+      border-radius: 4px;
+    }
+
+    .daily-challenge-title {
+      font-size: 12px;
+      color: #ffaa00;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    .daily-challenge-list {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .challenge-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-radius: 3px;
+      font-size: 11px;
+    }
+
+    .challenge-item.completed {
+      background-color: rgba(0, 255, 100, 0.1);
+      border: 1px solid #00aa55;
+    }
+
+    .challenge-desc {
+      color: #e0e0e0;
+      flex: 1;
+    }
+
+    .challenge-progress {
+      color: #aaaaaa;
+      margin: 0 8px;
+    }
+
+    .challenge-progress.completed {
+      color: #00ff7f;
+      font-weight: bold;
+    }
+
+    .challenge-reward {
+      color: #ffaa00;
+      font-size: 10px;
+    }
+
     /* ステータス効果表示 */
     #status-effects-panel {
       display: none;
@@ -947,6 +1005,10 @@
             <span class="slot-item" id="equipped-accessory">なし</span>
           </div>
         </div>
+      </div>
+      <div id="daily-challenge-panel">
+        <div class="daily-challenge-title">今日のチャレンジ:</div>
+        <div class="daily-challenge-list" id="daily-challenge-list"></div>
       </div>
       <div id="status-effects-panel">
         <div class="status-effects-title">状態:</div>

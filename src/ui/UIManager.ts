@@ -160,6 +160,49 @@ export class UIManager {
   }
 
   /**
+   * 装備表示を更新
+   */
+  updateEquipment(equipment: {
+    weapon?: { name: string; rarity: string } | null;
+    armor?: { name: string; rarity: string } | null;
+    accessory?: { name: string; rarity: string } | null;
+  }): void {
+    const weaponElement = document.getElementById('equipped-weapon');
+    const armorElement = document.getElementById('equipped-armor');
+    const accessoryElement = document.getElementById('equipped-accessory');
+
+    if (weaponElement) {
+      if (equipment.weapon) {
+        weaponElement.textContent = equipment.weapon.name;
+        weaponElement.className = `slot-item item-${equipment.weapon.rarity.toLowerCase()}`;
+      } else {
+        weaponElement.textContent = 'なし';
+        weaponElement.className = 'slot-item';
+      }
+    }
+
+    if (armorElement) {
+      if (equipment.armor) {
+        armorElement.textContent = equipment.armor.name;
+        armorElement.className = `slot-item item-${equipment.armor.rarity.toLowerCase()}`;
+      } else {
+        armorElement.textContent = 'なし';
+        armorElement.className = 'slot-item';
+      }
+    }
+
+    if (accessoryElement) {
+      if (equipment.accessory) {
+        accessoryElement.textContent = equipment.accessory.name;
+        accessoryElement.className = `slot-item item-${equipment.accessory.rarity.toLowerCase()}`;
+      } else {
+        accessoryElement.textContent = 'なし';
+        accessoryElement.className = 'slot-item';
+      }
+    }
+  }
+
+  /**
    * ゲームオーバー画面を表示
    */
   showGameOver(): void {

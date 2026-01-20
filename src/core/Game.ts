@@ -23,7 +23,7 @@ import { Item, ItemType, ItemRarity } from '@/entities/Item';
 import { Stairs, StairsDirection } from '@/entities/Stairs';
 import { Shop } from '@/entities/Shop';
 import { Chest, ChestType, ChestTemplates } from '@/entities/Chest';
-import { Equipment as EquipmentComponent } from '@/entities/components/Equipment';
+import { Equipment as EquipmentComponent, EquipmentSlot } from '@/entities/components/Equipment';
 import { CombatEntity } from '@/entities/Entity';
 import { CombatSystem } from '@/combat/CombatSystem';
 import { Vector2D } from '@/utils/Vector2D';
@@ -266,8 +266,10 @@ export class Game {
         MessageType.WARNING
       );
     } else {
-      // 通常フロア：敵数は階層に応じて増加
-      const enemyCount = 8 + currentFloor * 2;
+      // 通常フロア：敵数は階層に応じて増加（緩やかな曲線）
+      const baseCount = 5;
+      const growthRate = Math.floor(currentFloor * 1.2);
+      const enemyCount = Math.min(baseCount + growthRate, 18); // 上限18体
       this.spawnEnemies(enemyCount);
 
       // 店を配置（30%の確率）
@@ -1174,8 +1176,14 @@ export class Game {
     this.player.addGold(goldDrop);
     this.metaProgression.recordGoldEarned(goldDrop);
 
-    // 全回復
+    // 全回復（HP + MP）
     this.player.stats.heal(this.player.stats.maxHp);
+    this.player.stats.restoreMp(this.player.stats.maxMp);
+
+    // 全スキルのクールダウンをリセット
+    for (const skill of this.player.skills) {
+      skill.resetCooldown();
+    }
 
     this.soundManager.play(SoundType.LEVEL_UP);
 
@@ -1188,7 +1196,11 @@ export class Game {
       MessageType.SUCCESS
     );
     this.uiManager.addMessage(
-      `HPが全回復した！`,
+      `HP・MPが全回復した！`,
+      MessageType.SUCCESS
+    );
+    this.uiManager.addMessage(
+      `全スキルのクールダウンがリセットされた！`,
       MessageType.SUCCESS
     );
 
@@ -1609,6 +1621,27 @@ export class Game {
       key: skillKeys[index],
     }));
     this.uiManager.updateSkills(skills);
+
+    // 装備を更新
+    const weaponItem = this.player.equipment.getEquipped(EquipmentSlot.WEAPON);
+    const armorItem = this.player.equipment.getEquipped(EquipmentSlot.ARMOR);
+    const accessoryItem = this.player.equipment.getEquipped(EquipmentSlot.ACCESSORY);
+
+    const equipment = {
+      weapon: weaponItem ? {
+        name: weaponItem.name,
+        rarity: weaponItem.rarity,
+      } : null,
+      armor: armorItem ? {
+        name: armorItem.name,
+        rarity: armorItem.rarity,
+      } : null,
+      accessory: accessoryItem ? {
+        name: accessoryItem.name,
+        rarity: accessoryItem.rarity,
+      } : null,
+    };
+    this.uiManager.updateEquipment(equipment);
   }
 
   /**

@@ -101,11 +101,20 @@ export class Player extends CombatEntity {
     this.experience = 0;
     this.experienceToNextLevel = Math.floor(this.experienceToNextLevel * 1.5);
 
-    // ステータス上昇
-    this.stats.increaseMaxHp(10);
-    this.stats.increaseMaxMp(5);
-    this.stats.increaseAttack(2);
-    this.stats.increaseDefense(1);
+    // ステータス上昇（レベルに応じてスケーリング）
+    const hpGain = 15 + Math.floor(this.level / 3) * 5; // 15 → 20 → 25 → ...
+    const mpGain = 8;
+    const attackGain = 3 + Math.floor(this.level / 5);  // 3 → 4 → 5 → ...
+    const defenseGain = 2 + Math.floor(this.level / 5); // 2 → 3 → 4 → ...
+
+    this.stats.increaseMaxHp(hpGain);
+    this.stats.increaseMaxMp(mpGain);
+    this.stats.increaseAttack(attackGain);
+    this.stats.increaseDefense(defenseGain);
+
+    // 全回復ボーナス
+    this.stats.heal(this.stats.maxHp);
+    this.stats.restoreMp(this.stats.maxMp);
 
     // ベースステータスを更新
     this.updateBaseStats();

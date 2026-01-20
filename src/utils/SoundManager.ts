@@ -13,6 +13,7 @@ export enum SoundType {
   LEVEL_UP = 'LEVEL_UP',
   PURCHASE = 'PURCHASE',
   ERROR = 'ERROR',
+  SKILL = 'SKILL',
 }
 
 export class SoundManager {
@@ -90,6 +91,9 @@ export class SoundManager {
           break;
         case SoundType.ERROR:
           this.playErrorSound(now);
+          break;
+        case SoundType.SKILL:
+          this.playSkillSound(now);
           break;
       }
     } catch (error) {
@@ -295,6 +299,39 @@ export class SoundManager {
 
     osc.start(startTime);
     osc.stop(startTime + 0.15);
+  }
+
+  /**
+   * スキル使用音
+   */
+  private playSkillSound(startTime: number): void {
+    if (!this.audioContext) return;
+
+    // 2音のコンボで魔法っぽい音を作る
+    const frequencies = [700, 1000];
+    frequencies.forEach((freq, i) => {
+      const osc = this.audioContext!.createOscillator();
+      const gain = this.audioContext!.createGain();
+
+      osc.connect(gain);
+      gain.connect(this.audioContext!.destination);
+
+      const time = startTime + i * 0.08;
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+
+      gain.gain.value = this.volume * 0.4;
+      gain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+
+      // リソースのクリーンアップ
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
+
+      osc.start(time);
+      osc.stop(time + 0.2);
+    });
   }
 
   /**

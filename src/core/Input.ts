@@ -18,6 +18,9 @@ export enum Action {
   STAIRS = 'STAIRS',
   SHOP = 'SHOP',
   CANCEL = 'CANCEL',
+  SKILL_1 = 'SKILL_1',
+  SKILL_2 = 'SKILL_2',
+  SKILL_3 = 'SKILL_3',
 }
 
 export class Input {
@@ -67,6 +70,11 @@ export class Input {
     this.keyMap.set('Enter', Action.STAIRS); // Enterキーでも階段を使える
     this.keyMap.set('t', Action.SHOP);
     this.keyMap.set('Escape', Action.CANCEL);
+
+    // スキル
+    this.keyMap.set('1', Action.SKILL_1);
+    this.keyMap.set('3', Action.SKILL_2);
+    this.keyMap.set('5', Action.SKILL_3);
   }
 
   /**

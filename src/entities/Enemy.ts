@@ -23,11 +23,13 @@ export interface EnemyTemplate {
   defense: number;
   experienceValue: number;
   specialAttack?: SpecialAttack;
+  isBoss?: boolean;
 }
 
 export class Enemy extends CombatEntity {
   public experienceValue: number;
   public specialAttack?: SpecialAttack;
+  public isBoss: boolean;
 
   constructor(x: number, y: number, template: EnemyTemplate) {
     const stats = new Stats(template.maxHp, template.attack, template.defense);
@@ -46,6 +48,7 @@ export class Enemy extends CombatEntity {
 
     this.experienceValue = template.experienceValue;
     this.specialAttack = template.specialAttack;
+    this.isBoss = template.isBoss || false;
   }
 
   /**

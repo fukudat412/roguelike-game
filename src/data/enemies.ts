@@ -184,6 +184,71 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     defense: 12,
     experienceValue: 200,
   },
+
+  // ボス敵
+  GOBLIN_KING: {
+    name: 'ゴブリンキング',
+    char: 'G',
+    color: '#00ff00',
+    maxHp: 100,
+    attack: 15,
+    defense: 8,
+    experienceValue: 100,
+    isBoss: true,
+    specialAttack: {
+      type: 'weaken',
+      chance: 0.3,
+      duration: 4,
+    },
+  },
+
+  ORC_LORD: {
+    name: 'オークロード',
+    char: 'O',
+    color: '#ff0000',
+    maxHp: 200,
+    attack: 25,
+    defense: 12,
+    experienceValue: 250,
+    isBoss: true,
+    specialAttack: {
+      type: 'vampiric',
+      chance: 0.5,
+      strength: 0.5,
+    },
+  },
+
+  ELDER_DRAGON: {
+    name: '古の竜',
+    char: 'D',
+    color: '#ff6600',
+    maxHp: 400,
+    attack: 40,
+    defense: 20,
+    experienceValue: 500,
+    isBoss: true,
+    specialAttack: {
+      type: 'poison',
+      chance: 0.4,
+      duration: 5,
+    },
+  },
+
+  ANCIENT_LICH: {
+    name: '古代リッチ',
+    char: 'L',
+    color: '#9933ff',
+    maxHp: 800,
+    attack: 60,
+    defense: 30,
+    experienceValue: 1000,
+    isBoss: true,
+    specialAttack: {
+      type: 'paralyze',
+      chance: 0.3,
+      duration: 3,
+    },
+  },
 };
 
 /**
@@ -230,4 +295,30 @@ export function getEnemiesForFloor(floor: number): EnemyTemplate[] {
 export function getRandomEnemyForFloor(floor: number): EnemyTemplate {
   const enemies = getEnemiesForFloor(floor);
   return enemies[Math.floor(Math.random() * enemies.length)];
+}
+
+/**
+ * ボスフロアかチェック
+ */
+export function isBossFloor(floor: number): boolean {
+  return floor > 0 && floor % 5 === 0;
+}
+
+/**
+ * 階層に応じたボスを取得
+ */
+export function getBossForFloor(floor: number): EnemyTemplate | null {
+  if (!isBossFloor(floor)) return null;
+
+  if (floor === 5) {
+    return EnemyDatabase.GOBLIN_KING;
+  } else if (floor === 10) {
+    return EnemyDatabase.ORC_LORD;
+  } else if (floor === 15) {
+    return EnemyDatabase.ELDER_DRAGON;
+  } else if (floor >= 20) {
+    return EnemyDatabase.ANCIENT_LICH;
+  }
+
+  return null;
 }

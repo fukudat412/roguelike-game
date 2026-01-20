@@ -8,6 +8,13 @@ import { Stats } from './components/Stats';
 import { Inventory } from './components/Inventory';
 import { Equipment } from './components/Equipment';
 import { eventBus, GameEvents } from '@/core/EventBus';
+import {
+  Skill,
+  SkillType,
+  PowerStrikeSkill,
+  AreaSlashSkill,
+  HealingPrayerSkill,
+} from '@/character/Skill';
 
 export class Player extends CombatEntity {
   public level: number = 1;
@@ -16,6 +23,7 @@ export class Player extends CombatEntity {
   public gold: number = 50; // 初期ゴールド
   public inventory: Inventory;
   public equipment: Equipment;
+  public skills: Skill[] = [];
   private baseStats: Stats;
 
   constructor(x: number, y: number) {
@@ -40,6 +48,13 @@ export class Player extends CombatEntity {
     this.baseStats = stats.clone();
     this.inventory = inventory;
     this.equipment = equipment;
+
+    // 初期スキルを付与
+    this.skills = [
+      new PowerStrikeSkill(),
+      new AreaSlashSkill(),
+      new HealingPrayerSkill(),
+    ];
   }
 
   /**
@@ -88,6 +103,7 @@ export class Player extends CombatEntity {
 
     // ステータス上昇
     this.stats.increaseMaxHp(10);
+    this.stats.increaseMaxMp(5);
     this.stats.increaseAttack(2);
     this.stats.increaseDefense(1);
 
@@ -165,5 +181,24 @@ export class Player extends CombatEntity {
     this.gold -= amount;
     eventBus.emit(GameEvents.UI_UPDATE);
     return true;
+  }
+
+  /**
+   * スキルクールダウンを更新（ターン経過時）
+   */
+  updateSkillCooldowns(): void {
+    for (const skill of this.skills) {
+      skill.updateCooldown();
+    }
+  }
+
+  /**
+   * スキルを取得
+   */
+  getSkill(index: number): Skill | null {
+    if (index < 0 || index >= this.skills.length) {
+      return null;
+    }
+    return this.skills[index];
   }
 }

@@ -163,6 +163,86 @@
       border: 1px solid #8b4513;
     }
 
+    /* スキル表示 */
+    #skills-panel {
+      display: block;
+      margin-bottom: 10px;
+      padding: 8px;
+      background-color: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 4px;
+    }
+
+    .skills-title {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 5px;
+    }
+
+    .skills-list {
+      display: flex;
+      gap: 10px;
+    }
+
+    .skill {
+      flex: 1;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      background-color: #3a3a3a;
+      border: 1px solid #555;
+      text-align: center;
+    }
+
+    .skill-ready {
+      background-color: #2d4a4a;
+      border-color: #4ecdc4;
+    }
+
+    .skill-cooldown {
+      opacity: 0.5;
+      background-color: #3a2d2d;
+      border-color: #8b4513;
+    }
+
+    .skill-no-mp {
+      opacity: 0.6;
+      background-color: #2d2d4a;
+      border-color: #6b6baa;
+    }
+
+    .skill-name {
+      font-weight: bold;
+      color: #4ecdc4;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .skill-cooldown .skill-name {
+      color: #cd853f;
+    }
+
+    .skill-no-mp .skill-name {
+      color: #8888ff;
+    }
+
+    .skill-cost {
+      color: #88ccff;
+      font-size: 10px;
+    }
+
+    .skill-cd {
+      color: #ff8888;
+      font-size: 10px;
+    }
+
+    .skill-key {
+      color: #ffdd57;
+      font-size: 10px;
+      margin-top: 2px;
+      display: block;
+    }
+
     #game-over {
       display: none;
       position: fixed;
@@ -532,10 +612,15 @@
     <div id="ui-container">
       <div id="stats-panel">
         <div class="stat">HP: <span id="player-hp">100</span>/<span id="player-max-hp">100</span></div>
+        <div class="stat">MP: <span id="player-mp">50</span>/<span id="player-max-mp">50</span></div>
         <div class="stat">攻撃力: <span id="player-attack">10</span></div>
         <div class="stat">防御力: <span id="player-defense">5</span></div>
         <div class="stat">ゴールド: <span id="player-gold">50</span></div>
         <div class="stat">階層: <span id="current-floor">1</span></div>
+      </div>
+      <div id="skills-panel">
+        <div class="skills-title">スキル:</div>
+        <div class="skills-list" id="skills-list"></div>
       </div>
       <div id="status-effects-panel">
         <div class="status-effects-title">状態:</div>
@@ -627,6 +712,21 @@
       <div class="control-item">
         <span class="control-key">Space</span>
         <span class="control-desc">待機</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="control-group-title">スキル</div>
+      <div class="control-item">
+        <span class="control-key">1</span>
+        <span class="control-desc">強打</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">3</span>
+        <span class="control-desc">範囲斬り</span>
+      </div>
+      <div class="control-item">
+        <span class="control-key">5</span>
+        <span class="control-desc">回復の祈り</span>
       </div>
     </div>
   </div>

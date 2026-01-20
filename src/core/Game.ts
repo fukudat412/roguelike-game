@@ -18,16 +18,17 @@ import { CaveGenerator } from '@/world/generators/CaveGenerator';
 import { BSPGenerator } from '@/world/generators/BSPGenerator';
 import { Player } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
-import { Item, ItemType } from '@/entities/Item';
+import { Item, ItemType, ItemRarity } from '@/entities/Item';
 import { Stairs, StairsDirection } from '@/entities/Stairs';
 import { Shop } from '@/entities/Shop';
+import { Chest, ChestType, ChestTemplates } from '@/entities/Chest';
 import { Equipment as EquipmentComponent } from '@/entities/components/Equipment';
 import { CombatEntity } from '@/entities/Entity';
 import { CombatSystem } from '@/combat/CombatSystem';
 import { Vector2D } from '@/utils/Vector2D';
 import { MessageType } from '@/ui/MessageLog';
 import { rollRandomItem, getItemData } from '@/data/items';
-import { getRandomEnemyForFloor } from '@/data/enemies';
+import { getRandomEnemyForFloor, isBossFloor, getBossForFloor } from '@/data/enemies';
 import { AStar } from '@/ai/pathfinding/AStar';
 import { ItemAffixManager } from '@/items/ItemAffix';
 import { StatusEffectType } from '@/combat/StatusEffect';
@@ -51,6 +52,7 @@ export class Game {
   private items: Item[] = [];
   private stairs!: Stairs;
   private shop!: Shop | null;
+  private chests: Chest[] = [];
 
   private lastFrameTime: number = 0;
   private running: boolean = false;
@@ -196,21 +198,38 @@ export class Game {
     this.enemies = [];
     this.items = [];
     this.shop = null;
+    this.chests = [];
 
-    // 敵数は階層に応じて増加
-    const enemyCount = 8 + this.world.getCurrentFloor() * 2;
-    this.spawnEnemies(enemyCount);
+    const currentFloor = this.world.getCurrentFloor();
+
+    // ボスフロアチェック
+    if (isBossFloor(currentFloor)) {
+      // ボス戦
+      this.spawnBoss();
+      this.uiManager.addMessage(
+        `【警告】ボス階層に到達した！`,
+        MessageType.WARNING
+      );
+    } else {
+      // 通常フロア：敵数は階層に応じて増加
+      const enemyCount = 8 + currentFloor * 2;
+      this.spawnEnemies(enemyCount);
+
+      // 店を配置（30%の確率）
+      if (Math.random() < 0.3) {
+        this.spawnShop();
+      }
+    }
 
     // アイテムを配置
     this.spawnItems(15);
 
+    // 宝箱を配置（2-4個）
+    const chestCount = 2 + Math.floor(Math.random() * 3);
+    this.spawnChests(chestCount);
+
     // 階段を配置
     this.spawnStairs();
-
-    // 店を配置（30%の確率）
-    if (Math.random() < 0.3) {
-      this.spawnShop();
-    }
 
     // インベントリUIの設定
     this.inventoryUI.setInventory(this.player.inventory);
@@ -307,6 +326,80 @@ export class Game {
   }
 
   /**
+   * ボスを配置
+   */
+  private spawnBoss(): void {
+    const currentFloor = this.world.getCurrentFloor();
+    const bossTemplate = getBossForFloor(currentFloor);
+
+    if (!bossTemplate) return;
+
+    // ボスを配置
+    const bossCell = this.map.getRandomWalkableCell();
+    if (!bossCell) return;
+
+    const bossPos = bossCell.position;
+
+    // プレイヤーから離れた位置に配置
+    if (this.player.getPosition().distanceTo(bossPos) < 15) {
+      this.spawnBoss(); // 再試行
+      return;
+    }
+
+    const boss = new Enemy(bossPos.x, bossPos.y, bossTemplate);
+    this.enemies.push(boss);
+
+    this.uiManager.addMessage(
+      `${boss.name}が現れた！`,
+      MessageType.WARNING
+    );
+
+    // ボスの周りに少数の雑魚敵も配置（3-5体）
+    const minionCount = 3 + Math.floor(Math.random() * 3);
+    this.spawnEnemies(minionCount);
+  }
+
+  /**
+   * 宝箱を配置
+   */
+  private spawnChests(count: number): void {
+    for (let i = 0; i < count; i++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
+
+      const pos = cell.position;
+
+      // プレイヤーとの距離をチェック
+      if (this.player.getPosition().distanceTo(pos) < 8) {
+        continue;
+      }
+
+      // 既存の宝箱と重ならないようにチェック
+      const occupied = this.chests.some(c => c.getPosition().equals(pos));
+      if (occupied) continue;
+
+      // ランダムに宝箱タイプを選択
+      const roll = Math.random();
+      let chestType: ChestType;
+
+      if (roll < 0.5) {
+        chestType = ChestType.WOODEN;
+      } else if (roll < 0.8) {
+        chestType = ChestType.IRON;
+      } else if (roll < 0.95) {
+        chestType = ChestType.GOLDEN;
+      } else {
+        chestType = ChestType.TRAPPED;
+      }
+
+      const template = ChestTemplates[chestType];
+      const chest = new Chest(pos.x, pos.y, template);
+
+      this.chests.push(chest);
+    }
+  }
+
+  /**
    * ゲームループ開始
    */
   start(): void {
@@ -372,9 +465,9 @@ export class Game {
       return;
     }
 
-    // アイテム拾う
+    // アイテム拾う / 宝箱を開く
     if (action === Action.PICKUP) {
-      turnEnded = this.pickupItem();
+      turnEnded = this.pickupOrOpenChest();
     }
 
     // 階段を使う
@@ -388,6 +481,17 @@ export class Game {
       turnEnded = this.interactWithShop();
     }
 
+    // スキル使用
+    if (action === Action.SKILL_1) {
+      turnEnded = this.useSkill(0);
+    }
+    if (action === Action.SKILL_2) {
+      turnEnded = this.useSkill(1);
+    }
+    if (action === Action.SKILL_3) {
+      turnEnded = this.useSkill(2);
+    }
+
     // 移動アクション
     const direction = Input.actionToDirection(action);
     if (direction) {
@@ -398,6 +502,8 @@ export class Game {
     if (turnEnded) {
       // プレイヤーのステータス効果を処理
       this.player.processStatusEffects();
+      // スキルクールダウンを更新
+      this.player.updateSkillCooldowns();
       this.gameState.advanceTurn();
     }
   }
@@ -483,6 +589,41 @@ export class Game {
       this.soundManager.play(SoundType.ERROR);
       this.uiManager.addMessage(result.message, MessageType.WARNING);
     }
+  }
+
+  /**
+   * スキルを使用
+   */
+  private useSkill(skillIndex: number): boolean {
+    const skill = this.player.getSkill(skillIndex);
+    if (!skill) {
+      return false;
+    }
+
+    if (!skill.canUse(this.player)) {
+      if (skill.currentCooldown > 0) {
+        this.uiManager.addMessage(
+          `${skill.data.name}はクールダウン中です (残り${skill.currentCooldown}ターン)`,
+          MessageType.WARNING
+        );
+      } else {
+        this.uiManager.addMessage(
+          `MPが足りません (必要: ${skill.data.mpCost}, 現在: ${this.player.stats.mp})`,
+          MessageType.WARNING
+        );
+      }
+      this.soundManager.play(SoundType.ERROR);
+      return false;
+    }
+
+    const success = skill.use(this.player, this.enemies);
+    if (success) {
+      this.soundManager.play(SoundType.SKILL);
+      this.updateUI();
+      return true; // ターン消費
+    }
+
+    return false;
   }
 
   /**
@@ -626,18 +767,27 @@ export class Game {
   }
 
   /**
-   * アイテムを拾う
+   * アイテムを拾う または 宝箱を開く
    */
-  private pickupItem(): boolean {
+  private pickupOrOpenChest(): boolean {
     const playerPos = this.player.getPosition();
 
-    // プレイヤーの位置にあるアイテムを検索
+    // まず宝箱をチェック
+    const chestAtPosition = this.chests.find(chest =>
+      !chest.isOpened && chest.getPosition().equals(playerPos)
+    );
+
+    if (chestAtPosition) {
+      return this.openChest(chestAtPosition);
+    }
+
+    // 宝箱がなければアイテムをチェック
     const itemAtPosition = this.items.find(item =>
       item.getPosition().equals(playerPos)
     );
 
     if (!itemAtPosition) {
-      this.uiManager.addMessage('ここにはアイテムがない', MessageType.INFO);
+      this.uiManager.addMessage('ここにはアイテムも宝箱もない', MessageType.INFO);
       return false;
     }
 
@@ -652,6 +802,83 @@ export class Game {
     }
 
     return false;
+  }
+
+  /**
+   * 宝箱を開く
+   */
+  private openChest(chest: Chest): boolean {
+    const template = chest.template;
+
+    // 罠チェック
+    if (Math.random() < template.trapChance) {
+      this.player.stats.takeDamage(template.trapDamage);
+      this.soundManager.play(SoundType.DAMAGE);
+      this.uiManager.addMessage(
+        `罠だ！${template.trapDamage}ダメージを受けた！`,
+        MessageType.WARNING
+      );
+    } else {
+      this.soundManager.play(SoundType.PICKUP);
+    }
+
+    // 宝箱を開ける
+    chest.open();
+
+    // アイテムを生成
+    const playerPos = this.player.getPosition();
+    for (let i = 0; i < template.itemCount; i++) {
+      const itemData = this.generateItemForChest(template.minRarity, template.maxRarity);
+      const item = new Item(playerPos.x, playerPos.y, itemData);
+
+      // レア度を設定
+      const rarityRoll = Math.random();
+      if (rarityRoll < 0.4) {
+        item.rarity = template.minRarity;
+      } else if (rarityRoll < 0.8) {
+        // 中間のレア度
+        const midRarity = this.getMidRarity(template.minRarity, template.maxRarity);
+        item.rarity = midRarity;
+      } else {
+        item.rarity = template.maxRarity;
+      }
+
+      this.items.push(item);
+    }
+
+    this.uiManager.addMessage(
+      `${chest.name}を開けた！${template.itemCount}個のアイテムを発見！`,
+      MessageType.SUCCESS
+    );
+
+    this.updateUI();
+    return true;
+  }
+
+  /**
+   * 宝箱用のアイテムを生成
+   */
+  private generateItemForChest(minRarity: ItemRarity, maxRarity: ItemRarity): any {
+    return rollRandomItem();
+  }
+
+  /**
+   * レア度の中間を取得
+   */
+  private getMidRarity(minRarity: ItemRarity, maxRarity: ItemRarity): ItemRarity {
+    const rarities = [
+      ItemRarity.COMMON,
+      ItemRarity.UNCOMMON,
+      ItemRarity.RARE,
+      ItemRarity.EPIC,
+      ItemRarity.LEGENDARY,
+    ];
+
+    const minIndex = rarities.indexOf(minRarity);
+    const maxIndex = rarities.indexOf(maxRarity);
+    const midIndex = Math.floor((minIndex + maxIndex) / 2);
+
+    return rarities[midIndex];
   }
 
   /**
@@ -851,12 +1078,78 @@ export class Game {
    * 敵の死亡処理
    */
   private handleEnemyDeath(enemy: Enemy): void {
-    // ゴールドをドロップ
-    const goldDrop = 5 + Math.floor(Math.random() * 10) + this.world.getCurrentFloor() * 2;
+    if (enemy.isBoss) {
+      // ボス撃破時の特別報酬
+      this.handleBossDefeat(enemy);
+    } else {
+      // 通常の敵
+      const goldDrop = 5 + Math.floor(Math.random() * 10) + this.world.getCurrentFloor() * 2;
+      this.player.addGold(goldDrop);
+
+      this.uiManager.addMessage(
+        `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
+        MessageType.SUCCESS
+      );
+    }
+  }
+
+  /**
+   * ボス撃破時の処理
+   */
+  private handleBossDefeat(boss: Enemy): void {
+    // 大量のゴールド（通常の10倍）
+    const goldDrop = (50 + Math.floor(Math.random() * 50)) * 10;
     this.player.addGold(goldDrop);
 
+    // 全回復
+    this.player.stats.heal(this.player.stats.maxHp);
+
+    this.soundManager.play(SoundType.LEVEL_UP);
+
     this.uiManager.addMessage(
-      `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
+      `【勝利】${boss.name}を撃破した！`,
+      MessageType.SUCCESS
+    );
+    this.uiManager.addMessage(
+      `${goldDrop}ゴールドを手に入れた！`,
+      MessageType.SUCCESS
+    );
+    this.uiManager.addMessage(
+      `HPが全回復した！`,
+      MessageType.SUCCESS
+    );
+
+    // レジェンダリー装備をドロップ
+    this.dropLegendaryItem(boss.getPosition());
+  }
+
+  /**
+   * レジェンダリー装備をドロップ
+   */
+  private dropLegendaryItem(position: Vector2D): void {
+    // ランダムなレジェンダリー装備を生成
+    const itemData = rollRandomItem();
+    const item = new Item(position.x, position.y, itemData);
+
+    // 強制的にレジェンダリーにする
+    item.rarity = ItemRarity.LEGENDARY;
+
+    // 接頭辞と接尾辞を両方付与
+    const prefix = ItemAffixManager.getRandomPrefix();
+    const suffix = ItemAffixManager.getRandomSuffix();
+
+    if (prefix && suffix) {
+      const newName = ItemAffixManager.generateName(item.name, prefix, suffix);
+      item.name = newName;
+
+      const newDesc = ItemAffixManager.generateDescription(item.description, prefix, suffix);
+      item.description = newDesc;
+    }
+
+    this.items.push(item);
+
+    this.uiManager.addMessage(
+      `【レジェンダリー】${item.name}を発見した！`,
       MessageType.SUCCESS
     );
   }
@@ -1075,6 +1368,43 @@ export class Game {
       }
     }
 
+    // 宝箱を描画
+    for (const chest of this.chests) {
+      if (chest.isOpened) continue; // 開けた宝箱はスキップ
+
+      const pos = chest.getPosition();
+      const cell = this.map.getCellAt(pos);
+
+      // 可視範囲内のみ描画
+      if (cell && cell.visible) {
+        const screenPos = this.renderer.gridToScreen(pos.x, pos.y);
+        const tileSize = this.renderer.getTileSize();
+        const renderInfo = chest.getRenderInfo();
+
+        // 背景
+        this.renderer.drawRect(
+          screenPos.x,
+          screenPos.y,
+          tileSize,
+          tileSize,
+          { fillColor: '#3a2a1a' }
+        );
+
+        // 宝箱
+        this.renderer.drawText(
+          renderInfo.char,
+          screenPos.x + tileSize / 2,
+          screenPos.y + tileSize / 2,
+          {
+            color: renderInfo.color,
+            font: 'bold 24px monospace',
+            align: 'center',
+            baseline: 'middle',
+          }
+        );
+      }
+    }
+
     // アイテムを描画
     for (const item of this.items) {
       const pos = item.getPosition();
@@ -1193,6 +1523,19 @@ export class Game {
       duration: effect.turnsRemaining,
     }));
     this.uiManager.updateStatusEffects(effects);
+
+    // スキルを更新
+    const skillKeys = ['1', '3', '5'];
+    const skills = this.player.skills.map((skill, index) => ({
+      name: skill.data.name,
+      icon: skill.data.icon,
+      mpCost: skill.data.mpCost,
+      cooldown: skill.currentCooldown,
+      canUse: skill.canUse(this.player),
+      hasEnoughMp: this.player.stats.mp >= skill.data.mpCost,
+      key: skillKeys[index],
+    }));
+    this.uiManager.updateSkills(skills);
   }
 
   /**

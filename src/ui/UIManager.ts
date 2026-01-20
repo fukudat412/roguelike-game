@@ -65,18 +65,24 @@ export class UIManager {
   updatePlayerStats(stats: {
     hp: number;
     maxHp: number;
+    mp?: number;
+    maxMp?: number;
     attack: number;
     defense: number;
     gold?: number;
   }): void {
     const hpElement = document.getElementById('player-hp');
     const maxHpElement = document.getElementById('player-max-hp');
+    const mpElement = document.getElementById('player-mp');
+    const maxMpElement = document.getElementById('player-max-mp');
     const attackElement = document.getElementById('player-attack');
     const defenseElement = document.getElementById('player-defense');
     const goldElement = document.getElementById('player-gold');
 
     if (hpElement) hpElement.textContent = stats.hp.toString();
     if (maxHpElement) maxHpElement.textContent = stats.maxHp.toString();
+    if (mpElement && stats.mp !== undefined) mpElement.textContent = stats.mp.toString();
+    if (maxMpElement && stats.maxMp !== undefined) maxMpElement.textContent = stats.maxMp.toString();
     if (attackElement) attackElement.textContent = stats.attack.toString();
     if (defenseElement) defenseElement.textContent = stats.defense.toString();
     if (goldElement && stats.gold !== undefined) goldElement.textContent = stats.gold.toString();
@@ -89,6 +95,67 @@ export class UIManager {
     const floorElement = document.getElementById('current-floor');
     if (floorElement) {
       floorElement.textContent = floor.toString();
+    }
+  }
+
+  /**
+   * スキル表示を更新
+   */
+  updateSkills(skills: Array<{
+    name: string;
+    icon: string;
+    mpCost: number;
+    cooldown: number;
+    canUse: boolean;
+    hasEnoughMp: boolean;
+    key: string;
+  }>): void {
+    const skillsListElement = document.getElementById('skills-list');
+    if (!skillsListElement) return;
+
+    skillsListElement.innerHTML = '';
+
+    for (const skill of skills) {
+      const skillDiv = document.createElement('div');
+
+      // クラスを決定
+      let skillClass = 'skill';
+      if (skill.cooldown > 0) {
+        skillClass += ' skill-cooldown';
+      } else if (!skill.hasEnoughMp) {
+        skillClass += ' skill-no-mp';
+      } else if (skill.canUse) {
+        skillClass += ' skill-ready';
+      }
+
+      skillDiv.className = skillClass;
+
+      // スキル名
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'skill-name';
+      nameSpan.textContent = `${skill.icon} ${skill.name}`;
+      skillDiv.appendChild(nameSpan);
+
+      // MPコストまたはクールダウン
+      if (skill.cooldown > 0) {
+        const cdSpan = document.createElement('span');
+        cdSpan.className = 'skill-cd';
+        cdSpan.textContent = `CD: ${skill.cooldown}`;
+        skillDiv.appendChild(cdSpan);
+      } else {
+        const costSpan = document.createElement('span');
+        costSpan.className = 'skill-cost';
+        costSpan.textContent = `MP ${skill.mpCost}`;
+        skillDiv.appendChild(costSpan);
+      }
+
+      // キー表示
+      const keySpan = document.createElement('span');
+      keySpan.className = 'skill-key';
+      keySpan.textContent = `[${skill.key}]`;
+      skillDiv.appendChild(keySpan);
+
+      skillsListElement.appendChild(skillDiv);
     }
   }
 

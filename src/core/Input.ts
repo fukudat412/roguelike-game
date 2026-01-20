@@ -21,6 +21,11 @@ export enum Action {
   SKILL_1 = 'SKILL_1',
   SKILL_2 = 'SKILL_2',
   SKILL_3 = 'SKILL_3',
+  SKILL_4 = 'SKILL_4',
+  SKILL_5 = 'SKILL_5',
+  SKILL_6 = 'SKILL_6',
+  SKILL_7 = 'SKILL_7',
+  SKILL_8 = 'SKILL_8',
   META_PROGRESSION = 'META_PROGRESSION',
 }
 
@@ -76,6 +81,11 @@ export class Input {
     this.keyMap.set('1', Action.SKILL_1);
     this.keyMap.set('3', Action.SKILL_2);
     this.keyMap.set('5', Action.SKILL_3);
+    this.keyMap.set('7', Action.SKILL_4);
+    this.keyMap.set('9', Action.SKILL_5);
+    this.keyMap.set('q', Action.SKILL_6);
+    this.keyMap.set('e', Action.SKILL_7);
+    this.keyMap.set('r', Action.SKILL_8);
 
     // メタプログレッション
     this.keyMap.set('m', Action.META_PROGRESSION);

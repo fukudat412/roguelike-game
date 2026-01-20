@@ -14,6 +14,11 @@ import {
   PowerStrikeSkill,
   AreaSlashSkill,
   HealingPrayerSkill,
+  FireballSkill,
+  TeleportSkill,
+  BerserkSkill,
+  IceWallSkill,
+  LifeStealSkill,
 } from '@/character/Skill';
 
 export class Player extends CombatEntity {
@@ -49,11 +54,16 @@ export class Player extends CombatEntity {
     this.inventory = inventory;
     this.equipment = equipment;
 
-    // 初期スキルを付与
+    // 初期スキルを付与（全8種類）
     this.skills = [
-      new PowerStrikeSkill(),
-      new AreaSlashSkill(),
-      new HealingPrayerSkill(),
+      new PowerStrikeSkill(),    // 1キー
+      new AreaSlashSkill(),       // 3キー
+      new HealingPrayerSkill(),   // 5キー
+      new FireballSkill(),        // 7キー
+      new TeleportSkill(),        // 9キー
+      new BerserkSkill(),         // Qキー
+      new IceWallSkill(),         // Eキー
+      new LifeStealSkill(),       // Rキー
     ];
   }
 

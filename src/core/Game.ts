@@ -558,6 +558,21 @@ export class Game {
     if (action === Action.SKILL_3) {
       turnEnded = this.useSkill(2);
     }
+    if (action === Action.SKILL_4) {
+      turnEnded = this.useSkill(3);
+    }
+    if (action === Action.SKILL_5) {
+      turnEnded = this.useSkill(4);
+    }
+    if (action === Action.SKILL_6) {
+      turnEnded = this.useSkill(5);
+    }
+    if (action === Action.SKILL_7) {
+      turnEnded = this.useSkill(6);
+    }
+    if (action === Action.SKILL_8) {
+      turnEnded = this.useSkill(7);
+    }
 
     // 移動アクション
     const direction = Input.actionToDirection(action);
@@ -1610,7 +1625,7 @@ export class Game {
     this.uiManager.updateStatusEffects(effects);
 
     // スキルを更新
-    const skillKeys = ['1', '3', '5'];
+    const skillKeys = ['1', '3', '5', '7', '9', 'Q', 'E', 'R'];
     const skills = this.player.skills.map((skill, index) => ({
       name: skill.data.name,
       icon: skill.data.icon,

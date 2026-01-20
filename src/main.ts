@@ -5,6 +5,8 @@
 
 import { Game } from './core/Game';
 import { Logger } from './utils/Logger';
+import { DungeonSelectionUI } from './ui/DungeonSelectionUI';
+import { DungeonType } from './world/DungeonType';
 
 // グローバルエラーハンドリング
 window.addEventListener('error', (event) => {
@@ -23,17 +25,23 @@ window.addEventListener('DOMContentLoaded', () => {
   // ゲームインスタンス作成
   const game = new Game(canvas);
 
-  // 初期化
-  game.initialize();
+  // ダンジョン選択UIを表示
+  const dungeonSelection = new DungeonSelectionUI('dungeon-selection', (dungeonType: DungeonType) => {
+    // 選択されたダンジョンタイプでゲームを初期化
+    game.initialize(dungeonType);
 
-  // 開始
-  game.start();
+    // 開始
+    game.start();
 
-  console.log('ローグライク探索ゲーム開始！');
-  console.log('操作方法:');
-  console.log('  移動: WASD / 矢印キー / テンキー');
-  console.log('  攻撃: 敵に向かって移動');
-  console.log('  待機: スペースキー');
+    console.log(`ローグライク探索ゲーム開始！ (${dungeonType})`);
+    console.log('操作方法:');
+    console.log('  移動: WASD / 矢印キー / テンキー');
+    console.log('  攻撃: 敵に向かって移動');
+    console.log('  待機: スペースキー');
+  });
+
+  // ダンジョン選択UIを表示
+  dungeonSelection.show();
 
   // グローバルに公開（開発環境のみ）
   if (import.meta.env.DEV) {

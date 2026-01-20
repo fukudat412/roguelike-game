@@ -971,9 +971,75 @@
     #meta-btn:hover {
       background-color: #aa44ff;
     }
+    /* ダンジョン選択UI */
+    #dungeon-selection {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .dungeon-selection-title {
+      color: #fff;
+      font-size: 32px;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .dungeon-cards {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1200px;
+    }
+
+    .dungeon-card {
+      background: #2a2a2a;
+      border: 3px solid;
+      border-radius: 12px;
+      padding: 30px;
+      width: 250px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .dungeon-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px currentColor;
+    }
+
+    .dungeon-icon {
+      font-size: 64px;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .dungeon-name {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .dungeon-description {
+      font-size: 14px;
+      color: #ccc;
+      text-align: center;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
+  <div id="dungeon-selection"></div>
   <div id="game-container">
     <canvas id="game-canvas" width="800" height="600"></canvas>
     <div id="ui-container">

@@ -8,12 +8,19 @@ import { RoomGenerator } from './generators/RoomGenerator';
 import { CaveGenerator } from './generators/CaveGenerator';
 import { BSPGenerator } from './generators/BSPGenerator';
 import { Vector2D } from '@/utils/Vector2D';
+import { DungeonType, DungeonConfig } from './DungeonType';
+import { DUNGEON_CONFIGS } from '@/data/dungeonConfigs';
 
 export class World {
   private floors: Map<number, GameMap> = new Map();
   private currentFloor: number = 1;
+  private dungeonType: DungeonType;
+  private dungeonConfig: DungeonConfig;
 
-  constructor() {
+  constructor(dungeonType: DungeonType = DungeonType.CAVE) {
+    this.dungeonType = dungeonType;
+    this.dungeonConfig = DUNGEON_CONFIGS[dungeonType];
+
     // 最初の階層を生成
     this.generateFloor(1);
   }
@@ -27,19 +34,19 @@ export class World {
       return this.floors.get(floorNumber)!;
     }
 
-    // マップ生成アルゴリズムをランダムに選択
-    const generatorType = Math.random();
+    // ダンジョン設定に基づいてマップ生成アルゴリズムを選択
+    const algorithm = this.selectGenerationAlgorithm();
     let map: GameMap;
 
-    if (generatorType < 0.4) {
-      // 40%: ルームベース
+    if (algorithm === 'room') {
+      // ルームベース
       map = RoomGenerator.generate(80, 60, {
         minRoomSize: 5,
         maxRoomSize: 12,
         maxRooms: 15 + floorNumber * 2,
       });
-    } else if (generatorType < 0.7) {
-      // 30%: 洞窟型
+    } else if (algorithm === 'cave') {
+      // 洞窟型
       map = CaveGenerator.generate(80, 60, {
         fillProbability: 0.45,
         smoothIterations: 5,
@@ -47,7 +54,7 @@ export class World {
         birthLimit: 4,
       });
     } else {
-      // 30%: BSP分割型
+      // BSP分割型
       map = BSPGenerator.generate(80, 60, {
         minRoomSize: 4,
         maxRoomSize: 10,
@@ -56,8 +63,41 @@ export class World {
       });
     }
 
+    // 環境効果を適用
+    this.applyEnvironmentalEffects(map, floorNumber);
+
     this.floors.set(floorNumber, map);
     return map;
+  }
+
+  /**
+   * ダンジョン設定に基づいてマップ生成アルゴリズムを選択
+   */
+  private selectGenerationAlgorithm(): 'room' | 'cave' | 'bsp' {
+    const rand = Math.random();
+    let cumulative = 0;
+
+    for (const config of this.dungeonConfig.mapGeneration) {
+      cumulative += config.weight;
+      if (rand < cumulative) {
+        return config.algorithm;
+      }
+    }
+
+    // フォールバック: 最初のアルゴリズムを返す
+    return this.dungeonConfig.mapGeneration[0].algorithm;
+  }
+
+  /**
+   * 環境効果を適用
+   */
+  private applyEnvironmentalEffects(map: GameMap, floorNumber: number): void {
+    for (const effect of this.dungeonConfig.environmentalEffects) {
+      if (floorNumber % effect.floorInterval === 0) {
+        map.environmentalEffect = effect;
+        break; // 1つの環境効果のみ適用
+      }
+    }
   }
 
   /**
@@ -137,5 +177,19 @@ export class World {
   clear(): void {
     this.floors.clear();
     this.currentFloor = 1;
+  }
+
+  /**
+   * ダンジョンタイプを取得
+   */
+  getDungeonType(): DungeonType {
+    return this.dungeonType;
+  }
+
+  /**
+   * ダンジョン設定を取得
+   */
+  getDungeonConfig(): DungeonConfig {
+    return this.dungeonConfig;
   }
 }

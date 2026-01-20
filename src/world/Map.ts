@@ -7,11 +7,13 @@ import { Cell } from './Cell';
 import { Tile, TileFactory } from './Tile';
 import { Vector2D } from '@/utils/Vector2D';
 import { FOV } from '@/utils/FOV';
+import { EnvironmentalEffectConfig } from './DungeonType';
 
 export class GameMap {
   private cells: Cell[][] = [];
   public width: number;
   public height: number;
+  public environmentalEffect: EnvironmentalEffectConfig | null = null;
 
   constructor(width: number, height: number) {
     this.width = width;

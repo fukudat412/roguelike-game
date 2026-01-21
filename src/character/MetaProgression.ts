@@ -11,6 +11,9 @@ export interface MetaProgressionData {
   totalGoldEarned: number;
   totalBossesKilled: number;
 
+  // 最終ボス撃破記録
+  defeatedFinalBosses: string[]; // ダンジョンタイプのリスト
+
   // アンロック
   unlockedUpgrades: string[];
 
@@ -33,6 +36,11 @@ export enum UpgradeType {
   DEFENSE_BOOST_1 = 'DEFENSE_BOOST_1',
   DEFENSE_BOOST_2 = 'DEFENSE_BOOST_2',
   STARTING_GOLD = 'STARTING_GOLD',
+  // 最終ボス撃破報酬
+  BEAST_LORD_BLESSING = 'BEAST_LORD_BLESSING',
+  DEATH_LORD_CONTRACT = 'DEATH_LORD_CONTRACT',
+  DEMON_LORD_ARMOR = 'DEMON_LORD_ARMOR',
+  ARCHMAGE_WISDOM = 'ARCHMAGE_WISDOM',
 }
 
 export interface Upgrade {
@@ -124,6 +132,35 @@ export const UpgradeDatabase: Record<UpgradeType, Upgrade> = {
     cost: 25,
     goldBonus: 50,
   },
+  // 最終ボス撃破報酬（自動解放）
+  [UpgradeType.BEAST_LORD_BLESSING]: {
+    type: UpgradeType.BEAST_LORD_BLESSING,
+    name: '獣王の加護',
+    description: '獣王ベヒーモスを倒した証。開始時のHP +100',
+    cost: 0, // 自動解放
+    hpBonus: 100,
+  },
+  [UpgradeType.DEATH_LORD_CONTRACT]: {
+    type: UpgradeType.DEATH_LORD_CONTRACT,
+    name: '死神の契約',
+    description: '死神デスロードを倒した証。開始時の攻撃力 +10',
+    cost: 0, // 自動解放
+    attackBonus: 10,
+  },
+  [UpgradeType.DEMON_LORD_ARMOR]: {
+    type: UpgradeType.DEMON_LORD_ARMOR,
+    name: '魔王の鎧',
+    description: '魔王サタナスを倒した証。開始時の防御力 +10',
+    cost: 0, // 自動解放
+    defenseBonus: 10,
+  },
+  [UpgradeType.ARCHMAGE_WISDOM]: {
+    type: UpgradeType.ARCHMAGE_WISDOM,
+    name: '大魔導師の知恵',
+    description: '大魔導師ゼノスを倒した証。開始時のMP +50',
+    cost: 0, // 自動解放
+    mpBonus: 50,
+  },
 };
 
 export class MetaProgression {
@@ -154,6 +191,7 @@ export class MetaProgression {
       deepestFloor: 0,
       totalGoldEarned: 0,
       totalBossesKilled: 0,
+      defeatedFinalBosses: [],
       unlockedUpgrades: [],
       permanentHpBonus: 0,
       permanentMpBonus: 0,
@@ -209,6 +247,61 @@ export class MetaProgression {
   recordGoldEarned(amount: number): void {
     this.data.totalGoldEarned += amount;
     this.saveToStorage();
+  }
+
+  /**
+   * 最終ボス撃破を記録し、特別な永続強化を解放
+   */
+  recordFinalBossDefeat(dungeonType: string): string | null {
+    // 既に撃破済みの場合は何もしない
+    if (this.data.defeatedFinalBosses.includes(dungeonType)) {
+      return null;
+    }
+
+    // 撃破記録を追加
+    this.data.defeatedFinalBosses.push(dungeonType);
+
+    // ダンジョンタイプに応じた特別な永続強化を解放
+    let unlockedUpgrade: UpgradeType | null = null;
+    switch (dungeonType) {
+      case 'CAVE':
+        unlockedUpgrade = UpgradeType.BEAST_LORD_BLESSING;
+        break;
+      case 'CRYPT':
+        unlockedUpgrade = UpgradeType.DEATH_LORD_CONTRACT;
+        break;
+      case 'FORTRESS':
+        unlockedUpgrade = UpgradeType.DEMON_LORD_ARMOR;
+        break;
+      case 'TOWER':
+        unlockedUpgrade = UpgradeType.ARCHMAGE_WISDOM;
+        break;
+    }
+
+    if (unlockedUpgrade && !this.data.unlockedUpgrades.includes(unlockedUpgrade)) {
+      const upgrade = UpgradeDatabase[unlockedUpgrade];
+      this.data.unlockedUpgrades.push(unlockedUpgrade);
+
+      // ボーナスを適用
+      if (upgrade.hpBonus) this.data.permanentHpBonus += upgrade.hpBonus;
+      if (upgrade.mpBonus) this.data.permanentMpBonus += upgrade.mpBonus;
+      if (upgrade.attackBonus) this.data.permanentAttackBonus += upgrade.attackBonus;
+      if (upgrade.defenseBonus) this.data.permanentDefenseBonus += upgrade.defenseBonus;
+      if (upgrade.goldBonus) this.data.startingGoldBonus += upgrade.goldBonus;
+
+      this.saveToStorage();
+      return upgrade.name;
+    }
+
+    this.saveToStorage();
+    return null;
+  }
+
+  /**
+   * 特定のダンジョンの最終ボスを撃破済みか
+   */
+  hasFinalBossDefeated(dungeonType: string): boolean {
+    return this.data.defeatedFinalBosses.includes(dungeonType);
   }
 
   /**
@@ -276,6 +369,7 @@ export class MetaProgression {
       deepestFloor: this.data.deepestFloor,
       totalGoldEarned: this.data.totalGoldEarned,
       totalBossesKilled: this.data.totalBossesKilled,
+      defeatedFinalBosses: this.data.defeatedFinalBosses,
     };
   }
 
@@ -284,6 +378,7 @@ export class MetaProgression {
    */
   getAvailableUpgrades(): Upgrade[] {
     return Object.values(UpgradeDatabase).filter(upgrade =>
+      upgrade.cost > 0 && // コスト0のアップグレード（最終ボス報酬）は除外
       !this.data.unlockedUpgrades.includes(upgrade.type) &&
       (!upgrade.prerequisite || this.data.unlockedUpgrades.includes(upgrade.prerequisite))
     );

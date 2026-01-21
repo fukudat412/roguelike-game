@@ -162,6 +162,40 @@ export class MetaProgressionUI {
 
     bonusesDiv.appendChild(bonusList);
     this.statsContainer.appendChild(bonusesDiv);
+
+    // 最終ボス撃破実績
+    if (stats.defeatedFinalBosses && stats.defeatedFinalBosses.length > 0) {
+      const achievementsDiv = document.createElement('div');
+      achievementsDiv.className = 'meta-bonuses';
+      achievementsDiv.style.marginTop = '15px';
+
+      const achievementTitle = document.createElement('h4');
+      achievementTitle.textContent = '🏆 最終ボス撃破実績:';
+      achievementsDiv.appendChild(achievementTitle);
+
+      const achievementList = document.createElement('div');
+      achievementList.className = 'meta-bonus-list';
+
+      const dungeonNames: Record<string, string> = {
+        CAVE: '🦁 野獣の洞窟',
+        CRYPT: '💀 忘れられた墓地',
+        FORTRESS: '🏰 放棄された要塞',
+        TOWER: '🗼 魔法使いの塔',
+      };
+
+      for (const dungeonType of stats.defeatedFinalBosses) {
+        const achievementSpan = document.createElement('span');
+        achievementSpan.className = 'meta-bonus';
+        achievementSpan.style.backgroundColor = '#4a3a2a';
+        achievementSpan.style.borderColor = '#ffaa00';
+        achievementSpan.style.color = '#ffdd57';
+        achievementSpan.textContent = dungeonNames[dungeonType] || dungeonType;
+        achievementList.appendChild(achievementSpan);
+      }
+
+      achievementsDiv.appendChild(achievementList);
+      this.statsContainer.appendChild(achievementsDiv);
+    }
   }
 
   /**

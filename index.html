@@ -1029,6 +1029,108 @@
     #meta-btn:hover {
       background-color: #aa44ff;
     }
+
+    /* スキル選択UI */
+    #skill-selection-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(30, 30, 30, 0.98);
+      border: 3px solid #4ecdc4;
+      border-radius: 8px;
+      padding: 20px;
+      width: 600px;
+      max-height: 700px;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    #skill-selection-panel h2 {
+      color: #4ecdc4;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    #skill-selection-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .skill-selection-card {
+      background-color: #3a3a3a;
+      border: 2px solid #555;
+      border-radius: 6px;
+      padding: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .skill-selection-card:hover {
+      border-color: #4ecdc4;
+    }
+
+    .skill-selection-card.learned {
+      background-color: #2d4a3a;
+      border-color: #00aa55;
+      opacity: 0.8;
+    }
+
+    .skill-selection-name {
+      color: #4ecdc4;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .skill-selection-card.learned .skill-selection-name {
+      color: #00ff7f;
+    }
+
+    .skill-selection-key {
+      color: #ffdd57;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .skill-selection-desc {
+      color: #b0b0b0;
+      font-size: 13px;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .skill-selection-cost {
+      color: #88ccff;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .skill-selection-btn {
+      padding: 8px 16px;
+      font-family: 'Courier New', monospace;
+      background-color: #4ecdc4;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 13px;
+      transition: background-color 0.2s;
+    }
+
+    .skill-selection-btn:hover {
+      background-color: #5eddd4;
+    }
+
+    .skill-selection-learned {
+      color: #00ff7f;
+      font-weight: bold;
+      font-size: 13px;
+      padding: 6px 0;
+      text-align: center;
+    }
     /* ボス階警告オーバーレイ */
     #boss-warning-overlay {
       position: fixed;
@@ -1184,7 +1286,7 @@
       <p>移動: WASD / 矢印 / テンキー</p>
       <p>待機: Space | 拾う: G | インベントリ: I</p>
       <p>階段: Enter | 商人: T | 強化: M</p>
-      <p>スキル: 1(強打) 3(範囲) 5(回復)</p>
+      <p>スキル習得: K | スキル: 1-9/QER</p>
     </div>
   </div>
 
@@ -1339,6 +1441,12 @@
     <h3>アップグレード</h3>
     <div id="meta-upgrades-list"></div>
     <button id="close-meta-btn" style="width: 100%; padding: 10px; margin-top: 15px; font-family: 'Courier New', monospace; background-color: #444; color: #e0e0e0; border: 1px solid #666; border-radius: 4px; cursor: pointer;">閉じる (ESC)</button>
+  </div>
+
+  <div id="skill-selection-panel">
+    <h2>スキル習得</h2>
+    <div id="skill-selection-list"></div>
+    <button id="close-skill-selection-btn" style="width: 100%; padding: 10px; margin-top: 15px; font-family: 'Courier New', monospace; background-color: #444; color: #e0e0e0; border: 1px solid #666; border-radius: 4px; cursor: pointer;">閉じる (ESC)</button>
   </div>
 
   <button id="meta-btn">永続強化</button>

@@ -12,6 +12,7 @@ import { InventoryUI } from '@/ui/InventoryUI';
 import { ShopUI } from '@/ui/ShopUI';
 import { Minimap } from '@/ui/Minimap';
 import { MetaProgressionUI } from '@/ui/MetaProgressionUI';
+import { SkillSelectionUI } from '@/ui/SkillSelectionUI';
 import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
@@ -49,6 +50,7 @@ export class Game {
   private shopUI: ShopUI;
   private minimap: Minimap;
   private metaProgressionUI: MetaProgressionUI;
+  private skillSelectionUI: SkillSelectionUI;
   private soundManager: SoundManager;
   private metaProgression: MetaProgression;
   private dailyChallenge: DailyChallenge;
@@ -86,6 +88,7 @@ export class Game {
     this.soundManager = new SoundManager();
     this.metaProgression = new MetaProgression();
     this.metaProgressionUI = new MetaProgressionUI();
+    this.skillSelectionUI = new SkillSelectionUI();
     this.dailyChallenge = new DailyChallenge();
 
     this.setupEventListeners();
@@ -283,6 +286,15 @@ export class Game {
     if (bonuses.attack > 0) this.player.stats.increaseAttack(bonuses.attack);
     if (bonuses.defense > 0) this.player.stats.increaseDefense(bonuses.defense);
     if (bonuses.gold > 0) this.player.addGold(bonuses.gold);
+
+    // スキル選択UIを設定
+    this.skillSelectionUI.setPlayer(this.player, (skill) => {
+      this.uiManager.addMessage(
+        `スキル「${skill.name}」を習得した！`,
+        MessageType.INFO
+      );
+      this.uiManager.updatePlayer(this.player);
+    });
 
     // 新規ラン記録
     this.metaProgression.recordNewRun();
@@ -775,6 +787,12 @@ export class Game {
       return;
     }
 
+    // スキル選択
+    if (action === Action.SKILL_SELECTION) {
+      this.skillSelectionUI.open();
+      return;
+    }
+
     // アイテム拾う / 宝箱を開く
     if (action === Action.PICKUP) {
       turnEnded = this.pickupOrOpenChest();
@@ -1065,6 +1083,10 @@ export class Game {
     this.running = false;
     this.gameState.setGameOver();
 
+    // 最終ボス撃破を記録し、特別な永続強化を解放
+    const dungeonType = this.world.getDungeonConfig().metadata.type;
+    const unlockedUpgrade = this.metaProgression.recordFinalBossDefeat(dungeonType);
+
     // ゲームオーバー画面にクリアメッセージを表示
     const gameOverScreen = document.getElementById('game-over');
     const deathMessage = document.getElementById('death-message');
@@ -1077,8 +1099,14 @@ export class Game {
         title.style.color = '#ffaa00';
       }
 
-      deathMessage.textContent = 'おめでとうございます！ダンジョンを制覇しました！';
+      // クリアメッセージ
+      let message = 'おめでとうございます！ダンジョンを制覇しました！';
+      if (unlockedUpgrade) {
+        message += `\n\n【永続強化解放】\n${unlockedUpgrade}`;
+      }
+      deathMessage.textContent = message;
       deathMessage.style.color = '#ffdd57';
+      deathMessage.style.whiteSpace = 'pre-line'; // 改行を有効化
 
       // 統計を更新
       const stats = {
@@ -1098,14 +1126,18 @@ export class Game {
       gameOverScreen.style.display = 'block';
     }
 
-    // メタプログレッションにクリア記録
-    // TODO: recordVictory()メソッドを実装
-    // this.metaProgression.recordVictory();
-
+    // メッセージログに記録
     this.uiManager.addMessage(
       'ダンジョンを制覇した！あなたは真の英雄だ！',
       MessageType.INFO
     );
+
+    if (unlockedUpgrade) {
+      this.uiManager.addMessage(
+        `【永続強化解放】${unlockedUpgrade}`,
+        MessageType.INFO
+      );
+    }
   }
 
   /**

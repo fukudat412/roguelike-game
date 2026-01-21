@@ -29,6 +29,7 @@ export class Player extends CombatEntity {
   public inventory: Inventory;
   public equipment: Equipment;
   public skills: Skill[] = [];
+  public skillPoints: number = 0; // スキルポイント
   private baseStats: Stats;
 
   constructor(x: number, y: number) {
@@ -54,17 +55,13 @@ export class Player extends CombatEntity {
     this.inventory = inventory;
     this.equipment = equipment;
 
-    // 初期スキルを付与（全8種類）
+    // 初期スキル（基本スキル1つのみ）
     this.skills = [
-      new PowerStrikeSkill(),    // 1キー
-      new AreaSlashSkill(),       // 3キー
-      new HealingPrayerSkill(),   // 5キー
-      new FireballSkill(),        // 7キー
-      new TeleportSkill(),        // 9キー
-      new BerserkSkill(),         // Qキー
-      new IceWallSkill(),         // Eキー
-      new LifeStealSkill(),       // Rキー
+      new PowerStrikeSkill(),    // 1キー - 基本攻撃スキル
     ];
+
+    // 初期スキルポイント（すぐに他のスキルを習得できるように）
+    this.skillPoints = 2;
   }
 
   /**
@@ -126,15 +123,50 @@ export class Player extends CombatEntity {
     this.stats.heal(this.stats.maxHp);
     this.stats.restoreMp(this.stats.maxMp);
 
+    // スキルポイント獲得（2レベルごとに1ポイント）
+    if (this.level % 2 === 0) {
+      this.skillPoints++;
+      eventBus.emit(GameEvents.MESSAGE_LOG, {
+        text: `スキルポイントを獲得！(残り${this.skillPoints}ポイント)`,
+        type: 'info',
+      });
+    }
+
     // ベースステータスを更新
     this.updateBaseStats();
     this.updateEquipmentStats();
 
-    eventBus.emit(GameEvents.PLAYER_LEVEL_UP, { level: this.level });
+    eventBus.emit(GameEvents.PLAYER_LEVEL_UP, { level: this.level, skillPoints: this.skillPoints });
     eventBus.emit(GameEvents.MESSAGE_LOG, {
       text: `レベルアップ！レベル${this.level}になった！`,
       type: 'info',
     });
+  }
+
+  /**
+   * スキルを習得
+   */
+  learnSkill(skill: Skill): boolean {
+    // 既に習得済み
+    if (this.skills.some(s => s.name === skill.name)) {
+      return false;
+    }
+
+    // スキルポイント不足
+    if (this.skillPoints <= 0) {
+      return false;
+    }
+
+    this.skills.push(skill);
+    this.skillPoints--;
+    return true;
+  }
+
+  /**
+   * スキルを習得済みか
+   */
+  hasSkill(skillName: string): boolean {
+    return this.skills.some(s => s.name === skillName);
   }
 
   /**

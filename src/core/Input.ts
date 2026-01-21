@@ -27,6 +27,7 @@ export enum Action {
   SKILL_7 = 'SKILL_7',
   SKILL_8 = 'SKILL_8',
   META_PROGRESSION = 'META_PROGRESSION',
+  SKILL_SELECTION = 'SKILL_SELECTION',
 }
 
 export class Input {
@@ -89,6 +90,9 @@ export class Input {
 
     // メタプログレッション
     this.keyMap.set('m', Action.META_PROGRESSION);
+
+    // スキル選択
+    this.keyMap.set('k', Action.SKILL_SELECTION);
   }
 
   /**

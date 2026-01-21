@@ -39,6 +39,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       5: 'GOBLIN_KING',
       10: 'ORC_LORD',
       15: 'ELDER_DRAGON',
+      30: 'BEAST_LORD',
     },
 
     environmentalEffects: [
@@ -89,6 +90,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       5: 'GOBLIN_KING',
       10: 'ORC_LORD',
       15: 'ANCIENT_LICH',
+      30: 'DEATH_LORD',
     },
 
     environmentalEffects: [
@@ -140,6 +142,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       5: 'GOBLIN_KING',
       10: 'ORC_LORD',
       15: 'ELDER_DRAGON',
+      30: 'DEMON_LORD',
     },
 
     environmentalEffects: [
@@ -190,6 +193,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       5: 'ORC_LORD',
       10: 'ELDER_DRAGON',
       15: 'ANCIENT_LICH',
+      30: 'ARCHMAGE',
     },
 
     environmentalEffects: [

@@ -177,6 +177,79 @@ export const ItemDatabase: Record<string, ItemData> = {
       color: '#ff6600',
     },
   },
+
+  // Epic装備
+  DRAGON_SLAYER: {
+    id: 'DRAGON_SLAYER',
+    name: 'ドラゴンスレイヤー',
+    description: '攻撃力+20、強力な伝説の剣',
+    type: ItemType.EQUIPMENT,
+    rarity: ItemRarity.EPIC,
+    stackable: false,
+    maxStack: 1,
+    renderInfo: {
+      char: '/',
+      color: '#a335ee',
+    },
+  },
+
+  MYTHRIL_ARMOR: {
+    id: 'MYTHRIL_ARMOR',
+    name: 'ミスリルアーマー',
+    description: '防御力+12、軽量で強靭な鎧',
+    type: ItemType.EQUIPMENT,
+    rarity: ItemRarity.EPIC,
+    stackable: false,
+    maxStack: 1,
+    renderInfo: {
+      char: '[',
+      color: '#a335ee',
+    },
+  },
+
+  // Legendary装備
+  EXCALIBUR: {
+    id: 'EXCALIBUR',
+    name: 'エクスカリバー',
+    description: '攻撃力+30、選ばれし者の聖剣',
+    type: ItemType.EQUIPMENT,
+    rarity: ItemRarity.LEGENDARY,
+    stackable: false,
+    maxStack: 1,
+    renderInfo: {
+      char: '/',
+      color: '#ff8000',
+    },
+  },
+
+  DIVINE_PLATE: {
+    id: 'DIVINE_PLATE',
+    name: '神聖なる鎧',
+    description: '防御力+20、神の加護を受けた鎧',
+    type: ItemType.EQUIPMENT,
+    rarity: ItemRarity.LEGENDARY,
+    stackable: false,
+    maxStack: 1,
+    renderInfo: {
+      char: '[',
+      color: '#ff8000',
+    },
+  },
+
+  // Epic消費アイテム
+  ELIXIR: {
+    id: 'ELIXIR',
+    name: 'エリクサー',
+    description: 'HPとMPを完全回復する',
+    type: ItemType.CONSUMABLE,
+    rarity: ItemRarity.EPIC,
+    stackable: true,
+    maxStack: 3,
+    renderInfo: {
+      char: '!',
+      color: '#a335ee',
+    },
+  },
 };
 
 /**
@@ -194,6 +267,10 @@ export function getRandomItem(rarity?: ItemRarity): ItemData {
 
   if (rarity) {
     const filtered = items.filter(item => item.rarity === rarity);
+    // 指定されたレア度のアイテムがない場合は全アイテムからランダムに選択
+    if (filtered.length === 0) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
     return filtered[Math.floor(Math.random() * filtered.length)];
   }
 

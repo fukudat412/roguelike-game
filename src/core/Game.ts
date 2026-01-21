@@ -312,6 +312,9 @@ export class Game {
         `【警告】ボス階層に到達した！`,
         MessageType.WARNING
       );
+
+      // ボス階警告オーバーレイを表示
+      this.showBossWarning(dungeonConfig.bosses[currentFloor]);
     } else {
       // 通常フロア：敵数は階層に応じて増加（ダンジョン設定の倍率適用）
       const baseCount = 5;
@@ -335,8 +338,17 @@ export class Game {
     const chestCount = 2 + Math.floor(Math.random() * 3);
     this.spawnChests(chestCount);
 
-    // 階段を配置
-    this.spawnStairs();
+    // 階段を配置（最終階以外）
+    const MAX_FLOOR = 30;
+    if (currentFloor < MAX_FLOOR) {
+      this.spawnStairs();
+    } else {
+      // 最終階メッセージ
+      this.uiManager.addMessage(
+        '【最終階】全ての敵を倒してダンジョンを制覇しよう！',
+        MessageType.WARNING
+      );
+    }
 
     // インベントリUIの設定
     this.inventoryUI.setInventory(this.player.inventory);
@@ -367,40 +379,71 @@ export class Game {
    * 階段を配置
    */
   private spawnStairs(): void {
-    const cell = this.map.getRandomWalkableCell();
-    if (!cell) return;
+    const playerPos = this.player.getPosition();
+    const maxAttempts = 100;
+    let bestCell = null;
+    let bestDistance = 0;
 
-    const pos = cell.position;
+    // 最大100回試行して、できるだけプレイヤーから離れた位置を探す
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
 
-    // プレイヤーから離れた位置に配置
-    if (this.player.getPosition().distanceTo(pos) < 10) {
-      this.spawnStairs(); // 再試行
-      return;
+      const distance = playerPos.distanceTo(cell.position);
+
+      // 最も離れた位置を記録
+      if (distance > bestDistance) {
+        bestDistance = distance;
+        bestCell = cell;
+      }
+
+      // 理想的な距離（10マス以上）が見つかったら終了
+      if (distance >= 10) {
+        break;
+      }
     }
 
-    // 下り階段を配置
-    const targetFloor = this.world.getCurrentFloor() + 1;
-    this.stairs = new Stairs(pos.x, pos.y, StairsDirection.DOWN, targetFloor);
+    // 適切な位置が見つからなくても、最良の位置に配置
+    if (bestCell) {
+      const pos = bestCell.position;
+      const targetFloor = this.world.getCurrentFloor() + 1;
+      this.stairs = new Stairs(pos.x, pos.y, StairsDirection.DOWN, targetFloor);
+    }
   }
 
   /**
    * 店を配置
    */
   private spawnShop(): void {
-    const cell = this.map.getRandomWalkableCell();
-    if (!cell) return;
+    const playerPos = this.player.getPosition();
+    const maxAttempts = 50;
+    let bestCell = null;
+    let bestDistance = 0;
 
-    const pos = cell.position;
+    // 最大50回試行して、できるだけプレイヤーから離れた位置を探す
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
 
-    // プレイヤーから離れた位置に配置
-    if (this.player.getPosition().distanceTo(pos) < 15) {
-      this.spawnShop(); // 再試行
-      return;
+      const distance = playerPos.distanceTo(cell.position);
+
+      if (distance > bestDistance) {
+        bestDistance = distance;
+        bestCell = cell;
+      }
+
+      // 理想的な距離（15マス以上）が見つかったら終了
+      if (distance >= 15) {
+        break;
+      }
     }
 
-    // 店を配置
-    this.shop = new Shop(pos.x, pos.y);
-    this.uiManager.addMessage('この階には商人がいるようだ', MessageType.INFO);
+    // 適切な位置が見つかったら配置
+    if (bestCell) {
+      const pos = bestCell.position;
+      this.shop = new Shop(pos.x, pos.y);
+      this.uiManager.addMessage('この階には商人がいるようだ', MessageType.INFO);
+    }
   }
 
   /**
@@ -462,13 +505,32 @@ export class Game {
       const template = EnemyDatabase[enemyKey];
       if (!template) continue;
 
+      // 階層に応じて敵のステータスをスケーリング
+      const scaledTemplate = this.scaleEnemyStats(template, currentFloor);
+
       // エリート判定
       const isElite = Math.random() < dungeonConfig.enemies.eliteChance;
 
-      const enemy = new Enemy(pos.x, pos.y, template, isElite);
+      const enemy = new Enemy(pos.x, pos.y, scaledTemplate, isElite);
 
       this.enemies.push(enemy);
     }
+  }
+
+  /**
+   * 階層に応じて敵のステータスをスケーリング
+   */
+  private scaleEnemyStats(template: EnemyTemplate, floor: number): EnemyTemplate {
+    // 基準階層は1階、5階ごとに約30%ステータスが増加
+    const scalingFactor = 1 + (floor - 1) * 0.06;
+
+    return {
+      ...template,
+      maxHp: Math.floor(template.maxHp * scalingFactor),
+      attack: Math.floor(template.attack * scalingFactor),
+      defense: Math.floor(template.defense * scalingFactor),
+      experienceValue: Math.floor(template.experienceValue * scalingFactor),
+    };
   }
 
   /**
@@ -484,20 +546,57 @@ export class Game {
     const bossTemplate = EnemyDatabase[bossKey];
     if (!bossTemplate) return;
 
-    // ボスを配置
-    const bossCell = this.map.getRandomWalkableCell();
-    if (!bossCell) return;
+    const playerPos = this.player.getPosition();
+    const maxAttempts = 100;
+    let bestCell = null;
+    let bestDistance = 0;
 
-    const bossPos = bossCell.position;
+    // 最大100回試行して、理想的な距離（10-15マス）の位置を探す
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
 
-    // プレイヤーから離れた位置に配置
-    if (this.player.getPosition().distanceTo(bossPos) < 15) {
-      this.spawnDungeonBoss(); // 再試行
-      return;
+      const distance = playerPos.distanceTo(cell.position);
+
+      // 理想的な距離範囲（10-15マス）
+      if (distance >= 10 && distance <= 15) {
+        bestCell = cell;
+        break;
+      }
+
+      // 理想的な距離が見つからない場合、最も離れた位置を記録
+      if (distance > bestDistance && distance >= 8) {
+        bestDistance = distance;
+        bestCell = cell;
+      }
     }
 
-    const boss = new Enemy(bossPos.x, bossPos.y, bossTemplate);
+    // 適切な位置が見つからなくても配置
+    if (!bestCell) {
+      bestCell = this.map.getRandomWalkableCell();
+    }
+
+    if (!bestCell) return;
+
+    const bossPos = bestCell.position;
+
+    // ボスも階層に応じてスケーリング
+    const scaledBossTemplate = this.scaleEnemyStats(bossTemplate, currentFloor);
+    const boss = new Enemy(bossPos.x, bossPos.y, scaledBossTemplate);
     this.enemies.push(boss);
+
+    // ボスの周りのセルを探索済みにして見えるようにする
+    const revealRadius = 3;
+    for (let dx = -revealRadius; dx <= revealRadius; dx++) {
+      for (let dy = -revealRadius; dy <= revealRadius; dy++) {
+        const checkPos = new Vector2D(bossPos.x + dx, bossPos.y + dy);
+        const cell = this.map.getCellAt(checkPos);
+        if (cell) {
+          cell.explored = true;
+          cell.visible = true;
+        }
+      }
+    }
 
     this.uiManager.addMessage(
       `${boss.name}が現れた！`,
@@ -518,19 +617,36 @@ export class Game {
 
     if (!bossTemplate) return;
 
-    // ボスを配置
-    const bossCell = this.map.getRandomWalkableCell();
-    if (!bossCell) return;
+    const playerPos = this.player.getPosition();
+    const maxAttempts = 100;
+    let bestCell = null;
+    let bestDistance = 0;
 
-    const bossPos = bossCell.position;
+    // 最大100回試行して、できるだけプレイヤーから離れた位置を探す
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const cell = this.map.getRandomWalkableCell();
+      if (!cell) continue;
 
-    // プレイヤーから離れた位置に配置
-    if (this.player.getPosition().distanceTo(bossPos) < 15) {
-      this.spawnBoss(); // 再試行
-      return;
+      const distance = playerPos.distanceTo(cell.position);
+
+      if (distance > bestDistance) {
+        bestDistance = distance;
+        bestCell = cell;
+      }
+
+      // 理想的な距離（15マス以上）が見つかったら終了
+      if (distance >= 15) {
+        break;
+      }
     }
 
-    const boss = new Enemy(bossPos.x, bossPos.y, bossTemplate);
+    if (!bestCell) return;
+
+    const bossPos = bestCell.position;
+
+    // ボスも階層に応じてスケーリング
+    const scaledBossTemplate = this.scaleEnemyStats(bossTemplate, currentFloor);
+    const boss = new Enemy(bossPos.x, bossPos.y, scaledBossTemplate);
     this.enemies.push(boss);
 
     this.uiManager.addMessage(
@@ -880,10 +996,45 @@ export class Game {
   }
 
   /**
+   * ボス階警告を表示
+   */
+  private showBossWarning(bossKey: string): void {
+    const overlay = document.getElementById('boss-warning-overlay');
+    const messageElement = document.getElementById('boss-warning-message');
+
+    if (!overlay) return;
+
+    // ボス名を取得
+    const bossTemplate = EnemyDatabase[bossKey];
+    const bossName = bossTemplate ? bossTemplate.name : '強力なボス';
+
+    if (messageElement) {
+      messageElement.textContent = `${bossName}が待ち構えている...`;
+    }
+
+    // オーバーレイを表示
+    overlay.style.display = 'flex';
+
+    // 2秒後に自動的に非表示
+    setTimeout(() => {
+      overlay.style.display = 'none';
+    }, 2000);
+  }
+
+  /**
    * 次の階層へ降りる
    */
   private descendToNextFloor(): void {
-    const nextFloor = this.world.getCurrentFloor() + 1;
+    const currentFloor = this.world.getCurrentFloor();
+    const MAX_FLOOR = 30;
+
+    // 最大階層チェック
+    if (currentFloor >= MAX_FLOOR) {
+      this.gameVictory();
+      return;
+    }
+
+    const nextFloor = currentFloor + 1;
 
     // メタプログレッションに記録
     this.metaProgression.recordFloor(nextFloor);
@@ -905,6 +1056,56 @@ export class Game {
 
     // 階層をセットアップ
     this.setupFloor();
+  }
+
+  /**
+   * ゲームクリア処理
+   */
+  private gameVictory(): void {
+    this.running = false;
+    this.gameState.setGameOver();
+
+    // ゲームオーバー画面にクリアメッセージを表示
+    const gameOverScreen = document.getElementById('game-over');
+    const deathMessage = document.getElementById('death-message');
+
+    if (gameOverScreen && deathMessage) {
+      // タイトルを変更
+      const title = gameOverScreen.querySelector('h1');
+      if (title) {
+        title.textContent = 'VICTORY!';
+        title.style.color = '#ffaa00';
+      }
+
+      deathMessage.textContent = 'おめでとうございます！ダンジョンを制覇しました！';
+      deathMessage.style.color = '#ffdd57';
+
+      // 統計を更新
+      const stats = {
+        floor: this.world.getCurrentFloor(),
+        enemiesKilled: this.statistics.enemiesKilled,
+        bossesDefeated: this.statistics.bossesDefeated,
+        itemsCollected: this.statistics.itemsCollected,
+        chestsOpened: this.statistics.chestsOpened,
+        goldEarned: this.statistics.goldEarned,
+        turnsPlayed: this.statistics.turnsPlayed,
+      };
+
+      // 統計を表示
+      this.uiManager.showGameOver(stats);
+
+      // 表示
+      gameOverScreen.style.display = 'block';
+    }
+
+    // メタプログレッションにクリア記録
+    // TODO: recordVictory()メソッドを実装
+    // this.metaProgression.recordVictory();
+
+    this.uiManager.addMessage(
+      'ダンジョンを制覇した！あなたは真の英雄だ！',
+      MessageType.INFO
+    );
   }
 
   /**
@@ -1375,6 +1576,19 @@ export class Game {
         `${enemy.name}を倒した！${goldDrop}ゴールドを手に入れた`,
         MessageType.SUCCESS
       );
+    }
+
+    // 最終階で敵が全滅したかチェック
+    const MAX_FLOOR = 30;
+    const currentFloor = this.world.getCurrentFloor();
+    if (currentFloor >= MAX_FLOOR) {
+      // 次のフレームで敵配列が更新された後にチェック
+      setTimeout(() => {
+        const aliveEnemies = this.enemies.filter(e => e.isAlive());
+        if (aliveEnemies.length === 0) {
+          this.gameVictory();
+        }
+      }, 100);
     }
   }
 

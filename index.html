@@ -1029,6 +1029,41 @@
     #meta-btn:hover {
       background-color: #aa44ff;
     }
+    /* ボス階警告オーバーレイ */
+    #boss-warning-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(139, 0, 0, 0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      animation: pulse 1s ease-in-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    .boss-warning-title {
+      color: #fff;
+      font-size: 64px;
+      font-weight: bold;
+      text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+      margin-bottom: 20px;
+    }
+
+    .boss-warning-text {
+      color: #ffcccc;
+      font-size: 24px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    }
+
     /* ダンジョン選択UI */
     #dungeon-selection {
       position: fixed;
@@ -1097,6 +1132,10 @@
   </style>
 </head>
 <body>
+  <div id="boss-warning-overlay">
+    <div class="boss-warning-title">⚠️ BOSS FLOOR ⚠️</div>
+    <div class="boss-warning-text" id="boss-warning-message">強力なボスが待ち構えている...</div>
+  </div>
   <div id="dungeon-selection"></div>
   <div id="game-container">
     <div id="ui-container">

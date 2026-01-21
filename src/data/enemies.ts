@@ -249,6 +249,71 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
       duration: 3,
     },
   },
+
+  // 最終ボス（30階）
+  BEAST_LORD: {
+    name: '獣王ベヒーモス',
+    char: 'B',
+    color: '#ff8c00',
+    maxHp: 1500,
+    attack: 80,
+    defense: 40,
+    experienceValue: 2000,
+    isBoss: true,
+    specialAttack: {
+      type: 'vampiric',
+      chance: 0.6,
+      strength: 0.7,
+    },
+  },
+
+  DEATH_LORD: {
+    name: '死神デスロード',
+    char: 'R',
+    color: '#000000',
+    maxHp: 1200,
+    attack: 90,
+    defense: 35,
+    experienceValue: 2000,
+    isBoss: true,
+    specialAttack: {
+      type: 'poison',
+      chance: 0.5,
+      duration: 10,
+    },
+  },
+
+  DEMON_LORD: {
+    name: '魔王サタナス',
+    char: 'S',
+    color: '#8b0000',
+    maxHp: 1800,
+    attack: 85,
+    defense: 45,
+    experienceValue: 2000,
+    isBoss: true,
+    specialAttack: {
+      type: 'paralyze',
+      chance: 0.4,
+      duration: 5,
+    },
+  },
+
+  ARCHMAGE: {
+    name: '大魔導師ゼノス',
+    char: 'Z',
+    color: '#4169e1',
+    maxHp: 1000,
+    attack: 100,
+    defense: 30,
+    experienceValue: 2000,
+    isBoss: true,
+    specialAttack: {
+      type: 'confusion',
+      chance: 0.5,
+      duration: 4,
+    },
+  },
 };
 
 /**

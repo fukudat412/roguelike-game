@@ -22,6 +22,7 @@ export interface DungeonMetadata {
   description: string;    // 説明文
   icon: string;          // アイコン（絵文字）
   color: string;         // テーマカラー
+  difficulty: number;    // 難易度（1-5の星で表示）
 }
 
 /**

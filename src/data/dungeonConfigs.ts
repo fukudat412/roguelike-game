@@ -16,6 +16,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       description: '野生の獣が住む自然の洞窟。素早い敵が多い。',
       icon: '🦁',
       color: '#8B4513',
+      difficulty: 2,
     },
 
     mapGeneration: [
@@ -66,6 +67,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       description: 'アンデッドが徘徊する古い墓所。毒攻撃に注意。',
       icon: '💀',
       color: '#4B0082',
+      difficulty: 3,
     },
 
     mapGeneration: [
@@ -122,6 +124,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       description: '訓練された兵士が守る軍事施設。高い防御力。',
       icon: '🏰',
       color: '#696969',
+      difficulty: 4,
     },
 
     mapGeneration: [
@@ -172,6 +175,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       description: '魔法生物が住む神秘的な塔。強力な魔法攻撃。',
       icon: '🗼',
       color: '#9370DB',
+      difficulty: 5,
     },
 
     mapGeneration: [

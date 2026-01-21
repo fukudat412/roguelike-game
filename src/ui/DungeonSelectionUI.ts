@@ -89,7 +89,7 @@ export class DungeonSelectionUI {
    */
   private createDungeonCard(
     type: DungeonType,
-    metadata: { name: string; description: string; icon: string; color: string }
+    metadata: { name: string; description: string; icon: string; color: string; difficulty: number }
   ): HTMLElement {
     const card = document.createElement('div');
     card.className = 'dungeon-card';
@@ -106,6 +106,12 @@ export class DungeonSelectionUI {
     name.className = 'dungeon-name';
     name.textContent = metadata.name;
     card.appendChild(name);
+
+    // 難易度
+    const difficulty = document.createElement('div');
+    difficulty.className = 'dungeon-difficulty';
+    difficulty.textContent = '難易度: ' + '★'.repeat(metadata.difficulty) + '☆'.repeat(5 - metadata.difficulty);
+    card.appendChild(difficulty);
 
     // 説明
     const desc = document.createElement('div');

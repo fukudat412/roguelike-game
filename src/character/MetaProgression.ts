@@ -203,7 +203,14 @@ export class MetaProgression {
     try {
       const saved = localStorage.getItem(MetaProgression.STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const data = JSON.parse(saved);
+
+        // マイグレーション: defeatedFinalBossesプロパティが存在しない場合は追加
+        if (!data.defeatedFinalBosses) {
+          data.defeatedFinalBosses = [];
+        }
+
+        return data;
       }
     } catch (error) {
       console.error('Failed to load meta progression:', error);

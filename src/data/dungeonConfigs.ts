@@ -76,6 +76,8 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
+        'RAT',        // 巨大ネズミ（序盤）
+        'GOBLIN',     // ゴブリン（序盤）
         'ZOMBIE',     // ゾンビ（中盤）
         'SKELETON',   // スケルトン（中盤）
         'WRAITH',     // レイス（後半）
@@ -180,6 +182,12 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
+        'KOBOLD',         // コボルド（序盤）
+        'ORC',            // オーク（中盤）
+        'SKELETON',       // スケルトン（中盤）
+        'OGRE',           // オーガ（後半）
+        'WRAITH',         // レイス（後半）
+        'VAMPIRE',        // ヴァンパイア（後半）
         'DEMON',          // デーモン（終盤）
         'DRAGON',         // ドラゴン（終盤）
         'ANCIENT_DRAGON', // 古代竜（終盤）

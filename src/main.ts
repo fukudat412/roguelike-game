@@ -48,6 +48,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // ダンジョン選択UIにメタプログレッションを設定
+  game.setupDungeonSelectionUI(dungeonSelection);
+
   // ダンジョン選択UIを表示
   dungeonSelection.show();
 

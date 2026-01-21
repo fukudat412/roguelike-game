@@ -40,6 +40,7 @@ import { MetaProgression } from '@/character/MetaProgression';
 import { DailyChallenge, ChallengeType } from './DailyChallenge';
 import { DungeonType } from '@/world/DungeonType';
 import { EnemyDatabase } from '@/data/enemies';
+import { DungeonSelectionUI } from '@/ui/DungeonSelectionUI';
 
 export class Game {
   private renderer: Renderer;
@@ -54,6 +55,7 @@ export class Game {
   private soundManager: SoundManager;
   private metaProgression: MetaProgression;
   private dailyChallenge: DailyChallenge;
+  private dungeonSelectionUI: DungeonSelectionUI | null = null;
 
   private world!: World;
   private map!: GameMap;
@@ -92,7 +94,6 @@ export class Game {
     this.dailyChallenge = new DailyChallenge();
 
     this.setupEventListeners();
-    this.setupMetaProgressionUI();
   }
 
   /**
@@ -221,20 +222,15 @@ export class Game {
   }
 
   /**
-   * メタプログレッションUI設定
+   * ダンジョン選択UI設定
    */
-  private setupMetaProgressionUI(): void {
-    // メタプログレッション画面を開くボタン
-    const metaBtn = document.getElementById('meta-btn');
-    if (metaBtn) {
-      metaBtn.addEventListener('click', () => {
-        this.metaProgressionUI.setMetaProgression(
-          this.metaProgression,
-          (upgrade) => this.handleUpgradePurchase(upgrade)
-        );
-        this.metaProgressionUI.toggle();
-      });
-    }
+  setupDungeonSelectionUI(dungeonSelectionUI: DungeonSelectionUI): void {
+    this.dungeonSelectionUI = dungeonSelectionUI;
+    dungeonSelectionUI.setMetaProgression(
+      this.metaProgression,
+      this.metaProgressionUI,
+      (upgrade) => this.handleUpgradePurchase(upgrade)
+    );
   }
 
   /**
@@ -794,6 +790,12 @@ export class Game {
     // スキル選択
     if (action === Action.SKILL_SELECTION) {
       this.skillSelectionUI.open();
+      return;
+    }
+
+    // メニューに戻る
+    if (action === Action.RETURN_TO_MENU) {
+      this.showReturnToMenuConfirmation();
       return;
     }
 
@@ -2143,6 +2145,45 @@ export class Game {
    */
   stop(): void {
     this.running = false;
+  }
+
+  /**
+   * メニューに戻る確認ダイアログ
+   */
+  private showReturnToMenuConfirmation(): void {
+    const confirmed = window.confirm(
+      'ダンジョン選択に戻りますか？\n現在の進行状況は失われます。'
+    );
+
+    if (confirmed) {
+      this.returnToDungeonSelection();
+    }
+  }
+
+  /**
+   * ダンジョン選択画面に戻る
+   */
+  private returnToDungeonSelection(): void {
+    // ゲームを停止
+    this.stop();
+
+    // ゲームコンテナを非表示
+    const gameContainer = document.getElementById('game-container');
+    if (gameContainer) {
+      gameContainer.classList.remove('active');
+    }
+
+    // ダンジョン選択UIを表示
+    if (this.dungeonSelectionUI) {
+      this.dungeonSelectionUI.show();
+    }
+
+    // UIをクリーンアップ
+    this.inventoryUI.close();
+    this.shopUI.close();
+    this.metaProgressionUI.close();
+    this.skillSelectionUI.close();
+    this.uiManager.hideGameOver();
   }
 
   /**

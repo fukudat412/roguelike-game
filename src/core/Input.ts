@@ -28,6 +28,7 @@ export enum Action {
   SKILL_8 = 'SKILL_8',
   META_PROGRESSION = 'META_PROGRESSION',
   SKILL_SELECTION = 'SKILL_SELECTION',
+  RETURN_TO_MENU = 'RETURN_TO_MENU',
 }
 
 export class Input {
@@ -93,6 +94,9 @@ export class Input {
 
     // スキル選択
     this.keyMap.set('k', Action.SKILL_SELECTION);
+
+    // メニューに戻る（Backspaceキー）
+    this.keyMap.set('Backspace', Action.RETURN_TO_MENU);
   }
 
   /**

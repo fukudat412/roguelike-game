@@ -5,10 +5,15 @@
 
 import { DungeonType } from '@/world/DungeonType';
 import { DUNGEON_CONFIGS } from '@/data/dungeonConfigs';
+import { MetaProgression } from '@/character/MetaProgression';
+import { MetaProgressionUI } from './MetaProgressionUI';
 
 export class DungeonSelectionUI {
   private container: HTMLElement;
   private onSelect: (type: DungeonType) => void;
+  private metaProgression: MetaProgression | null = null;
+  private metaProgressionUI: MetaProgressionUI | null = null;
+  private onUpgradePurchase: ((upgrade: any) => void) | null = null;
 
   constructor(containerId: string, onSelect: (type: DungeonType) => void) {
     const element = document.getElementById(containerId);
@@ -18,6 +23,19 @@ export class DungeonSelectionUI {
     this.container = element;
     this.onSelect = onSelect;
     this.render();
+  }
+
+  /**
+   * メタプログレッション設定
+   */
+  setMetaProgression(
+    metaProgression: MetaProgression,
+    metaProgressionUI: MetaProgressionUI,
+    onUpgradePurchase: (upgrade: any) => void
+  ): void {
+    this.metaProgression = metaProgression;
+    this.metaProgressionUI = metaProgressionUI;
+    this.onUpgradePurchase = onUpgradePurchase;
   }
 
   /**
@@ -47,6 +65,23 @@ export class DungeonSelectionUI {
     }
 
     this.container.appendChild(cardsContainer);
+
+    // 永続強化ボタン
+    const metaBtn = document.createElement('button');
+    metaBtn.id = 'meta-btn-dungeon';
+    metaBtn.textContent = '⭐ 永続強化';
+    metaBtn.addEventListener('click', () => this.openMetaProgression());
+    this.container.appendChild(metaBtn);
+  }
+
+  /**
+   * 永続強化を開く
+   */
+  private openMetaProgression(): void {
+    if (this.metaProgression && this.metaProgressionUI && this.onUpgradePurchase) {
+      this.metaProgressionUI.setMetaProgression(this.metaProgression, this.onUpgradePurchase);
+      this.metaProgressionUI.open();
+    }
   }
 
   /**

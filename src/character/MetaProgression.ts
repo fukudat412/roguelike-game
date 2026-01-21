@@ -1295,6 +1295,7 @@ export const UpgradeDatabase: Record<UpgradeType, Upgrade> = {
 export class MetaProgression {
   private static readonly STORAGE_KEY = 'roguelike_meta_progression_v2';
   private data: MetaProgressionData;
+  private onAchievementUnlocked?: (achievement: Achievement) => void;
 
   constructor() {
     this.data = this.loadFromStorage();
@@ -1553,12 +1554,24 @@ export class MetaProgression {
         newUnlocks++;
 
         console.log(`🏆 実績解禁: ${achievement.name} (+${achievement.rewardSP} SP)`);
+
+        // 実績解禁コールバック
+        if (this.onAchievementUnlocked) {
+          this.onAchievementUnlocked(achievement);
+        }
       }
     }
 
     if (newUnlocks > 0) {
       this.saveToStorage();
     }
+  }
+
+  /**
+   * 実績解禁時のコールバックを設定
+   */
+  setAchievementCallback(callback: (achievement: Achievement) => void): void {
+    this.onAchievementUnlocked = callback;
   }
 
   /**
@@ -1579,6 +1592,10 @@ export class MetaProgression {
 
   getUnlockedAchievements(): Achievement[] {
     return this.data.unlockedAchievements.map(type => AchievementDatabase[type as AchievementType]);
+  }
+
+  isUpgradeUnlocked(type: UpgradeType): boolean {
+    return this.data.unlockedUpgrades.includes(type);
   }
 
   // ========== アップグレード管理 ==========

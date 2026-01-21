@@ -13,6 +13,7 @@ import { ShopUI } from '@/ui/ShopUI';
 import { Minimap } from '@/ui/Minimap';
 import { MetaProgressionUI } from '@/ui/MetaProgressionUI';
 import { SkillSelectionUI } from '@/ui/SkillSelectionUI';
+import { AchievementNotificationUI } from '@/ui/AchievementNotificationUI';
 import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
@@ -52,6 +53,7 @@ export class Game {
   private minimap: Minimap;
   private metaProgressionUI: MetaProgressionUI;
   private skillSelectionUI: SkillSelectionUI;
+  private achievementNotificationUI: AchievementNotificationUI;
   private soundManager: SoundManager;
   private metaProgression: MetaProgression;
   private dailyChallenge: DailyChallenge;
@@ -91,7 +93,13 @@ export class Game {
     this.metaProgression = new MetaProgression();
     this.metaProgressionUI = new MetaProgressionUI();
     this.skillSelectionUI = new SkillSelectionUI();
+    this.achievementNotificationUI = new AchievementNotificationUI();
     this.dailyChallenge = new DailyChallenge();
+
+    // 実績解禁時の通知を設定
+    this.metaProgression.setAchievementCallback(achievement => {
+      this.achievementNotificationUI.show(achievement);
+    });
 
     this.setupEventListeners();
   }

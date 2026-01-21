@@ -1201,6 +1201,92 @@
       text-align: center;
       line-height: 1.5;
     }
+
+    /* Achievement Notification Styles */
+    #achievement-notifications {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .achievement-notification {
+      background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+      padding: 15px 20px;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+      animation: slideInRight 0.5s ease-out, fadeOut 0.5s ease-in 4.5s;
+      pointer-events: auto;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes fadeOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    .achievement-notification-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .achievement-notification-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .achievement-notification-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .achievement-notification-body {
+      margin-left: 42px;
+    }
+
+    .achievement-notification-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .achievement-notification-desc {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 8px;
+    }
+
+    .achievement-notification-reward {
+      font-size: 16px;
+      color: #4af;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -1402,11 +1488,7 @@
   </div>
 
   <div id="meta-progression-panel">
-    <h2>永続アップグレード</h2>
-    <h3>統計情報</h3>
-    <div id="meta-stats"></div>
-    <h3>アップグレード</h3>
-    <div id="meta-upgrades-list"></div>
+    <div class="meta-progression-content"></div>
     <button id="close-meta-btn" style="width: 100%; padding: 10px; margin-top: 15px; font-family: 'Courier New', monospace; background-color: #444; color: #e0e0e0; border: 1px solid #666; border-radius: 4px; cursor: pointer;">閉じる (ESC)</button>
   </div>
 
@@ -1415,6 +1497,9 @@
     <div id="skill-selection-list"></div>
     <button id="close-skill-selection-btn" style="width: 100%; padding: 10px; margin-top: 15px; font-family: 'Courier New', monospace; background-color: #444; color: #e0e0e0; border: 1px solid #666; border-radius: 4px; cursor: pointer;">閉じる (ESC)</button>
   </div>
+
+  <!-- Achievement Notifications -->
+  <div id="achievement-notifications"></div>
 
   <script type="module" src="/src/main.ts"></script>
 </body>

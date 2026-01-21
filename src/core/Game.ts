@@ -293,7 +293,7 @@ export class Game {
         `スキル「${skill.data.name}」を習得した！`,
         MessageType.INFO
       );
-      this.uiManager.updatePlayer(this.player);
+      eventBus.emit(GameEvents.UI_UPDATE);
     });
 
     // 新規ラン記録

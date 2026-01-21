@@ -27,17 +27,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // ダンジョン選択UIを表示
   const dungeonSelection = new DungeonSelectionUI('dungeon-selection', (dungeonType: DungeonType) => {
-    // 選択されたダンジョンタイプでゲームを初期化
-    game.initialize(dungeonType);
+    console.log(`ダンジョン選択: ${dungeonType}`);
 
-    // 開始
-    game.start();
+    try {
+      // 選択されたダンジョンタイプでゲームを初期化
+      console.log('ゲームを初期化中...');
+      game.initialize(dungeonType);
 
-    console.log(`ローグライク探索ゲーム開始！ (${dungeonType})`);
-    console.log('操作方法:');
-    console.log('  移動: WASD / 矢印キー / テンキー');
-    console.log('  攻撃: 敵に向かって移動');
-    console.log('  待機: スペースキー');
+      // 開始
+      console.log('ゲームを開始中...');
+      game.start();
+
+      console.log(`ローグライク探索ゲーム開始！ (${dungeonType})`);
+      console.log('操作方法:');
+      console.log('  移動: WASD / 矢印キー / テンキー');
+      console.log('  攻撃: 敵に向かって移動');
+      console.log('  待機: スペースキー');
+    } catch (error) {
+      console.error('ゲーム初期化エラー:', error);
+    }
   });
 
   // ダンジョン選択UIを表示

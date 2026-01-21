@@ -263,4 +263,74 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       itemDropRate: 0.8,
     },
   },
+
+  [DungeonType.ABYSS]: {
+    metadata: {
+      type: DungeonType.ABYSS,
+      name: '奈落の深淵',
+      description: '全ての試練を超えた者のみが挑める深淵。50階層。',
+      icon: '🌑',
+      color: '#000000',
+      difficulty: 5,
+      locked: true,
+      unlockRequirement: '野獣の洞窟、忘れられた墓地、放棄された要塞、魔法使いの塔を全てクリア',
+    },
+
+    mapGeneration: [
+      { algorithm: 'cave', weight: 0.4 },
+      { algorithm: 'bsp', weight: 0.3 },
+      { algorithm: 'room', weight: 0.3 },
+    ],
+
+    enemies: {
+      pool: [
+        'GOBLIN',         // 序盤
+        'KOBOLD',
+        'RAT',
+        'ORC',            // 中盤
+        'SKELETON',
+        'WOLF',
+        'ZOMBIE',
+        'TROLL',          // 後半
+        'OGRE',
+        'WRAITH',
+        'VAMPIRE',
+        'DEMON',          // 終盤
+        'DRAGON',
+        'LICH',
+        'ANCIENT_DRAGON',
+      ],
+      spawnMultiplier: 1.5,
+      eliteChance: 0.4,
+    },
+
+    bosses: {
+      10: 'GOBLIN_KING',
+      20: 'ORC_LORD',
+      30: 'ELDER_DRAGON',
+      40: 'ANCIENT_LICH',
+      50: 'ARCHMAGE',
+    },
+
+    environmentalEffects: [
+      {
+        name: '奈落の瘴気',
+        description: '全てのステータスが減少し、敵が強化される',
+        floorInterval: 5,
+        playerEffect: {
+          hpPerTurn: -2,
+          defenseMultiplier: 0.85,
+        },
+        enemyEffect: {
+          attackMultiplier: 1.25,
+          defenseMultiplier: 1.15,
+        },
+      },
+    ],
+
+    loot: {
+      goldMultiplier: 2.0,
+      itemDropRate: 1.5,
+    },
+  },
 };

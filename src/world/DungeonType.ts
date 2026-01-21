@@ -12,6 +12,7 @@ export enum DungeonType {
   CRYPT = 'CRYPT',       // 墓地 - アンデッド
   FORTRESS = 'FORTRESS', // 要塞 - 人間型の敵
   TOWER = 'TOWER',       // 塔 - 魔法生物
+  ABYSS = 'ABYSS',       // 奈落 - 全ダンジョンクリア後解禁
 }
 
 /**
@@ -24,6 +25,8 @@ export interface DungeonMetadata {
   icon: string;          // アイコン（絵文字）
   color: string;         // テーマカラー
   difficulty: number;    // 難易度（1-5の星で表示）
+  locked?: boolean;      // ロック状態（初期状態でロックされているか）
+  unlockRequirement?: string; // アンロック条件の説明文
 }
 
 /**

@@ -44,6 +44,8 @@ export enum UpgradeType {
   DEATH_LORD_CONTRACT = 'DEATH_LORD_CONTRACT',
   DEMON_LORD_ARMOR = 'DEMON_LORD_ARMOR',
   ARCHMAGE_WISDOM = 'ARCHMAGE_WISDOM',
+  // 奈落クリア報酬
+  ABYSS_CONQUEROR = 'ABYSS_CONQUEROR',
 }
 
 export interface Upgrade {
@@ -173,6 +175,17 @@ export const UpgradeDatabase: Record<UpgradeType, Upgrade> = {
     cost: 0, // 自動解放
     mpBonus: 50,
   },
+  [UpgradeType.ABYSS_CONQUEROR]: {
+    type: UpgradeType.ABYSS_CONQUEROR,
+    name: '深淵の征服者',
+    description: '奈落の深淵を制覇した証。全ステータス大幅強化',
+    cost: 0, // 自動解放
+    hpBonus: 150,
+    mpBonus: 75,
+    attackBonus: 15,
+    defenseBonus: 15,
+    goldBonus: 100,
+  },
 };
 
 export class MetaProgression {
@@ -288,6 +301,9 @@ export class MetaProgression {
       case 'TOWER':
         unlockedUpgrade = UpgradeType.ARCHMAGE_WISDOM;
         break;
+      case 'ABYSS':
+        unlockedUpgrade = UpgradeType.ABYSS_CONQUEROR;
+        break;
     }
 
     if (unlockedUpgrade && !this.data.unlockedUpgrades.includes(unlockedUpgrade)) {
@@ -338,6 +354,14 @@ export class MetaProgression {
    */
   hasFinalBossDefeated(dungeonType: string): boolean {
     return this.data.defeatedFinalBosses.includes(dungeonType);
+  }
+
+  /**
+   * 全ての必須ダンジョンをクリアしたか
+   */
+  hasAllRequiredDungeonsCleared(): boolean {
+    const requiredDungeons = ['CAVE', 'CRYPT', 'FORTRESS', 'TOWER'];
+    return requiredDungeons.every(dungeon => this.data.defeatedFinalBosses.includes(dungeon));
   }
 
   /**

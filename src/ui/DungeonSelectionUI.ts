@@ -89,10 +89,13 @@ export class DungeonSelectionUI {
    */
   private createDungeonCard(
     type: DungeonType,
-    metadata: { name: string; description: string; icon: string; color: string; difficulty: number }
+    metadata: { name: string; description: string; icon: string; color: string; difficulty: number; locked?: boolean; unlockRequirement?: string }
   ): HTMLElement {
+    // ロック状態を判定
+    const isLocked = metadata.locked && this.metaProgression && !this.metaProgression.hasAllRequiredDungeonsCleared();
+
     const card = document.createElement('div');
-    card.className = 'dungeon-card';
+    card.className = isLocked ? 'dungeon-card locked' : 'dungeon-card';
     card.style.borderColor = metadata.color;
 
     // アイコン
@@ -113,14 +116,32 @@ export class DungeonSelectionUI {
     difficulty.textContent = '難易度: ' + '★'.repeat(metadata.difficulty) + '☆'.repeat(5 - metadata.difficulty);
     card.appendChild(difficulty);
 
-    // 説明
+    // 説明またはロック表示
     const desc = document.createElement('div');
     desc.className = 'dungeon-description';
-    desc.textContent = metadata.description;
+    if (isLocked) {
+      // ロックアイコンを表示
+      const lockIcon = document.createElement('div');
+      lockIcon.className = 'dungeon-lock-icon';
+      lockIcon.textContent = '🔒';
+      card.appendChild(lockIcon);
+
+      // アンロック条件を表示
+      desc.textContent = metadata.unlockRequirement || 'ロックされています';
+      desc.className = 'dungeon-unlock-requirement';
+    } else {
+      desc.textContent = metadata.description;
+    }
     card.appendChild(desc);
 
     // クリックイベント
     card.addEventListener('click', () => {
+      // ロックされている場合は何もしない
+      if (isLocked) {
+        alert(`このダンジョンはロックされています。\n\n${metadata.unlockRequirement}`);
+        return;
+      }
+
       // ダンジョン選択画面を非表示
       this.hide();
 

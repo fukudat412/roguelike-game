@@ -1062,7 +1062,12 @@ export class Game {
     const dungeonType = this.world.getDungeonConfig().metadata.type;
 
     // ダンジョンタイプに応じた最大階層
-    const MAX_FLOOR = dungeonType === 'TUTORIAL' ? 5 : 30;
+    let MAX_FLOOR = 30;
+    if (dungeonType === 'TUTORIAL') {
+      MAX_FLOOR = 5;
+    } else if (dungeonType === 'ABYSS') {
+      MAX_FLOOR = 50;
+    }
 
     // 最大階層チェック
     if (currentFloor >= MAX_FLOOR) {

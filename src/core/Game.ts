@@ -491,6 +491,15 @@ export class Game {
     const currentFloor = this.world.getCurrentFloor();
     const dungeonConfig = this.world.getDungeonConfig();
 
+    // 現在の階層で出現可能な敵のプールをフィルタリング
+    const availableEnemies = dungeonConfig.enemies.pool.filter(enemyKey => {
+      const template = EnemyDatabase[enemyKey];
+      return !template.minFloor || template.minFloor <= currentFloor;
+    });
+
+    // 出現可能な敵がいない場合は終了
+    if (availableEnemies.length === 0) return;
+
     for (let i = 0; i < count; i++) {
       const cell = this.map.getRandomWalkableCell();
       if (!cell) continue;
@@ -506,9 +515,9 @@ export class Game {
       const occupied = this.enemies.some(e => e.getPosition().equals(pos));
       if (occupied) continue;
 
-      // ダンジョン設定の敵プールからランダムに選択
-      const enemyKey = dungeonConfig.enemies.pool[
-        Math.floor(Math.random() * dungeonConfig.enemies.pool.length)
+      // フィルタリングされた敵プールからランダムに選択
+      const enemyKey = availableEnemies[
+        Math.floor(Math.random() * availableEnemies.length)
       ];
 
       const template = EnemyDatabase[enemyKey];

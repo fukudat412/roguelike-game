@@ -24,6 +24,7 @@ export interface EnemyTemplate {
   experienceValue: number;
   specialAttack?: SpecialAttack;
   isBoss?: boolean;
+  minFloor?: number; // この敵が出現する最低階層
 }
 
 export class Enemy extends CombatEntity {

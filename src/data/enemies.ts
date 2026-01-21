@@ -15,6 +15,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 7,
     defense: 3,
     experienceValue: 10,
+    minFloor: 1,
   },
 
   KOBOLD: {
@@ -25,6 +26,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 8,
     defense: 3,
     experienceValue: 12,
+    minFloor: 1,
   },
 
   RAT: {
@@ -35,6 +37,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 6,
     defense: 2,
     experienceValue: 8,
+    minFloor: 1,
     specialAttack: {
       type: 'poison',
       chance: 0.3,
@@ -51,6 +54,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 12,
     defense: 5,
     experienceValue: 25,
+    minFloor: 4,
   },
 
   SKELETON: {
@@ -61,6 +65,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 10,
     defense: 6,
     experienceValue: 20,
+    minFloor: 4,
     specialAttack: {
       type: 'paralyze',
       chance: 0.1,
@@ -76,6 +81,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 14,
     defense: 3,
     experienceValue: 18,
+    minFloor: 4,
   },
 
   ZOMBIE: {
@@ -86,6 +92,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 9,
     defense: 3,
     experienceValue: 22,
+    minFloor: 4,
     specialAttack: {
       type: 'poison',
       chance: 0.2,
@@ -102,6 +109,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 18,
     defense: 8,
     experienceValue: 50,
+    minFloor: 8,
   },
 
   OGRE: {
@@ -112,6 +120,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 20,
     defense: 10,
     experienceValue: 60,
+    minFloor: 8,
   },
 
   WRAITH: {
@@ -122,6 +131,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 22,
     defense: 5,
     experienceValue: 55,
+    minFloor: 8,
     specialAttack: {
       type: 'weaken',
       chance: 0.15,
@@ -137,6 +147,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 19,
     defense: 8,
     experienceValue: 65,
+    minFloor: 8,
     specialAttack: {
       type: 'vampiric',
       chance: 1.0,
@@ -153,6 +164,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 26,
     defense: 12,
     experienceValue: 100,
+    minFloor: 13,
   },
 
   DRAGON: {
@@ -163,6 +175,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 32,
     defense: 15,
     experienceValue: 150,
+    minFloor: 13,
   },
 
   LICH: {
@@ -173,6 +186,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 30,
     defense: 10,
     experienceValue: 120,
+    minFloor: 13,
   },
 
   ANCIENT_DRAGON: {
@@ -183,6 +197,7 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
     attack: 38,
     defense: 18,
     experienceValue: 200,
+    minFloor: 13,
   },
 
   // ボス敵

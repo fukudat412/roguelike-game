@@ -1594,8 +1594,17 @@ export class Game {
     }
 
     // 最終階で敵が全滅したかチェック
-    const MAX_FLOOR = 30;
     const currentFloor = this.world.getCurrentFloor();
+    const dungeonType = this.world.getDungeonConfig().metadata.type;
+
+    // ダンジョンタイプに応じた最大階層
+    let MAX_FLOOR = 30;
+    if (dungeonType === 'TUTORIAL') {
+      MAX_FLOOR = 5;
+    } else if (dungeonType === 'ABYSS') {
+      MAX_FLOOR = 50;
+    }
+
     if (currentFloor >= MAX_FLOOR) {
       // 次のフレームで敵配列が更新された後にチェック
       setTimeout(() => {

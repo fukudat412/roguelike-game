@@ -1059,7 +1059,10 @@ export class Game {
    */
   private descendToNextFloor(): void {
     const currentFloor = this.world.getCurrentFloor();
-    const MAX_FLOOR = 30;
+    const dungeonType = this.world.getDungeonConfig().metadata.type;
+
+    // ダンジョンタイプに応じた最大階層
+    const MAX_FLOOR = dungeonType === 'TUTORIAL' ? 5 : 30;
 
     // 最大階層チェック
     if (currentFloor >= MAX_FLOOR) {
@@ -1098,9 +1101,17 @@ export class Game {
     this.running = false;
     this.gameState.setPhase(GamePhase.GAME_OVER);
 
-    // 最終ボス撃破を記録し、特別な永続強化を解放
+    // ダンジョンタイプに応じた報酬処理
     const dungeonType = this.world.getDungeonConfig().metadata.type;
-    const unlockedUpgrade = this.metaProgression.recordFinalBossDefeat(dungeonType);
+    let unlockedUpgrade: string | null = null;
+
+    if (dungeonType === 'TUTORIAL') {
+      // チュートリアルクリア報酬
+      unlockedUpgrade = this.metaProgression.recordTutorialClear();
+    } else {
+      // 最終ボス撃破を記録し、特別な永続強化を解放
+      unlockedUpgrade = this.metaProgression.recordFinalBossDefeat(dungeonType);
+    }
 
     // ゲームオーバー画面にクリアメッセージを表示
     const gameOverScreen = document.getElementById('game-over');

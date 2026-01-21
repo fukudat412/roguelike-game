@@ -9,6 +9,42 @@ import { DungeonType, DungeonConfig } from '@/world/DungeonType';
  * 各ダンジョンの設定
  */
 export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
+  [DungeonType.TUTORIAL]: {
+    metadata: {
+      type: DungeonType.TUTORIAL,
+      name: '訓練場',
+      description: '初心者向けの訓練ダンジョン。5階層のみ。',
+      icon: '🎓',
+      color: '#32CD32',
+      difficulty: 1,
+    },
+
+    mapGeneration: [
+      { algorithm: 'room', weight: 1.0 },
+    ],
+
+    enemies: {
+      pool: [
+        'RAT',        // 巨大ネズミ（序盤）
+        'GOBLIN',     // ゴブリン（序盤）
+        'KOBOLD',     // コボルド（序盤）
+      ],
+      spawnMultiplier: 0.7,
+      eliteChance: 0.05,
+    },
+
+    bosses: {
+      5: 'GOBLIN_KING',
+    },
+
+    environmentalEffects: [],
+
+    loot: {
+      goldMultiplier: 1.2,
+      itemDropRate: 1.3,
+    },
+  },
+
   [DungeonType.CAVE]: {
     metadata: {
       type: DungeonType.CAVE,

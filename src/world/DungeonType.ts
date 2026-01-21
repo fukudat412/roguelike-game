@@ -7,6 +7,7 @@
  * ダンジョンタイプ列挙型
  */
 export enum DungeonType {
+  TUTORIAL = 'TUTORIAL', // チュートリアル - 初心者向け
   CAVE = 'CAVE',         // 洞窟 - 野獣と動物
   CRYPT = 'CRYPT',       // 墓地 - アンデッド
   FORTRESS = 'FORTRESS', // 要塞 - 人間型の敵

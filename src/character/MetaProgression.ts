@@ -26,6 +26,9 @@ export interface MetaProgressionData {
 }
 
 export enum UpgradeType {
+  // チュートリアル報酬
+  TUTORIAL_REWARD = 'TUTORIAL_REWARD',
+  // 基本アップグレード
   HP_BOOST_1 = 'HP_BOOST_1',
   HP_BOOST_2 = 'HP_BOOST_2',
   HP_BOOST_3 = 'HP_BOOST_3',
@@ -57,6 +60,15 @@ export interface Upgrade {
 }
 
 export const UpgradeDatabase: Record<UpgradeType, Upgrade> = {
+  // チュートリアル報酬（コスト0で自動解禁）
+  [UpgradeType.TUTORIAL_REWARD]: {
+    type: UpgradeType.TUTORIAL_REWARD,
+    name: '訓練場卒業証書',
+    description: 'チュートリアルクリア報酬：HP+10, 初期Gold+20',
+    cost: 0,
+    hpBonus: 10,
+    goldBonus: 20,
+  },
   [UpgradeType.HP_BOOST_1]: {
     type: UpgradeType.HP_BOOST_1,
     name: 'HP強化 I',
@@ -295,6 +307,30 @@ export class MetaProgression {
 
     this.saveToStorage();
     return null;
+  }
+
+  /**
+   * チュートリアルクリアを記録し、特別報酬を解放
+   */
+  recordTutorialClear(): string | null {
+    // 既に解禁済みの場合は何もしない
+    if (this.data.unlockedUpgrades.includes(UpgradeType.TUTORIAL_REWARD)) {
+      return null;
+    }
+
+    // チュートリアル報酬を解禁
+    const upgrade = UpgradeDatabase[UpgradeType.TUTORIAL_REWARD];
+    this.data.unlockedUpgrades.push(UpgradeType.TUTORIAL_REWARD);
+
+    // ボーナスを適用
+    if (upgrade.hpBonus) this.data.permanentHpBonus += upgrade.hpBonus;
+    if (upgrade.mpBonus) this.data.permanentMpBonus += upgrade.mpBonus;
+    if (upgrade.attackBonus) this.data.permanentAttackBonus += upgrade.attackBonus;
+    if (upgrade.defenseBonus) this.data.permanentDefenseBonus += upgrade.defenseBonus;
+    if (upgrade.goldBonus) this.data.startingGoldBonus += upgrade.goldBonus;
+
+    this.saveToStorage();
+    return upgrade.name;
   }
 
   /**

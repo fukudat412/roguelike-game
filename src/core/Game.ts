@@ -290,7 +290,7 @@ export class Game {
     // スキル選択UIを設定
     this.skillSelectionUI.setPlayer(this.player, (skill) => {
       this.uiManager.addMessage(
-        `スキル「${skill.name}」を習得した！`,
+        `スキル「${skill.data.name}」を習得した！`,
         MessageType.INFO
       );
       this.uiManager.updatePlayer(this.player);

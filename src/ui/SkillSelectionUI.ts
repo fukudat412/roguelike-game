@@ -129,7 +129,7 @@ export class SkillSelectionUI {
     // スキル一覧を描画
     for (const { skill: skillFactory, keyBinding } of this.availableSkills) {
       const skill = skillFactory();
-      const isLearned = this.player.hasSkill(skill.name);
+      const isLearned = this.player.hasSkill(skill.data.name);
       const skillCard = this.createSkillCard(skill, keyBinding, isLearned);
       this.skillListContainer.appendChild(skillCard);
     }
@@ -149,7 +149,7 @@ export class SkillSelectionUI {
     // スキル名
     const nameDiv = document.createElement('div');
     nameDiv.className = 'skill-selection-name';
-    nameDiv.textContent = isLearned ? `${skill.name} ✓` : skill.name;
+    nameDiv.textContent = isLearned ? `${skill.data.name} ✓` : skill.data.name;
     card.appendChild(nameDiv);
 
     // キーバインディング
@@ -161,13 +161,13 @@ export class SkillSelectionUI {
     // 説明
     const descDiv = document.createElement('div');
     descDiv.className = 'skill-selection-desc';
-    descDiv.textContent = skill.description;
+    descDiv.textContent = skill.data.description;
     card.appendChild(descDiv);
 
     // コスト
     const costDiv = document.createElement('div');
     costDiv.className = 'skill-selection-cost';
-    costDiv.textContent = `消費MP: ${skill.mpCost}`;
+    costDiv.textContent = `消費MP: ${skill.data.mpCost}`;
     card.appendChild(costDiv);
 
     if (!isLearned && this.player && this.player.skillPoints > 0) {

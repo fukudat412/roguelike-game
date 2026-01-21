@@ -148,7 +148,7 @@ export class Player extends CombatEntity {
    */
   learnSkill(skill: Skill): boolean {
     // 既に習得済み
-    if (this.skills.some(s => s.name === skill.name)) {
+    if (this.skills.some(s => s.data.name === skill.data.name)) {
       return false;
     }
 
@@ -166,7 +166,7 @@ export class Player extends CombatEntity {
    * スキルを習得済みか
    */
   hasSkill(skillName: string): boolean {
-    return this.skills.some(s => s.name === skillName);
+    return this.skills.some(s => s.data.name === skillName);
   }
 
   /**

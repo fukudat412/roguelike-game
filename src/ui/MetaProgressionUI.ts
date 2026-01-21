@@ -109,7 +109,7 @@ export class MetaProgressionUI {
     const statItems = [
       { label: '総ゲーム数:', value: stats.totalRuns },
       { label: '総撃破数:', value: stats.totalKills },
-      { label: '最深階層:', value: `${stats.deepestFloor}階` },
+      { label: '最深階層:', value: `${stats.maxFloorReached}階` },
       { label: '総獲得ゴールド:', value: `${stats.totalGoldEarned}G` },
       { label: 'ボス撃破数:', value: stats.totalBossesKilled },
     ];
@@ -209,7 +209,7 @@ export class MetaProgressionUI {
 
     const stats = this.metaProgression.getStats();
     const availableUpgrades = this.metaProgression.getAvailableUpgrades();
-    const unlockedUpgrades = this.metaProgression.getUnlockedUpgrades();
+    const unlockedUpgrades = this.metaProgression.getUnlockedUpgradesData();
 
     // クリア
     this.upgradesContainer.textContent = '';
@@ -224,7 +224,7 @@ export class MetaProgressionUI {
       availableSection.appendChild(title);
 
       for (const upgrade of availableUpgrades) {
-        const canAfford = stats.totalKills >= upgrade.cost;
+        const canAfford = stats.soulPoints >= upgrade.costSP;
         const upgradeDiv = this.createUpgradeElement(upgrade, canAfford, false);
         availableSection.appendChild(upgradeDiv);
       }
@@ -285,7 +285,7 @@ export class MetaProgressionUI {
     if (!isUnlocked) {
       const costDiv = document.createElement('div');
       costDiv.className = 'meta-upgrade-cost';
-      costDiv.textContent = `必要撃破数: ${upgrade.cost} ${canAfford ? '✓' : '✗'}`;
+      costDiv.textContent = `必要SP: ${upgrade.costSP} ${canAfford ? '✓' : '✗'}`;
       infoDiv.appendChild(costDiv);
 
       const btn = document.createElement('button');

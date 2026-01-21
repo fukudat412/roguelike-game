@@ -122,9 +122,13 @@ export class Game {
     eventBus.on(GameEvents.PLAYER_DEATH, () => {
       this.soundManager.play(SoundType.DAMAGE);
 
+      // 死亡報酬SPを付与
+      const floorReached = this.world.getCurrentFloor();
+      const spReward = this.metaProgression.recordDeathReward(floorReached);
+
       // 統計情報を収集して表示
       const stats = {
-        floor: this.world.getCurrentFloor(),
+        floor: floorReached,
         enemiesKilled: this.statistics.enemiesKilled,
         bossesDefeated: this.statistics.bossesDefeated,
         itemsCollected: this.statistics.itemsCollected,
@@ -136,6 +140,13 @@ export class Game {
       // 少し遅延させてゲームオーバー画面を表示
       setTimeout(() => {
         this.uiManager.showGameOver(stats);
+        // 死亡報酬メッセージ
+        if (spReward > 0) {
+          this.uiManager.addMessage(
+            `【死亡報酬】${spReward} ソウルポイントを獲得しました`,
+            MessageType.INFO
+          );
+        }
       }, 500);
     });
 
@@ -163,6 +174,11 @@ export class Game {
         if (targetPos) {
           this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, false, false);
         }
+
+        // プレイヤーが与えたダメージを記録
+        if (data.attacker === this.player.name) {
+          this.metaProgression.recordDamage(data.damage);
+        }
       }
     );
 
@@ -183,6 +199,11 @@ export class Game {
 
         if (targetPos) {
           this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, true, false);
+        }
+
+        // プレイヤーが与えたダメージを記録
+        if (data.attacker === this.player.name) {
+          this.metaProgression.recordDamage(data.damage);
         }
       }
     );
@@ -1000,6 +1021,9 @@ export class Game {
 
     const success = skill.use(this.player, this.enemies);
     if (success) {
+      // メタプログレッションに記録
+      this.metaProgression.recordSkillUsed();
+
       this.soundManager.play(SoundType.SKILL);
       this.updateUI();
       return true; // ターン消費
@@ -1077,7 +1101,14 @@ export class Game {
     this.gameState.setPhase(GamePhase.GAME_OVER);
 
     // ダンジョンタイプに応じた報酬処理
-    const dungeonType = this.world.getDungeonConfig().metadata.type;
+    const dungeonConfig = this.world.getDungeonConfig();
+    const dungeonType = dungeonConfig.metadata.type;
+    const difficulty = dungeonConfig.metadata.difficulty;
+    const maxFloors = dungeonConfig.maxFloors;
+
+    // ダンジョンクリア報酬のSPを記録
+    const spReward = this.metaProgression.recordDungeonClear(dungeonType, difficulty, maxFloors);
+
     let unlockedUpgrade: string | null = null;
 
     if (dungeonType === 'TUTORIAL') {
@@ -1102,6 +1133,7 @@ export class Game {
 
       // クリアメッセージ
       let message = 'おめでとうございます！ダンジョンを制覇しました！';
+      message += `\n\n【クリア報酬】\n${spReward} ソウルポイントを獲得しました！`;
       if (unlockedUpgrade) {
         message += `\n\n【永続強化解放】\n${unlockedUpgrade}`;
       }
@@ -1129,6 +1161,10 @@ export class Game {
 
     // メッセージログに記録
     this.uiManager.addMessage('ダンジョンを制覇した！あなたは真の英雄だ！', MessageType.INFO);
+    this.uiManager.addMessage(
+      `【クリア報酬】${spReward} ソウルポイント獲得！`,
+      MessageType.SUCCESS
+    );
 
     if (unlockedUpgrade) {
       this.uiManager.addMessage(`【永続強化解放】${unlockedUpgrade}`, MessageType.INFO);
@@ -1284,6 +1320,9 @@ export class Game {
       // デイリーチャレンジ進捗を更新
       this.dailyChallenge.updateProgress(ChallengeType.COLLECT_ITEMS, 1);
 
+      // メタプログレッションに記録
+      this.metaProgression.recordItemCollected();
+
       // マップからアイテムを削除
       this.items = this.items.filter(item => item !== itemAtPosition);
       this.soundManager.play(SoundType.PICKUP);
@@ -1319,6 +1358,9 @@ export class Game {
 
     // デイリーチャレンジ進捗を更新
     this.dailyChallenge.updateProgress(ChallengeType.OPEN_CHESTS, 1);
+
+    // メタプログレッションに記録
+    this.metaProgression.recordChestOpened();
 
     // アイテムを生成
     const playerPos = this.player.getPosition();

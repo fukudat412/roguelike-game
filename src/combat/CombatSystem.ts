@@ -8,8 +8,18 @@ import { Player } from '@/entities/Player';
 import { Enemy } from '@/entities/Enemy';
 import { eventBus, GameEvents } from '@/core/EventBus';
 import { StatusEffectType, StatusEffect } from './StatusEffect';
+import { MetaProgression } from '@/character/MetaProgression';
 
 export class CombatSystem {
+  private static metaProgression: MetaProgression | null = null;
+
+  /**
+   * メタプログレッションを設定
+   */
+  static setMetaProgression(metaProgression: MetaProgression): void {
+    this.metaProgression = metaProgression;
+  }
+
   /**
    * 攻撃を実行
    */
@@ -17,9 +27,25 @@ export class CombatSystem {
     // ダメージ計算
     const damage = this.calculateDamage(attacker, defender);
 
-    // クリティカルヒット判定（10%の確率）
-    const isCritical = Math.random() < 0.1;
-    const finalDamage = isCritical ? damage * 2 : damage;
+    // クリティカルヒット判定
+    let baseCritRate = 0.1; // 基本クリティカル率10%
+
+    // プレイヤーが攻撃者の場合、メタプログレッションのクリティカル率ボーナスを適用
+    if (attacker instanceof Player && this.metaProgression) {
+      baseCritRate += this.metaProgression.getCriticalRateBonus() / 100; // パーセント→小数
+    }
+
+    const isCritical = Math.random() < baseCritRate;
+
+    // クリティカルダメージ倍率
+    let critMultiplier = 2.0; // 基本倍率2倍
+
+    // プレイヤーが攻撃者の場合、メタプログレッションのクリティカルダメージボーナスを適用
+    if (attacker instanceof Player && this.metaProgression) {
+      critMultiplier += this.metaProgression.getCriticalDamageBonus(); // 0.25 → 2.25倍
+    }
+
+    const finalDamage = isCritical ? damage * critMultiplier : damage;
 
     // ダメージを与える
     const actualDamage = defender.takeDamage(finalDamage, attacker.name);

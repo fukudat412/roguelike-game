@@ -21,6 +21,8 @@ import {
   LifeStealSkill,
 } from '@/character/Skill';
 
+import { MetaProgression } from '@/character/MetaProgression';
+
 export class Player extends CombatEntity {
   public level: number = 1;
   public experience: number = 0;
@@ -31,6 +33,7 @@ export class Player extends CombatEntity {
   public skills: Skill[] = [];
   public skillPoints: number = 0; // スキルポイント
   private baseStats: Stats;
+  private metaProgression: MetaProgression | null = null;
 
   constructor(x: number, y: number) {
     const stats = new Stats(80, 8, 3);
@@ -90,10 +93,23 @@ export class Player extends CombatEntity {
   }
 
   /**
+   * メタプログレッションを設定
+   */
+  setMetaProgression(metaProgression: MetaProgression): void {
+    this.metaProgression = metaProgression;
+  }
+
+  /**
    * 経験値を獲得
    */
   gainExperience(amount: number): void {
-    this.experience += amount;
+    // メタプログレッションの経験値倍率を適用
+    let finalAmount = amount;
+    if (this.metaProgression) {
+      finalAmount = Math.floor(amount * this.metaProgression.getExpMultiplier());
+    }
+
+    this.experience += finalAmount;
 
     if (this.experience >= this.experienceToNextLevel) {
       this.levelUp();
@@ -215,10 +231,17 @@ export class Player extends CombatEntity {
   }
 
   /**
-   * ゴールドを追加
+   * ゴールドを追加（メタプログレッションの倍率適用）
    */
-  addGold(amount: number): void {
-    this.gold += amount;
+  addGold(amount: number, applyMultiplier: boolean = true): void {
+    let finalAmount = amount;
+
+    // メタプログレッションのゴールドドロップ倍率を適用
+    if (applyMultiplier && this.metaProgression) {
+      finalAmount = Math.floor(amount * this.metaProgression.getGoldDropMultiplier());
+    }
+
+    this.gold += finalAmount;
     eventBus.emit(GameEvents.UI_UPDATE);
   }
 

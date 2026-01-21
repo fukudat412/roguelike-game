@@ -128,6 +128,21 @@ export class Game {
 
     // プレイヤー死亡時に統計表示
     eventBus.on(GameEvents.PLAYER_DEATH, () => {
+      // 復活機能チェック
+      if (this.metaProgression.hasReviveOnce()) {
+        // 復活処理
+        this.metaProgression.consumeRevive();
+        const reviveHp = Math.floor(this.player.stats.maxHp * 0.5);
+        this.player.stats.hp = reviveHp;
+
+        this.soundManager.play(SoundType.LEVEL_UP);
+        this.uiManager.addMessage('【不死鳥の加護】HP50%で復活しました！', MessageType.SUCCESS);
+        this.updateUI();
+
+        // 復活したのでゲームオーバーにしない
+        return;
+      }
+
       this.soundManager.play(SoundType.DAMAGE);
 
       // 死亡報酬SPを付与
@@ -302,13 +317,24 @@ export class Game {
     const startPos = this.world.getRandomStartPosition();
     this.player = new Player(startPos.x, startPos.y);
 
+    // メタプログレッションをプレイヤーに設定
+    this.player.setMetaProgression(this.metaProgression);
+
+    // メタプログレッションを戦闘システムに設定
+    CombatSystem.setMetaProgression(this.metaProgression);
+
     // メタプログレッションの永続ボーナスを適用
     const bonuses = this.metaProgression.getPermanentBonuses();
     if (bonuses.hp > 0) this.player.stats.increaseMaxHp(bonuses.hp);
     if (bonuses.mp > 0) this.player.stats.increaseMaxMp(bonuses.mp);
     if (bonuses.attack > 0) this.player.stats.increaseAttack(bonuses.attack);
     if (bonuses.defense > 0) this.player.stats.increaseDefense(bonuses.defense);
-    if (bonuses.gold > 0) this.player.addGold(bonuses.gold);
+    if (bonuses.gold > 0) this.player.addGold(bonuses.gold, false); // 初期ゴールドは倍率適用しない
+
+    // インベントリ拡張の適用
+    if (this.metaProgression.hasInventoryExpansion()) {
+      this.player.inventory.expandCapacity(5);
+    }
 
     // スキル選択UIを設定
     this.skillSelectionUI.setPlayer(this.player, skill => {
@@ -390,8 +416,10 @@ export class Game {
     // カメラをプレイヤーに追従
     this.renderer.setCameraPosition(this.player.getPosition());
 
-    // FOV更新
-    this.map.updateFOV(this.player.getPosition(), 8);
+    // FOV更新（視界範囲ボーナス適用）
+    const baseVisionRange = 8;
+    const visionRange = baseVisionRange + this.metaProgression.getVisionRangeBonus();
+    this.map.updateFOV(this.player.getPosition(), visionRange);
 
     // UI更新
     this.updateUI();
@@ -1212,8 +1240,10 @@ export class Game {
     // カメラ追従
     this.renderer.setCameraPosition(newPos);
 
-    // FOV更新
-    this.map.updateFOV(newPos, 8);
+    // FOV更新（視界範囲ボーナス適用）
+    const baseVisionRange = 8;
+    const visionRange = baseVisionRange + this.metaProgression.getVisionRangeBonus();
+    this.map.updateFOV(newPos, visionRange);
 
     // 階段の上に立った時にメッセージを表示
     if (this.stairs && this.stairs.getPosition().equals(newPos)) {
@@ -1521,8 +1551,10 @@ export class Game {
     // カメラ追従
     this.renderer.setCameraPosition(randomCell.position);
 
-    // FOV更新
-    this.map.updateFOV(randomCell.position, 8);
+    // FOV更新（視界範囲ボーナス適用）
+    const baseVisionRange = 8;
+    const visionRange = baseVisionRange + this.metaProgression.getVisionRangeBonus();
+    this.map.updateFOV(randomCell.position, visionRange);
 
     this.soundManager.play(SoundType.STAIRS);
     this.uiManager.addMessage('テレポートの巻物を使った！別の場所に移動した', MessageType.INFO);

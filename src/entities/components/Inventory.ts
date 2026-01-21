@@ -143,4 +143,11 @@ export class Inventory {
   clear(): void {
     this.items = [];
   }
+
+  /**
+   * 最大容量を拡張
+   */
+  expandCapacity(additionalSlots: number): void {
+    this.maxSlots += additionalSlots;
+  }
 }

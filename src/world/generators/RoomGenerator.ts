@@ -18,16 +18,16 @@ export class RoomGenerator {
   /**
    * マップを生成
    */
-  static generate(width: number, height: number, options: {
-    minRoomSize?: number;
-    maxRoomSize?: number;
-    maxRooms?: number;
-  } = {}): GameMap {
-    const {
-      minRoomSize = 4,
-      maxRoomSize = 10,
-      maxRooms = 15,
-    } = options;
+  static generate(
+    width: number,
+    height: number,
+    options: {
+      minRoomSize?: number;
+      maxRoomSize?: number;
+      maxRooms?: number;
+    } = {}
+  ): GameMap {
+    const { minRoomSize = 4, maxRoomSize = 10, maxRooms = 15 } = options;
 
     const map = new GameMap(width, height);
     const rooms: Room[] = [];
@@ -93,10 +93,7 @@ export class RoomGenerator {
    * 部屋の中心座標を取得
    */
   static getRoomCenter(room: Room): Vector2D {
-    return new Vector2D(
-      Math.floor(room.x + room.width / 2),
-      Math.floor(room.y + room.height / 2)
-    );
+    return new Vector2D(Math.floor(room.x + room.width / 2), Math.floor(room.y + room.height / 2));
   }
 
   /**

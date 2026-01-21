@@ -112,7 +112,7 @@ export class PowerStrikeSkill extends Skill {
   protected execute(player: Player, enemies: Enemy[]): void {
     // 隣接する敵を探す
     const playerPos = player.getPosition();
-    const adjacent = enemies.filter((enemy) => {
+    const adjacent = enemies.filter(enemy => {
       if (!enemy.isAlive()) return false;
       const enemyPos = enemy.getPosition();
       const distance = Math.max(
@@ -164,7 +164,7 @@ export class AreaSlashSkill extends Skill {
     const damage = player.getAttack();
 
     // 周囲8マスの敵を探す
-    const targets = enemies.filter((enemy) => {
+    const targets = enemies.filter(enemy => {
       if (!enemy.isAlive()) return false;
       const enemyPos = enemy.getPosition();
       const distance = Math.max(
@@ -404,7 +404,7 @@ export class LifeStealSkill extends Skill {
 
   protected execute(player: Player, enemies: Enemy[]): void {
     const playerPos = player.getPosition();
-    const adjacent = enemies.filter((enemy) => {
+    const adjacent = enemies.filter(enemy => {
       if (!enemy.isAlive()) return false;
       const enemyPos = enemy.getPosition();
       const distance = Math.max(

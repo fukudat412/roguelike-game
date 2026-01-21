@@ -444,10 +444,11 @@ export class MetaProgression {
    * 購入可能なアップグレードを取得
    */
   getAvailableUpgrades(): Upgrade[] {
-    return Object.values(UpgradeDatabase).filter(upgrade =>
-      upgrade.cost > 0 && // コスト0のアップグレード（最終ボス報酬）は除外
-      !this.data.unlockedUpgrades.includes(upgrade.type) &&
-      (!upgrade.prerequisite || this.data.unlockedUpgrades.includes(upgrade.prerequisite))
+    return Object.values(UpgradeDatabase).filter(
+      upgrade =>
+        upgrade.cost > 0 && // コスト0のアップグレード（最終ボス報酬）は除外
+        !this.data.unlockedUpgrades.includes(upgrade.type) &&
+        (!upgrade.prerequisite || this.data.unlockedUpgrades.includes(upgrade.prerequisite))
     );
   }
 

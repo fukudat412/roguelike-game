@@ -81,41 +81,45 @@ export class DailyChallenge {
     const seed = this.dateToSeed(date);
     const rng = this.seededRandom(seed);
 
-    const challengePool: Array<{ type: ChallengeType; baseTarget: number; desc: (n: number) => string }> = [
+    const challengePool: Array<{
+      type: ChallengeType;
+      baseTarget: number;
+      desc: (n: number) => string;
+    }> = [
       {
         type: ChallengeType.KILL_ENEMIES,
         baseTarget: 10,
-        desc: (n) => `敵を${n}体倒す`,
+        desc: n => `敵を${n}体倒す`,
       },
       {
         type: ChallengeType.KILL_BOSSES,
         baseTarget: 1,
-        desc: (n) => `ボスを${n}体倒す`,
+        desc: n => `ボスを${n}体倒す`,
       },
       {
         type: ChallengeType.OPEN_CHESTS,
         baseTarget: 3,
-        desc: (n) => `宝箱を${n}個開ける`,
+        desc: n => `宝箱を${n}個開ける`,
       },
       {
         type: ChallengeType.COLLECT_ITEMS,
         baseTarget: 15,
-        desc: (n) => `アイテムを${n}個収集する`,
+        desc: n => `アイテムを${n}個収集する`,
       },
       {
         type: ChallengeType.REACH_FLOOR,
         baseTarget: 5,
-        desc: (n) => `${n}階層に到達する`,
+        desc: n => `${n}階層に到達する`,
       },
       {
         type: ChallengeType.EARN_GOLD,
         baseTarget: 500,
-        desc: (n) => `${n}ゴールドを獲得する`,
+        desc: n => `${n}ゴールドを獲得する`,
       },
       {
         type: ChallengeType.SURVIVE_TURNS,
         baseTarget: 100,
-        desc: (n) => `${n}ターン生き延びる`,
+        desc: n => `${n}ターン生き延びる`,
       },
     ];
 
@@ -161,7 +165,7 @@ export class DailyChallenge {
   private dateToSeed(dateStr: string): number {
     let hash = 0;
     for (let i = 0; i < dateStr.length; i++) {
-      hash = ((hash << 5) - hash) + dateStr.charCodeAt(i);
+      hash = (hash << 5) - hash + dateStr.charCodeAt(i);
       hash = hash & hash; // Convert to 32bit integer
     }
     return Math.abs(hash);

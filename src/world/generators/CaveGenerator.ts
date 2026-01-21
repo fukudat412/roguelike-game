@@ -13,12 +13,16 @@ export class CaveGenerator {
    * @param height マップの高さ
    * @param options 生成オプション
    */
-  static generate(width: number, height: number, options: {
-    fillProbability?: number;
-    smoothIterations?: number;
-    deathLimit?: number;
-    birthLimit?: number;
-  } = {}): GameMap {
+  static generate(
+    width: number,
+    height: number,
+    options: {
+      fillProbability?: number;
+      smoothIterations?: number;
+      deathLimit?: number;
+      birthLimit?: number;
+    } = {}
+  ): GameMap {
     const {
       fillProbability = 0.45,
       smoothIterations = 5,

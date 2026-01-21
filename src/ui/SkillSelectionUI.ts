@@ -51,7 +51,7 @@ export class SkillSelectionUI {
     }
 
     // ESCキーで閉じる
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.isOpen) {
         this.close();
       }

@@ -31,9 +31,7 @@ export class SoundManager {
   private initAudioContext(): void {
     if (!this.audioContext) {
       // 型安全なAudioContext取得
-      const AudioContextClass =
-        (window as any).AudioContext ||
-        (window as any).webkitAudioContext;
+      const AudioContextClass = (window as any).AudioContext || (window as any).webkitAudioContext;
 
       if (!AudioContextClass) {
         Logger.error('AudioContext is not supported in this browser');

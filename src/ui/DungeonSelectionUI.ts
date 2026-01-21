@@ -91,10 +91,21 @@ export class DungeonSelectionUI {
    */
   private createDungeonCard(
     type: DungeonType,
-    metadata: { name: string; description: string; icon: string; color: string; difficulty: number; locked?: boolean; unlockRequirement?: string }
+    metadata: {
+      name: string;
+      description: string;
+      icon: string;
+      color: string;
+      difficulty: number;
+      locked?: boolean;
+      unlockRequirement?: string;
+    }
   ): HTMLElement {
     // ロック状態を判定
-    const isLocked = metadata.locked && this.metaProgression && !this.metaProgression.hasAllRequiredDungeonsCleared();
+    const isLocked =
+      metadata.locked &&
+      this.metaProgression &&
+      !this.metaProgression.hasAllRequiredDungeonsCleared();
 
     const card = document.createElement('div');
     card.className = isLocked ? 'dungeon-card locked' : 'dungeon-card';
@@ -115,7 +126,8 @@ export class DungeonSelectionUI {
     // 難易度
     const difficulty = document.createElement('div');
     difficulty.className = 'dungeon-difficulty';
-    difficulty.textContent = '難易度: ' + '★'.repeat(metadata.difficulty) + '☆'.repeat(5 - metadata.difficulty);
+    difficulty.textContent =
+      '難易度: ' + '★'.repeat(metadata.difficulty) + '☆'.repeat(5 - metadata.difficulty);
     card.appendChild(difficulty);
 
     // 説明またはロック表示
@@ -165,7 +177,10 @@ export class DungeonSelectionUI {
         const handleTransitionEnd = (e: TransitionEvent) => {
           // opacity の transition のみを対象
           if (e.propertyName === 'opacity') {
-            gameContainer.removeEventListener('transitionend', handleTransitionEnd as EventListener);
+            gameContainer.removeEventListener(
+              'transitionend',
+              handleTransitionEnd as EventListener
+            );
             console.log('Transition完了');
             initializeGame();
           }

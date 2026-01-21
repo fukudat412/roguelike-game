@@ -176,8 +176,8 @@ export class ItemAffixManager {
    * ランダムな接頭辞を取得
    */
   static getRandomPrefix(minRarity: ItemRarity = ItemRarity.COMMON): Affix | null {
-    const prefixes = Object.values(Prefixes).filter(p =>
-      this.getRarityValue(p.rarity) >= this.getRarityValue(minRarity)
+    const prefixes = Object.values(Prefixes).filter(
+      p => this.getRarityValue(p.rarity) >= this.getRarityValue(minRarity)
     );
 
     if (prefixes.length === 0 || Math.random() > 0.3) {
@@ -191,8 +191,8 @@ export class ItemAffixManager {
    * ランダムな接尾辞を取得
    */
   static getRandomSuffix(minRarity: ItemRarity = ItemRarity.COMMON): Affix | null {
-    const suffixes = Object.values(Suffixes).filter(s =>
-      this.getRarityValue(s.rarity) >= this.getRarityValue(minRarity)
+    const suffixes = Object.values(Suffixes).filter(
+      s => this.getRarityValue(s.rarity) >= this.getRarityValue(minRarity)
     );
 
     if (suffixes.length === 0 || Math.random() > 0.3) {
@@ -290,7 +290,10 @@ export class ItemAffixManager {
   /**
    * 合計ボーナスを計算
    */
-  static getTotalBonuses(prefix: Affix | null, suffix: Affix | null): {
+  static getTotalBonuses(
+    prefix: Affix | null,
+    suffix: Affix | null
+  ): {
     attack: number;
     defense: number;
     maxHp: number;

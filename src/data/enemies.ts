@@ -337,27 +337,13 @@ export const EnemyDatabase: Record<string, EnemyTemplate> = {
 export function getEnemiesForFloor(floor: number): EnemyTemplate[] {
   if (floor <= 3) {
     // 序盤
-    return [
-      EnemyDatabase.GOBLIN,
-      EnemyDatabase.KOBOLD,
-      EnemyDatabase.RAT,
-    ];
+    return [EnemyDatabase.GOBLIN, EnemyDatabase.KOBOLD, EnemyDatabase.RAT];
   } else if (floor <= 7) {
     // 中盤
-    return [
-      EnemyDatabase.ORC,
-      EnemyDatabase.SKELETON,
-      EnemyDatabase.WOLF,
-      EnemyDatabase.ZOMBIE,
-    ];
+    return [EnemyDatabase.ORC, EnemyDatabase.SKELETON, EnemyDatabase.WOLF, EnemyDatabase.ZOMBIE];
   } else if (floor <= 12) {
     // 後半
-    return [
-      EnemyDatabase.TROLL,
-      EnemyDatabase.OGRE,
-      EnemyDatabase.WRAITH,
-      EnemyDatabase.VAMPIRE,
-    ];
+    return [EnemyDatabase.TROLL, EnemyDatabase.OGRE, EnemyDatabase.WRAITH, EnemyDatabase.VAMPIRE];
   } else {
     // 終盤
     return [

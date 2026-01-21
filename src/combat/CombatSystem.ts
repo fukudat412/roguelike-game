@@ -53,11 +53,7 @@ export class CombatSystem {
   /**
    * 特殊攻撃を処理
    */
-  private static processSpecialAttack(
-    attacker: Enemy,
-    defender: Player,
-    damage: number
-  ): void {
+  private static processSpecialAttack(attacker: Enemy, defender: Player, damage: number): void {
     const special = attacker.specialAttack!;
 
     // 確率判定

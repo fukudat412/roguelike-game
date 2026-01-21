@@ -134,12 +134,17 @@ export class Renderer {
   /**
    * テキストを描画
    */
-  drawText(text: string, x: number, y: number, options: {
-    color?: string;
-    font?: string;
-    align?: CanvasTextAlign;
-    baseline?: CanvasTextBaseline;
-  } = {}): void {
+  drawText(
+    text: string,
+    x: number,
+    y: number,
+    options: {
+      color?: string;
+      font?: string;
+      align?: CanvasTextAlign;
+      baseline?: CanvasTextBaseline;
+    } = {}
+  ): void {
     this.ctx.fillStyle = options.color || '#ffffff';
     this.ctx.font = options.font || '16px monospace';
     this.ctx.textAlign = options.align || 'left';
@@ -168,10 +173,7 @@ export class Renderer {
     const worldX = screenX + this.camera.position.x - this.canvas.width / 2 + this.tileSize / 2;
     const worldY = screenY + this.camera.position.y - this.canvas.height / 2 + this.tileSize / 2;
 
-    return new Vector2D(
-      Math.floor(worldX / this.tileSize),
-      Math.floor(worldY / this.tileSize)
-    );
+    return new Vector2D(Math.floor(worldX / this.tileSize), Math.floor(worldY / this.tileSize));
   }
 
   /**
@@ -219,15 +221,23 @@ export class Renderer {
   /**
    * ダメージ数字を追加
    */
-  addDamageNumber(gridX: number, gridY: number, value: number, isCritical: boolean = false, isHeal: boolean = false): void {
+  addDamageNumber(
+    gridX: number,
+    gridY: number,
+    value: number,
+    isCritical: boolean = false,
+    isHeal: boolean = false
+  ): void {
     const screenPos = this.gridToScreen(gridX, gridY);
-    this.damageNumbers.push(new DamageNumber({
-      value,
-      x: screenPos.x + this.tileSize / 2,
-      y: screenPos.y,
-      isCritical,
-      isHeal,
-    }));
+    this.damageNumbers.push(
+      new DamageNumber({
+        value,
+        x: screenPos.x + this.tileSize / 2,
+        y: screenPos.y,
+        isCritical,
+        isHeal,
+      })
+    );
   }
 
   /**

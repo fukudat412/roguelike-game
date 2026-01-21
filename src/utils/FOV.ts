@@ -25,16 +25,7 @@ export class FOV {
 
     // 8方向それぞれでシャドウキャスティング
     for (let octant = 0; octant < 8; octant++) {
-      this.castLight(
-        visible,
-        origin,
-        1,
-        1.0,
-        0.0,
-        radius,
-        octant,
-        isBlocking
-      );
+      this.castLight(visible, origin, 1, 1.0, 0.0, radius, octant, isBlocking);
     }
 
     // Set を Vector2D配列に変換
@@ -171,10 +162,7 @@ export class FOV {
   /**
    * シンプルな円形FOV（フォールバック）
    */
-  static calculateCircular(
-    origin: Vector2D,
-    radius: number
-  ): Vector2D[] {
+  static calculateCircular(origin: Vector2D, radius: number): Vector2D[] {
     const visible: Vector2D[] = [];
 
     for (let dy = -radius; dy <= radius; dy++) {

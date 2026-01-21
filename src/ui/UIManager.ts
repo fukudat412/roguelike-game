@@ -38,20 +38,26 @@ export class UIManager {
     });
 
     // 戦闘ヒット
-    eventBus.on(GameEvents.COMBAT_HIT, (data: { attacker: string; target: string; damage: number }) => {
-      this.messageLog.add(
-        `${data.attacker}が${data.target}に${data.damage}ダメージを与えた！`,
-        MessageType.COMBAT
-      );
-    });
+    eventBus.on(
+      GameEvents.COMBAT_HIT,
+      (data: { attacker: string; target: string; damage: number }) => {
+        this.messageLog.add(
+          `${data.attacker}が${data.target}に${data.damage}ダメージを与えた！`,
+          MessageType.COMBAT
+        );
+      }
+    );
 
     // 戦闘クリティカル
-    eventBus.on(GameEvents.COMBAT_CRITICAL, (data: { attacker: string; target: string; damage: number }) => {
-      this.messageLog.add(
-        `クリティカル！${data.attacker}が${data.target}に${data.damage}ダメージを与えた！`,
-        MessageType.COMBAT
-      );
-    });
+    eventBus.on(
+      GameEvents.COMBAT_CRITICAL,
+      (data: { attacker: string; target: string; damage: number }) => {
+        this.messageLog.add(
+          `クリティカル！${data.attacker}が${data.target}に${data.damage}ダメージを与えた！`,
+          MessageType.COMBAT
+        );
+      }
+    );
 
     // 敵死亡
     eventBus.on(GameEvents.ENEMY_DEATH, (data: { name: string }) => {
@@ -82,7 +88,8 @@ export class UIManager {
     if (hpElement) hpElement.textContent = stats.hp.toString();
     if (maxHpElement) maxHpElement.textContent = stats.maxHp.toString();
     if (mpElement && stats.mp !== undefined) mpElement.textContent = stats.mp.toString();
-    if (maxMpElement && stats.maxMp !== undefined) maxMpElement.textContent = stats.maxMp.toString();
+    if (maxMpElement && stats.maxMp !== undefined)
+      maxMpElement.textContent = stats.maxMp.toString();
     if (attackElement) attackElement.textContent = stats.attack.toString();
     if (defenseElement) defenseElement.textContent = stats.defense.toString();
     if (goldElement && stats.gold !== undefined) goldElement.textContent = stats.gold.toString();
@@ -101,15 +108,17 @@ export class UIManager {
   /**
    * スキル表示を更新
    */
-  updateSkills(skills: Array<{
-    name: string;
-    icon: string;
-    mpCost: number;
-    cooldown: number;
-    canUse: boolean;
-    hasEnoughMp: boolean;
-    key: string;
-  }>): void {
+  updateSkills(
+    skills: Array<{
+      name: string;
+      icon: string;
+      mpCost: number;
+      cooldown: number;
+      canUse: boolean;
+      hasEnoughMp: boolean;
+      key: string;
+    }>
+  ): void {
     const skillsListElement = document.getElementById('skills-list');
     if (!skillsListElement) return;
 
@@ -350,13 +359,15 @@ export class UIManager {
   /**
    * デイリーチャレンジを更新
    */
-  updateDailyChallenges(challenges: Array<{
-    description: string;
-    current: number;
-    target: number;
-    completed: boolean;
-    reward: { metaPoints: number; gold: number };
-  }>): void {
+  updateDailyChallenges(
+    challenges: Array<{
+      description: string;
+      current: number;
+      target: number;
+      completed: boolean;
+      reward: { metaPoints: number; gold: number };
+    }>
+  ): void {
     const listElement = document.getElementById('daily-challenge-list');
     if (!listElement) return;
 
@@ -374,7 +385,9 @@ export class UIManager {
 
       // 進捗
       const progressSpan = document.createElement('span');
-      progressSpan.className = challenge.completed ? 'challenge-progress completed' : 'challenge-progress';
+      progressSpan.className = challenge.completed
+        ? 'challenge-progress completed'
+        : 'challenge-progress';
       progressSpan.textContent = `${challenge.current}/${challenge.target}`;
       itemDiv.appendChild(progressSpan);
 

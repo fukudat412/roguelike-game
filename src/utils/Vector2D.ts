@@ -3,7 +3,10 @@
  * 位置、方向、速度などを表現
  */
 export class Vector2D {
-  constructor(public x: number, public y: number) {}
+  constructor(
+    public x: number,
+    public y: number
+  ) {}
 
   /**
    * ベクトルを複製
@@ -97,24 +100,19 @@ export class Vector2D {
   /**
    * 四方向の配列
    */
-  static readonly DIRECTIONS = [
-    Vector2D.UP,
-    Vector2D.DOWN,
-    Vector2D.LEFT,
-    Vector2D.RIGHT,
-  ];
+  static readonly DIRECTIONS = [Vector2D.UP, Vector2D.DOWN, Vector2D.LEFT, Vector2D.RIGHT];
 
   /**
    * 八方向の配列
    */
   static readonly EIGHT_DIRECTIONS = [
-    new Vector2D(0, -1),  // 上
-    new Vector2D(1, -1),  // 右上
-    new Vector2D(1, 0),   // 右
-    new Vector2D(1, 1),   // 右下
-    new Vector2D(0, 1),   // 下
-    new Vector2D(-1, 1),  // 左下
-    new Vector2D(-1, 0),  // 左
+    new Vector2D(0, -1), // 上
+    new Vector2D(1, -1), // 右上
+    new Vector2D(1, 0), // 右
+    new Vector2D(1, 1), // 右下
+    new Vector2D(0, 1), // 下
+    new Vector2D(-1, 1), // 左下
+    new Vector2D(-1, 0), // 左
     new Vector2D(-1, -1), // 左上
   ];
 }

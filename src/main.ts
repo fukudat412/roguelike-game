@@ -9,7 +9,7 @@ import { DungeonSelectionUI } from './ui/DungeonSelectionUI';
 import { DungeonType } from './world/DungeonType';
 
 // グローバルエラーハンドリング
-window.addEventListener('error', (event) => {
+window.addEventListener('error', event => {
   Logger.error('Global error:', event.error);
 });
 
@@ -26,27 +26,30 @@ window.addEventListener('DOMContentLoaded', () => {
   const game = new Game(canvas);
 
   // ダンジョン選択UIを表示
-  const dungeonSelection = new DungeonSelectionUI('dungeon-selection', (dungeonType: DungeonType) => {
-    console.log(`ダンジョン選択: ${dungeonType}`);
+  const dungeonSelection = new DungeonSelectionUI(
+    'dungeon-selection',
+    (dungeonType: DungeonType) => {
+      console.log(`ダンジョン選択: ${dungeonType}`);
 
-    try {
-      // 選択されたダンジョンタイプでゲームを初期化
-      console.log('ゲームを初期化中...');
-      game.initialize(dungeonType);
+      try {
+        // 選択されたダンジョンタイプでゲームを初期化
+        console.log('ゲームを初期化中...');
+        game.initialize(dungeonType);
 
-      // 開始
-      console.log('ゲームを開始中...');
-      game.start();
+        // 開始
+        console.log('ゲームを開始中...');
+        game.start();
 
-      console.log(`ローグライク探索ゲーム開始！ (${dungeonType})`);
-      console.log('操作方法:');
-      console.log('  移動: WASD / 矢印キー / テンキー');
-      console.log('  攻撃: 敵に向かって移動');
-      console.log('  待機: スペースキー');
-    } catch (error) {
-      console.error('ゲーム初期化エラー:', error);
+        console.log(`ローグライク探索ゲーム開始！ (${dungeonType})`);
+        console.log('操作方法:');
+        console.log('  移動: WASD / 矢印キー / テンキー');
+        console.log('  攻撃: 敵に向かって移動');
+        console.log('  待機: スペースキー');
+      } catch (error) {
+        console.error('ゲーム初期化エラー:', error);
+      }
     }
-  });
+  );
 
   // ダンジョン選択UIにメタプログレッションを設定
   game.setupDungeonSelectionUI(dungeonSelection);

@@ -32,10 +32,7 @@ export class EventBus {
   /**
    * イベントリスナーを登録
    */
-  on<K extends keyof EventDataMap>(
-    event: K,
-    callback: EventCallback<EventDataMap[K]>
-  ): void;
+  on<K extends keyof EventDataMap>(event: K, callback: EventCallback<EventDataMap[K]>): void;
   on(event: string, callback: EventCallback): void;
   on(event: string, callback: EventCallback): void {
     if (!this.listeners.has(event)) {
@@ -47,10 +44,7 @@ export class EventBus {
   /**
    * イベントリスナーを削除
    */
-  off<K extends keyof EventDataMap>(
-    event: K,
-    callback: EventCallback<EventDataMap[K]>
-  ): void;
+  off<K extends keyof EventDataMap>(event: K, callback: EventCallback<EventDataMap[K]>): void;
   off(event: string, callback: EventCallback): void;
   off(event: string, callback: EventCallback): void {
     const callbacks = this.listeners.get(event);
@@ -77,10 +71,7 @@ export class EventBus {
   /**
    * 一度だけ実行されるイベントリスナーを登録
    */
-  once<K extends keyof EventDataMap>(
-    event: K,
-    callback: EventCallback<EventDataMap[K]>
-  ): void;
+  once<K extends keyof EventDataMap>(event: K, callback: EventCallback<EventDataMap[K]>): void;
   once(event: string, callback: EventCallback): void;
   once(event: string, callback: EventCallback): void {
     const onceCallback = (data: any) => {

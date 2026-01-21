@@ -57,7 +57,7 @@ export class Player extends CombatEntity {
 
     // 初期スキル（基本スキル1つのみ）
     this.skills = [
-      new PowerStrikeSkill(),    // 1キー - 基本攻撃スキル
+      new PowerStrikeSkill(), // 1キー - 基本攻撃スキル
     ];
 
     // 初期スキルポイント（すぐに他のスキルを習得できるように）
@@ -111,7 +111,7 @@ export class Player extends CombatEntity {
     // ステータス上昇（レベルに応じてスケーリング）
     const hpGain = 15 + Math.floor(this.level / 3) * 5; // 15 → 20 → 25 → ...
     const mpGain = 8;
-    const attackGain = 3 + Math.floor(this.level / 5);  // 3 → 4 → 5 → ...
+    const attackGain = 3 + Math.floor(this.level / 5); // 3 → 4 → 5 → ...
     const defenseGain = 2 + Math.floor(this.level / 5); // 2 → 3 → 4 → ...
 
     this.stats.increaseMaxHp(hpGain);

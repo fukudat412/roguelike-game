@@ -19,15 +19,13 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       difficulty: 1,
     },
 
-    mapGeneration: [
-      { algorithm: 'room', weight: 1.0 },
-    ],
+    mapGeneration: [{ algorithm: 'room', weight: 1.0 }],
 
     enemies: {
       pool: [
-        'RAT',        // 巨大ネズミ（序盤）
-        'GOBLIN',     // ゴブリン（序盤）
-        'KOBOLD',     // コボルド（序盤）
+        'RAT', // 巨大ネズミ（序盤）
+        'GOBLIN', // ゴブリン（序盤）
+        'KOBOLD', // コボルド（序盤）
       ],
       spawnMultiplier: 0.7,
       eliteChance: 0.05,
@@ -63,10 +61,10 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
-        'RAT',        // 巨大ネズミ（序盤）
-        'WOLF',       // 野生の狼（中盤）
-        'KOBOLD',     // コボルド（序盤）
-        'TROLL',      // トロール（後半）
+        'RAT', // 巨大ネズミ（序盤）
+        'WOLF', // 野生の狼（中盤）
+        'KOBOLD', // コボルド（序盤）
+        'TROLL', // トロール（後半）
       ],
       spawnMultiplier: 1.2,
       eliteChance: 0.15,
@@ -114,13 +112,13 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
-        'RAT',        // 巨大ネズミ（序盤）
-        'GOBLIN',     // ゴブリン（序盤）
-        'ZOMBIE',     // ゾンビ（中盤）
-        'SKELETON',   // スケルトン（中盤）
-        'WRAITH',     // レイス（後半）
-        'VAMPIRE',    // ヴァンパイア（後半）
-        'LICH',       // リッチ（終盤）
+        'RAT', // 巨大ネズミ（序盤）
+        'GOBLIN', // ゴブリン（序盤）
+        'ZOMBIE', // ゾンビ（中盤）
+        'SKELETON', // スケルトン（中盤）
+        'WRAITH', // レイス（後半）
+        'VAMPIRE', // ヴァンパイア（後半）
+        'LICH', // リッチ（終盤）
       ],
       spawnMultiplier: 1.0,
       eliteChance: 0.2,
@@ -170,10 +168,10 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
-        'GOBLIN',     // ゴブリン（序盤）
-        'ORC',        // オーク（中盤）
-        'OGRE',       // オーガ（後半）
-        'TROLL',      // トロール（後半）
+        'GOBLIN', // ゴブリン（序盤）
+        'ORC', // オーク（中盤）
+        'OGRE', // オーガ（後半）
+        'TROLL', // トロール（後半）
       ],
       spawnMultiplier: 0.9,
       eliteChance: 0.25,
@@ -222,16 +220,16 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
-        'KOBOLD',         // コボルド（序盤）
-        'ORC',            // オーク（中盤）
-        'SKELETON',       // スケルトン（中盤）
-        'OGRE',           // オーガ（後半）
-        'WRAITH',         // レイス（後半）
-        'VAMPIRE',        // ヴァンパイア（後半）
-        'DEMON',          // デーモン（終盤）
-        'DRAGON',         // ドラゴン（終盤）
+        'KOBOLD', // コボルド（序盤）
+        'ORC', // オーク（中盤）
+        'SKELETON', // スケルトン（中盤）
+        'OGRE', // オーガ（後半）
+        'WRAITH', // レイス（後半）
+        'VAMPIRE', // ヴァンパイア（後半）
+        'DEMON', // デーモン（終盤）
+        'DRAGON', // ドラゴン（終盤）
         'ANCIENT_DRAGON', // 古代竜（終盤）
-        'LICH',           // リッチ（終盤）
+        'LICH', // リッチ（終盤）
       ],
       spawnMultiplier: 0.8,
       eliteChance: 0.3,
@@ -284,18 +282,18 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
 
     enemies: {
       pool: [
-        'GOBLIN',         // 序盤
+        'GOBLIN', // 序盤
         'KOBOLD',
         'RAT',
-        'ORC',            // 中盤
+        'ORC', // 中盤
         'SKELETON',
         'WOLF',
         'ZOMBIE',
-        'TROLL',          // 後半
+        'TROLL', // 後半
         'OGRE',
         'WRAITH',
         'VAMPIRE',
-        'DEMON',          // 終盤
+        'DEMON', // 終盤
         'DRAGON',
         'LICH',
         'ANCIENT_DRAGON',

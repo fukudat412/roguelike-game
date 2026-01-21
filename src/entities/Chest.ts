@@ -31,16 +31,10 @@ export class Chest extends Entity {
   public template: ChestTemplate;
 
   constructor(x: number, y: number, template: ChestTemplate) {
-    super(
-      template.name,
-      EntityType.ITEM,
-      x,
-      y,
-      {
-        char: template.char,
-        color: template.color,
-      }
-    );
+    super(template.name, EntityType.ITEM, x, y, {
+      char: template.char,
+      color: template.color,
+    });
 
     this.chestType = template.type;
     this.template = template;

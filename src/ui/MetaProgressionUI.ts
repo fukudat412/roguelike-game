@@ -31,7 +31,7 @@ export class MetaProgressionUI {
     }
 
     // ESCキーで閉じる
-    window.addEventListener('keydown', (e) => {
+    window.addEventListener('keydown', e => {
       if (e.key === 'Escape' && this.isOpen) {
         this.close();
       }
@@ -41,7 +41,10 @@ export class MetaProgressionUI {
   /**
    * メタプログレッションを設定
    */
-  setMetaProgression(metaProgression: MetaProgression, onPurchase: (upgrade: Upgrade) => void): void {
+  setMetaProgression(
+    metaProgression: MetaProgression,
+    onPurchase: (upgrade: Upgrade) => void
+  ): void {
     this.metaProgression = metaProgression;
     this.onPurchaseCallback = onPurchase;
     this.render();
@@ -257,7 +260,11 @@ export class MetaProgressionUI {
   /**
    * アップグレード要素を作成
    */
-  private createUpgradeElement(upgrade: Upgrade, canAfford: boolean, isUnlocked: boolean): HTMLElement {
+  private createUpgradeElement(
+    upgrade: Upgrade,
+    canAfford: boolean,
+    isUnlocked: boolean
+  ): HTMLElement {
     const upgradeDiv = document.createElement('div');
     upgradeDiv.className = `meta-upgrade-item ${isUnlocked ? 'unlocked' : canAfford ? 'affordable' : 'locked'}`;
 

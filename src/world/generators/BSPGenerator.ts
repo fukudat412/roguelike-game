@@ -91,7 +91,8 @@ class BSPNode {
       );
 
       const roomX = this.rect.x + 1 + Math.floor(Math.random() * (this.rect.width - roomWidth - 1));
-      const roomY = this.rect.y + 1 + Math.floor(Math.random() * (this.rect.height - roomHeight - 1));
+      const roomY =
+        this.rect.y + 1 + Math.floor(Math.random() * (this.rect.height - roomHeight - 1));
 
       this.room = {
         x: roomX,
@@ -129,18 +130,17 @@ export class BSPGenerator {
   /**
    * BSPアルゴリズムでマップを生成
    */
-  static generate(width: number, height: number, options: {
-    minRoomSize?: number;
-    maxRoomSize?: number;
-    minPartitionSize?: number;
-    maxDepth?: number;
-  } = {}): GameMap {
-    const {
-      minRoomSize = 4,
-      maxRoomSize = 10,
-      minPartitionSize = 8,
-      maxDepth = 5,
-    } = options;
+  static generate(
+    width: number,
+    height: number,
+    options: {
+      minRoomSize?: number;
+      maxRoomSize?: number;
+      minPartitionSize?: number;
+      maxDepth?: number;
+    } = {}
+  ): GameMap {
+    const { minRoomSize = 4, maxRoomSize = 10, minPartitionSize = 8, maxDepth = 5 } = options;
 
     const map = new GameMap(width, height);
 

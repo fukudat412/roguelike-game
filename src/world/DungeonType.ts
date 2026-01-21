@@ -8,11 +8,11 @@
  */
 export enum DungeonType {
   TUTORIAL = 'TUTORIAL', // チュートリアル - 初心者向け
-  CAVE = 'CAVE',         // 洞窟 - 野獣と動物
-  CRYPT = 'CRYPT',       // 墓地 - アンデッド
+  CAVE = 'CAVE', // 洞窟 - 野獣と動物
+  CRYPT = 'CRYPT', // 墓地 - アンデッド
   FORTRESS = 'FORTRESS', // 要塞 - 人間型の敵
-  TOWER = 'TOWER',       // 塔 - 魔法生物
-  ABYSS = 'ABYSS',       // 奈落 - 全ダンジョンクリア後解禁
+  TOWER = 'TOWER', // 塔 - 魔法生物
+  ABYSS = 'ABYSS', // 奈落 - 全ダンジョンクリア後解禁
 }
 
 /**
@@ -20,12 +20,12 @@ export enum DungeonType {
  */
 export interface DungeonMetadata {
   type: DungeonType;
-  name: string;           // 日本語名
-  description: string;    // 説明文
-  icon: string;          // アイコン（絵文字）
-  color: string;         // テーマカラー
-  difficulty: number;    // 難易度（1-5の星で表示）
-  locked?: boolean;      // ロック状態（初期状態でロックされているか）
+  name: string; // 日本語名
+  description: string; // 説明文
+  icon: string; // アイコン（絵文字）
+  color: string; // テーマカラー
+  difficulty: number; // 難易度（1-5の星で表示）
+  locked?: boolean; // ロック状態（初期状態でロックされているか）
   unlockRequirement?: string; // アンロック条件の説明文
 }
 
@@ -34,7 +34,7 @@ export interface DungeonMetadata {
  */
 export interface MapGenerationConfig {
   algorithm: 'room' | 'cave' | 'bsp';
-  weight: number;        // 選択確率（0-1）
+  weight: number; // 選択確率（0-1）
   params?: {
     roomCount?: number;
     minRoomSize?: number;
@@ -50,10 +50,10 @@ export interface MapGenerationConfig {
 export interface EnvironmentalEffectConfig {
   name: string;
   description: string;
-  floorInterval: number;    // 何階ごとに発生
+  floorInterval: number; // 何階ごとに発生
   playerEffect?: {
-    hpPerTurn?: number;     // ターンごとのHP変化
-    mpPerTurn?: number;     // ターンごとのMP変化
+    hpPerTurn?: number; // ターンごとのHP変化
+    mpPerTurn?: number; // ターンごとのMP変化
     attackMultiplier?: number;
     defenseMultiplier?: number;
   };
@@ -73,9 +73,9 @@ export interface DungeonConfig {
   mapGeneration: MapGenerationConfig[];
 
   enemies: {
-    pool: string[];        // 敵キー配列
+    pool: string[]; // 敵キー配列
     spawnMultiplier: number; // 出現数倍率
-    eliteChance: number;   // エリート出現確率（0-1）
+    eliteChance: number; // エリート出現確率（0-1）
   };
 
   bosses: {

@@ -137,11 +137,14 @@ export class StatusEffect {
 /**
  * ステータス効果テンプレート
  */
-const StatusEffectTemplates: Record<StatusEffectType, {
-  name: string;
-  icon: string;
-  color: string;
-}> = {
+const StatusEffectTemplates: Record<
+  StatusEffectType,
+  {
+    name: string;
+    icon: string;
+    color: string;
+  }
+> = {
   [StatusEffectType.POISON]: {
     name: '毒',
     icon: '☠',

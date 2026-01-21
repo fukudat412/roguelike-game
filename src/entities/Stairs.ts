@@ -15,9 +15,10 @@ export class Stairs extends Entity {
   public targetFloor: number;
 
   constructor(x: number, y: number, direction: StairsDirection, targetFloor: number) {
-    const renderInfo = direction === StairsDirection.DOWN
-      ? { char: '>', color: '#ffffff' }
-      : { char: '<', color: '#ffffff' };
+    const renderInfo =
+      direction === StairsDirection.DOWN
+        ? { char: '>', color: '#ffffff' }
+        : { char: '<', color: '#ffffff' };
 
     super(
       direction === StairsDirection.DOWN ? '下り階段' : '上り階段',

@@ -145,41 +145,47 @@ export class Game {
     });
 
     // 戦闘ヒット時にダメージ数字表示
-    eventBus.on(GameEvents.COMBAT_HIT, (data: { attacker: string; target: string; damage: number }) => {
-      // ターゲットの位置を探す
-      let targetPos: Vector2D | null = null;
+    eventBus.on(
+      GameEvents.COMBAT_HIT,
+      (data: { attacker: string; target: string; damage: number }) => {
+        // ターゲットの位置を探す
+        let targetPos: Vector2D | null = null;
 
-      if (data.target === this.player.name) {
-        targetPos = this.player.getPosition();
-      } else {
-        const enemy = this.enemies.find(e => e.name === data.target);
-        if (enemy) {
-          targetPos = enemy.getPosition();
+        if (data.target === this.player.name) {
+          targetPos = this.player.getPosition();
+        } else {
+          const enemy = this.enemies.find(e => e.name === data.target);
+          if (enemy) {
+            targetPos = enemy.getPosition();
+          }
+        }
+
+        if (targetPos) {
+          this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, false, false);
         }
       }
-
-      if (targetPos) {
-        this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, false, false);
-      }
-    });
+    );
 
     // クリティカルヒット時にダメージ数字表示
-    eventBus.on(GameEvents.COMBAT_CRITICAL, (data: { attacker: string; target: string; damage: number }) => {
-      let targetPos: Vector2D | null = null;
+    eventBus.on(
+      GameEvents.COMBAT_CRITICAL,
+      (data: { attacker: string; target: string; damage: number }) => {
+        let targetPos: Vector2D | null = null;
 
-      if (data.target === this.player.name) {
-        targetPos = this.player.getPosition();
-      } else {
-        const enemy = this.enemies.find(e => e.name === data.target);
-        if (enemy) {
-          targetPos = enemy.getPosition();
+        if (data.target === this.player.name) {
+          targetPos = this.player.getPosition();
+        } else {
+          const enemy = this.enemies.find(e => e.name === data.target);
+          if (enemy) {
+            targetPos = enemy.getPosition();
+          }
+        }
+
+        if (targetPos) {
+          this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, true, false);
         }
       }
-
-      if (targetPos) {
-        this.renderer.addDamageNumber(targetPos.x, targetPos.y, data.damage, true, false);
-      }
-    });
+    );
 
     // リスタートボタン
     const restartButton = document.getElementById('restart-button');
@@ -226,10 +232,8 @@ export class Game {
    */
   setupDungeonSelectionUI(dungeonSelectionUI: DungeonSelectionUI): void {
     this.dungeonSelectionUI = dungeonSelectionUI;
-    dungeonSelectionUI.setMetaProgression(
-      this.metaProgression,
-      this.metaProgressionUI,
-      (upgrade) => this.handleUpgradePurchase(upgrade)
+    dungeonSelectionUI.setMetaProgression(this.metaProgression, this.metaProgressionUI, upgrade =>
+      this.handleUpgradePurchase(upgrade)
     );
   }
 
@@ -240,16 +244,10 @@ export class Game {
     const success = this.metaProgression.purchaseUpgrade(upgrade.type);
     if (success) {
       this.soundManager.play(SoundType.PURCHASE);
-      this.uiManager.addMessage(
-        `${upgrade.name}を購入しました！`,
-        MessageType.SUCCESS
-      );
+      this.uiManager.addMessage(`${upgrade.name}を購入しました！`, MessageType.SUCCESS);
     } else {
       this.soundManager.play(SoundType.ERROR);
-      this.uiManager.addMessage(
-        'アップグレードを購入できませんでした',
-        MessageType.WARNING
-      );
+      this.uiManager.addMessage('アップグレードを購入できませんでした', MessageType.WARNING);
     }
   }
 
@@ -284,11 +282,8 @@ export class Game {
     if (bonuses.gold > 0) this.player.addGold(bonuses.gold);
 
     // スキル選択UIを設定
-    this.skillSelectionUI.setPlayer(this.player, (skill) => {
-      this.uiManager.addMessage(
-        `スキル「${skill.data.name}」を習得した！`,
-        MessageType.INFO
-      );
+    this.skillSelectionUI.setPlayer(this.player, skill => {
+      this.uiManager.addMessage(`スキル「${skill.data.name}」を習得した！`, MessageType.INFO);
       eventBus.emit(GameEvents.UI_UPDATE);
     });
 
@@ -316,10 +311,7 @@ export class Game {
     if (dungeonConfig.bosses[currentFloor]) {
       // ボス戦（ダンジョン設定に基づく）
       this.spawnDungeonBoss();
-      this.uiManager.addMessage(
-        `【警告】ボス階層に到達した！`,
-        MessageType.WARNING
-      );
+      this.uiManager.addMessage(`【警告】ボス階層に到達した！`, MessageType.WARNING);
 
       // ボス階警告オーバーレイを表示
       this.showBossWarning(dungeonConfig.bosses[currentFloor]);
@@ -362,8 +354,8 @@ export class Game {
     // インベントリUIの設定
     this.inventoryUI.setInventory(this.player.inventory);
     this.inventoryUI.setCallbacks(
-      (item) => this.useItem(item),
-      (item) => this.dropItem(item)
+      item => this.useItem(item),
+      item => this.dropItem(item)
     );
 
     // カメラをプレイヤーに追従
@@ -516,9 +508,7 @@ export class Game {
       if (occupied) continue;
 
       // フィルタリングされた敵プールからランダムに選択
-      const enemyKey = availableEnemies[
-        Math.floor(Math.random() * availableEnemies.length)
-      ];
+      const enemyKey = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
 
       const template = EnemyDatabase[enemyKey];
       if (!template) continue;
@@ -616,10 +606,7 @@ export class Game {
       }
     }
 
-    this.uiManager.addMessage(
-      `${boss.name}が現れた！`,
-      MessageType.WARNING
-    );
+    this.uiManager.addMessage(`${boss.name}が現れた！`, MessageType.WARNING);
 
     // ボスの周りに少数の雑魚敵も配置（3-5体）
     const minionCount = 3 + Math.floor(Math.random() * 3);
@@ -667,10 +654,7 @@ export class Game {
     const boss = new Enemy(bossPos.x, bossPos.y, scaledBossTemplate);
     this.enemies.push(boss);
 
-    this.uiManager.addMessage(
-      `${boss.name}が現れた！`,
-      MessageType.WARNING
-    );
+    this.uiManager.addMessage(`${boss.name}が現れた！`, MessageType.WARNING);
 
     // ボスの周りに少数の雑魚敵も配置（3-5体）
     const minionCount = 3 + Math.floor(Math.random() * 3);
@@ -742,7 +726,7 @@ export class Game {
     this.render();
 
     // 次のフレーム
-    requestAnimationFrame((time) => this.gameLoop(time));
+    requestAnimationFrame(time => this.gameLoop(time));
   }
 
   /**
@@ -788,9 +772,8 @@ export class Game {
 
     // メタプログレッション
     if (action === Action.META_PROGRESSION) {
-      this.metaProgressionUI.setMetaProgression(
-        this.metaProgression,
-        (upgrade) => this.handleUpgradePurchase(upgrade)
+      this.metaProgressionUI.setMetaProgression(this.metaProgression, upgrade =>
+        this.handleUpgradePurchase(upgrade)
       );
       this.metaProgressionUI.toggle();
       return;
@@ -894,10 +877,7 @@ export class Game {
           );
         } else {
           this.player.stats.heal(hpChange);
-          this.uiManager.addMessage(
-            `${effect.name}により${hpChange}回復した`,
-            MessageType.SUCCESS
-          );
+          this.uiManager.addMessage(`${effect.name}により${hpChange}回復した`, MessageType.SUCCESS);
         }
       }
 
@@ -955,7 +935,7 @@ export class Game {
 
     // 店のUIを開く
     this.shopUI.setShop(this.shop, this.player.gold);
-    this.shopUI.setCallback((item) => this.buyItemFromShop(item));
+    this.shopUI.setCallback(item => this.buyItemFromShop(item));
     this.shopUI.open();
 
     return false; // UIを開くだけなのでターン消費しない
@@ -1083,10 +1063,7 @@ export class Game {
     // デイリーチャレンジ進捗を更新
     this.dailyChallenge.updateProgress(ChallengeType.REACH_FLOOR, nextFloor);
 
-    this.uiManager.addMessage(
-      `階段を降りて${nextFloor}階へ進んだ`,
-      MessageType.INFO
-    );
+    this.uiManager.addMessage(`階段を降りて${nextFloor}階へ進んだ`, MessageType.INFO);
 
     // 新しい階層を生成
     this.map = this.world.descendFloor();
@@ -1158,16 +1135,10 @@ export class Game {
     }
 
     // メッセージログに記録
-    this.uiManager.addMessage(
-      'ダンジョンを制覇した！あなたは真の英雄だ！',
-      MessageType.INFO
-    );
+    this.uiManager.addMessage('ダンジョンを制覇した！あなたは真の英雄だ！', MessageType.INFO);
 
     if (unlockedUpgrade) {
-      this.uiManager.addMessage(
-        `【永続強化解放】${unlockedUpgrade}`,
-        MessageType.INFO
-      );
+      this.uiManager.addMessage(`【永続強化解放】${unlockedUpgrade}`, MessageType.INFO);
     }
   }
 
@@ -1189,9 +1160,7 @@ export class Game {
     }
 
     // 敵との衝突チェック
-    const enemyAtPosition = this.enemies.find(e =>
-      e.isAlive() && e.getPosition().equals(newPos)
-    );
+    const enemyAtPosition = this.enemies.find(e => e.isAlive() && e.getPosition().equals(newPos));
 
     if (enemyAtPosition) {
       // 攻撃
@@ -1296,8 +1265,8 @@ export class Game {
     const playerPos = this.player.getPosition();
 
     // まず宝箱をチェック
-    const chestAtPosition = this.chests.find(chest =>
-      !chest.isOpened && chest.getPosition().equals(playerPos)
+    const chestAtPosition = this.chests.find(
+      chest => !chest.isOpened && chest.getPosition().equals(playerPos)
     );
 
     if (chestAtPosition) {
@@ -1305,9 +1274,7 @@ export class Game {
     }
 
     // 宝箱がなければアイテムをチェック
-    const itemAtPosition = this.items.find(item =>
-      item.getPosition().equals(playerPos)
-    );
+    const itemAtPosition = this.items.find(item => item.getPosition().equals(playerPos));
 
     if (!itemAtPosition) {
       this.uiManager.addMessage('ここにはアイテムも宝箱もない', MessageType.INFO);
@@ -1458,10 +1425,7 @@ export class Game {
     const slot = EquipmentComponent.getSlotForItem(item);
 
     if (!slot) {
-      this.uiManager.addMessage(
-        `${item.name}は装備できません`,
-        MessageType.INFO
-      );
+      this.uiManager.addMessage(`${item.name}は装備できません`, MessageType.INFO);
       return;
     }
 
@@ -1479,10 +1443,7 @@ export class Game {
         MessageType.INFO
       );
     } else {
-      this.uiManager.addMessage(
-        `${item.name}を装備した`,
-        MessageType.INFO
-      );
+      this.uiManager.addMessage(`${item.name}を装備した`, MessageType.INFO);
     }
 
     // ステータスを更新
@@ -1506,10 +1467,7 @@ export class Game {
     const randomCell = this.map.getRandomWalkableCell();
 
     if (!randomCell) {
-      this.uiManager.addMessage(
-        'テレポートに失敗した！',
-        MessageType.WARNING
-      );
+      this.uiManager.addMessage('テレポートに失敗した！', MessageType.WARNING);
       return;
     }
 
@@ -1524,10 +1482,7 @@ export class Game {
     this.map.updateFOV(randomCell.position, 8);
 
     this.soundManager.play(SoundType.STAIRS);
-    this.uiManager.addMessage(
-      'テレポートの巻物を使った！別の場所に移動した',
-      MessageType.INFO
-    );
+    this.uiManager.addMessage('テレポートの巻物を使った！別の場所に移動した', MessageType.INFO);
 
     // スタックから削除
     item.removeFromStack(1);
@@ -1575,10 +1530,7 @@ export class Game {
         MessageType.SUCCESS
       );
     } else {
-      this.uiManager.addMessage(
-        '火球の巻物を使ったが、範囲内に敵がいなかった',
-        MessageType.INFO
-      );
+      this.uiManager.addMessage('火球の巻物を使ったが、範囲内に敵がいなかった', MessageType.INFO);
     }
 
     // スタックから削除
@@ -1685,22 +1637,10 @@ export class Game {
 
     this.soundManager.play(SoundType.LEVEL_UP);
 
-    this.uiManager.addMessage(
-      `【勝利】${boss.name}を撃破した！`,
-      MessageType.SUCCESS
-    );
-    this.uiManager.addMessage(
-      `${goldDrop}ゴールドを手に入れた！`,
-      MessageType.SUCCESS
-    );
-    this.uiManager.addMessage(
-      `HP・MPが全回復した！`,
-      MessageType.SUCCESS
-    );
-    this.uiManager.addMessage(
-      `全スキルのクールダウンがリセットされた！`,
-      MessageType.SUCCESS
-    );
+    this.uiManager.addMessage(`【勝利】${boss.name}を撃破した！`, MessageType.SUCCESS);
+    this.uiManager.addMessage(`${goldDrop}ゴールドを手に入れた！`, MessageType.SUCCESS);
+    this.uiManager.addMessage(`HP・MPが全回復した！`, MessageType.SUCCESS);
+    this.uiManager.addMessage(`全スキルのクールダウンがリセットされた！`, MessageType.SUCCESS);
 
     // レジェンダリー装備をドロップ
     this.dropLegendaryItem(boss.getPosition());
@@ -1731,10 +1671,7 @@ export class Game {
 
     this.items.push(item);
 
-    this.uiManager.addMessage(
-      `【レジェンダリー】${item.name}を発見した！`,
-      MessageType.SUCCESS
-    );
+    this.uiManager.addMessage(`【レジェンダリー】${item.name}を発見した！`, MessageType.SUCCESS);
   }
 
   /**
@@ -1756,26 +1693,22 @@ export class Game {
     }
 
     // A*でパスを計算
-    const nextPos = AStar.getNextMove(
-      enemyPos,
-      playerPos,
-      (x, y) => {
-        // マップ境界チェック
-        if (!this.map.isInBounds(x, y)) return false;
+    const nextPos = AStar.getNextMove(enemyPos, playerPos, (x, y) => {
+      // マップ境界チェック
+      if (!this.map.isInBounds(x, y)) return false;
 
-        // 壁チェック
-        if (!this.map.isWalkableAt(new Vector2D(x, y))) return false;
+      // 壁チェック
+      if (!this.map.isWalkableAt(new Vector2D(x, y))) return false;
 
-        // 他の敵と重ならないかチェック（ただし目的地は除く）
-        if (x === playerPos.x && y === playerPos.y) return true;
+      // 他の敵と重ならないかチェック（ただし目的地は除く）
+      if (x === playerPos.x && y === playerPos.y) return true;
 
-        const occupied = this.enemies.some(e =>
-          e !== enemy && e.isAlive() && e.getPosition().equals(new Vector2D(x, y))
-        );
+      const occupied = this.enemies.some(
+        e => e !== enemy && e.isAlive() && e.getPosition().equals(new Vector2D(x, y))
+      );
 
-        return !occupied;
-      }
-    );
+      return !occupied;
+    });
 
     // パスが見つからない、または移動先がない場合
     if (!nextPos) {
@@ -1810,8 +1743,8 @@ export class Game {
     const newPos = enemyPos.add(new Vector2D(moveX, moveY));
 
     if (this.map.isWalkableAt(newPos)) {
-      const occupied = this.enemies.some(e =>
-        e !== enemy && e.isAlive() && e.getPosition().equals(newPos)
+      const occupied = this.enemies.some(
+        e => e !== enemy && e.isAlive() && e.getPosition().equals(newPos)
       );
 
       if (!occupied && !this.player.getPosition().equals(newPos)) {
@@ -1894,13 +1827,9 @@ export class Game {
         const renderInfo = this.stairs.getRenderInfo();
 
         // 背景
-        this.renderer.drawRect(
-          screenPos.x,
-          screenPos.y,
-          tileSize,
-          tileSize,
-          { fillColor: '#3a3a1a' }
-        );
+        this.renderer.drawRect(screenPos.x, screenPos.y, tileSize, tileSize, {
+          fillColor: '#3a3a1a',
+        });
 
         // 階段
         this.renderer.drawText(
@@ -1928,13 +1857,9 @@ export class Game {
         const renderInfo = this.shop.getRenderInfo();
 
         // 背景
-        this.renderer.drawRect(
-          screenPos.x,
-          screenPos.y,
-          tileSize,
-          tileSize,
-          { fillColor: '#4a3a1a' }
-        );
+        this.renderer.drawRect(screenPos.x, screenPos.y, tileSize, tileSize, {
+          fillColor: '#4a3a1a',
+        });
 
         // 商人
         this.renderer.drawText(
@@ -1965,13 +1890,9 @@ export class Game {
         const renderInfo = chest.getRenderInfo();
 
         // 背景
-        this.renderer.drawRect(
-          screenPos.x,
-          screenPos.y,
-          tileSize,
-          tileSize,
-          { fillColor: '#3a2a1a' }
-        );
+        this.renderer.drawRect(screenPos.x, screenPos.y, tileSize, tileSize, {
+          fillColor: '#3a2a1a',
+        });
 
         // 宝箱
         this.renderer.drawText(
@@ -2000,13 +1921,9 @@ export class Game {
         const renderInfo = item.getRenderInfo();
 
         // 背景
-        this.renderer.drawRect(
-          screenPos.x,
-          screenPos.y,
-          tileSize,
-          tileSize,
-          { fillColor: '#1a3a1a' }
-        );
+        this.renderer.drawRect(screenPos.x, screenPos.y, tileSize, tileSize, {
+          fillColor: '#1a3a1a',
+        });
 
         // アイテム
         this.renderer.drawText(
@@ -2037,13 +1954,9 @@ export class Game {
         const renderInfo = enemy.getRenderInfo();
 
         // 背景
-        this.renderer.drawRect(
-          screenPos.x,
-          screenPos.y,
-          tileSize,
-          tileSize,
-          { fillColor: '#2a2a2a' }
-        );
+        this.renderer.drawRect(screenPos.x, screenPos.y, tileSize, tileSize, {
+          fillColor: '#2a2a2a',
+        });
 
         // キャラクター
         this.renderer.drawText(
@@ -2067,13 +1980,7 @@ export class Game {
     const renderInfo = this.player.getRenderInfo();
 
     // 背景
-    this.renderer.drawRect(
-      screenPos.x,
-      screenPos.y,
-      tileSize,
-      tileSize,
-      { fillColor: '#4a4a4a' }
-    );
+    this.renderer.drawRect(screenPos.x, screenPos.y, tileSize, tileSize, { fillColor: '#4a4a4a' });
 
     // プレイヤー
     this.renderer.drawText(
@@ -2126,18 +2033,24 @@ export class Game {
     const accessoryItem = this.player.equipment.getEquipped(EquipmentSlot.ACCESSORY);
 
     const equipment = {
-      weapon: weaponItem ? {
-        name: weaponItem.name,
-        rarity: weaponItem.rarity,
-      } : null,
-      armor: armorItem ? {
-        name: armorItem.name,
-        rarity: armorItem.rarity,
-      } : null,
-      accessory: accessoryItem ? {
-        name: accessoryItem.name,
-        rarity: accessoryItem.rarity,
-      } : null,
+      weapon: weaponItem
+        ? {
+            name: weaponItem.name,
+            rarity: weaponItem.rarity,
+          }
+        : null,
+      armor: armorItem
+        ? {
+            name: armorItem.name,
+            rarity: armorItem.rarity,
+          }
+        : null,
+      accessory: accessoryItem
+        ? {
+            name: accessoryItem.name,
+            rarity: accessoryItem.rarity,
+          }
+        : null,
     };
     this.uiManager.updateEquipment(equipment);
 
@@ -2176,9 +2089,7 @@ export class Game {
    * メニューに戻る確認ダイアログ
    */
   private showReturnToMenuConfirmation(): void {
-    const confirmed = window.confirm(
-      'ダンジョン選択に戻りますか？\n現在の進行状況は失われます。'
-    );
+    const confirmed = window.confirm('ダンジョン選択に戻りますか？\n現在の進行状況は失われます。');
 
     if (confirmed) {
       this.returnToDungeonSelection();

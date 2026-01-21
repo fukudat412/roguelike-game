@@ -188,11 +188,7 @@ export class GameMap {
     this.getAllCells().forEach(cell => cell.setVisible(false));
 
     // シャドウキャスティングで可視セルを計算
-    const visibleCells = FOV.calculate(
-      center,
-      radius,
-      (x, y) => !this.isTransparent(x, y)
-    );
+    const visibleCells = FOV.calculate(center, radius, (x, y) => !this.isTransparent(x, y));
 
     // 可視セルをマークしてexploredにする
     for (const pos of visibleCells) {

@@ -29,13 +29,7 @@ export abstract class Entity {
   public renderInfo: RenderInfo;
   public blocksMovement: boolean = false;
 
-  constructor(
-    name: string,
-    type: EntityType,
-    x: number,
-    y: number,
-    renderInfo: RenderInfo
-  ) {
+  constructor(name: string, type: EntityType, x: number, y: number, renderInfo: RenderInfo) {
     this.id = this.generateId();
     this.name = name;
     this.type = type;

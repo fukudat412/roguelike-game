@@ -19,7 +19,7 @@ import { RoomGenerator } from '@/world/generators/RoomGenerator';
 import { CaveGenerator } from '@/world/generators/CaveGenerator';
 import { BSPGenerator } from '@/world/generators/BSPGenerator';
 import { Player } from '@/entities/Player';
-import { Enemy } from '@/entities/Enemy';
+import { Enemy, EnemyTemplate } from '@/entities/Enemy';
 import { Item, ItemType, ItemRarity } from '@/entities/Item';
 import { Stairs, StairsDirection } from '@/entities/Stairs';
 import { Shop } from '@/entities/Shop';
@@ -1087,7 +1087,7 @@ export class Game {
    */
   private gameVictory(): void {
     this.running = false;
-    this.gameState.setGameOver();
+    this.gameState.setPhase(GamePhase.GAME_OVER);
 
     // 最終ボス撃破を記録し、特別な永続強化を解放
     const dungeonType = this.world.getDungeonConfig().metadata.type;

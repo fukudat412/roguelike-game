@@ -8,7 +8,7 @@ import { Stats } from './components/Stats';
 import { eventBus, GameEvents } from '@/core/EventBus';
 
 export interface SpecialAttack {
-  type: 'poison' | 'paralyze' | 'vampiric' | 'weaken';
+  type: 'poison' | 'paralyze' | 'vampiric' | 'weaken' | 'confusion';
   chance: number; // 0.0 - 1.0
   duration?: number; // ターン数（ステータス効果の場合）
   strength?: number; // 効果の強さ（吸血の場合は吸収率など）

@@ -33,7 +33,7 @@ export class Player extends CombatEntity {
   private baseStats: Stats;
 
   constructor(x: number, y: number) {
-    const stats = new Stats(100, 10, 5);
+    const stats = new Stats(80, 8, 3);
 
     // インベントリと装備を初期化
     const inventory = new Inventory(20);

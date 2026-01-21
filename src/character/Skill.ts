@@ -95,7 +95,7 @@ export class Skill {
 
 /**
  * 強打スキル
- * MP 10消費、2倍ダメージの単体攻撃
+ * MP 7消費、2倍ダメージの単体攻撃
  */
 export class PowerStrikeSkill extends Skill {
   constructor() {
@@ -103,7 +103,7 @@ export class PowerStrikeSkill extends Skill {
       type: SkillType.POWER_STRIKE,
       name: '強打',
       description: '2倍のダメージを与える強力な一撃',
-      mpCost: 10,
+      mpCost: 7,
       cooldown: 3,
       icon: '💥',
     });
@@ -145,7 +145,7 @@ export class PowerStrikeSkill extends Skill {
 
 /**
  * 範囲斬りスキル
- * MP 15消費、周囲8マスの敵全てに攻撃
+ * MP 10消費、周囲8マスの敵全てに攻撃
  */
 export class AreaSlashSkill extends Skill {
   constructor() {
@@ -153,7 +153,7 @@ export class AreaSlashSkill extends Skill {
       type: SkillType.AREA_SLASH,
       name: '範囲斬り',
       description: '周囲の敵全てを攻撃',
-      mpCost: 15,
+      mpCost: 10,
       cooldown: 5,
       icon: '🌀',
     });
@@ -202,7 +202,7 @@ export class AreaSlashSkill extends Skill {
 
 /**
  * 回復の祈りスキル
- * MP 20消費、HP 50回復
+ * MP 14消費、HP 50回復
  */
 export class HealingPrayerSkill extends Skill {
   constructor() {
@@ -210,7 +210,7 @@ export class HealingPrayerSkill extends Skill {
       type: SkillType.HEALING_PRAYER,
       name: '回復の祈り',
       description: 'HP 50を回復する',
-      mpCost: 20,
+      mpCost: 14,
       cooldown: 4,
       icon: '✨',
     });
@@ -231,7 +231,7 @@ export class HealingPrayerSkill extends Skill {
 
 /**
  * ファイアボールスキル
- * MP 25消費、遠距離範囲攻撃（3x3）
+ * MP 18消費、遠距離範囲攻撃（3x3）
  */
 export class FireballSkill extends Skill {
   constructor() {
@@ -239,7 +239,7 @@ export class FireballSkill extends Skill {
       type: SkillType.FIREBALL,
       name: 'ファイアボール',
       description: '遠距離の敵に範囲ダメージ',
-      mpCost: 25,
+      mpCost: 18,
       cooldown: 6,
       icon: '🔥',
     });
@@ -288,7 +288,7 @@ export class FireballSkill extends Skill {
 
 /**
  * テレポートスキル
- * MP 30消費、ランダムな場所へ移動
+ * MP 21消費、ランダムな場所へ移動
  */
 export class TeleportSkill extends Skill {
   constructor() {
@@ -296,7 +296,7 @@ export class TeleportSkill extends Skill {
       type: SkillType.TELEPORT,
       name: 'テレポート',
       description: 'ランダムな場所へ瞬間移動',
-      mpCost: 30,
+      mpCost: 21,
       cooldown: 10,
       icon: '⚡',
     });
@@ -313,7 +313,7 @@ export class TeleportSkill extends Skill {
 
 /**
  * バーサークスキル
- * MP 20消費、攻撃力2倍・防御力半減（3ターン）
+ * MP 14消費、攻撃力2倍・防御力半減（3ターン）
  */
 export class BerserkSkill extends Skill {
   constructor() {
@@ -321,7 +321,7 @@ export class BerserkSkill extends Skill {
       type: SkillType.BERSERK,
       name: 'バーサーク',
       description: '攻撃力2倍、防御力半減（3ターン）',
-      mpCost: 20,
+      mpCost: 14,
       cooldown: 8,
       icon: '💢',
     });
@@ -339,7 +339,7 @@ export class BerserkSkill extends Skill {
 
 /**
  * 氷の壁スキル
- * MP 15消費、周囲の敵の行動を遅延
+ * MP 10消費、周囲の敵の行動を遅延
  */
 export class IceWallSkill extends Skill {
   constructor() {
@@ -347,7 +347,7 @@ export class IceWallSkill extends Skill {
       type: SkillType.ICE_WALL,
       name: '氷の壁',
       description: '周囲の敵を氷結させる',
-      mpCost: 15,
+      mpCost: 10,
       cooldown: 5,
       icon: '❄️',
     });
@@ -388,7 +388,7 @@ export class IceWallSkill extends Skill {
 
 /**
  * ライフスティールスキル
- * MP 18消費、敵に攻撃してHP吸収
+ * MP 13消費、敵に攻撃してHP吸収
  */
 export class LifeStealSkill extends Skill {
   constructor() {
@@ -396,7 +396,7 @@ export class LifeStealSkill extends Skill {
       type: SkillType.LIFE_STEAL,
       name: 'ライフスティール',
       description: '敵を攻撃してHP吸収',
-      mpCost: 18,
+      mpCost: 13,
       cooldown: 4,
       icon: '🩸',
     });

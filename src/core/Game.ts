@@ -343,11 +343,12 @@ export class Game {
       }
     }
 
-    // アイテムを配置
-    this.spawnItems(15);
+    // アイテムを配置（5-7個）
+    const itemCount = 5 + Math.floor(Math.random() * 3);
+    this.spawnItems(itemCount);
 
-    // 宝箱を配置（2-4個）
-    const chestCount = 2 + Math.floor(Math.random() * 3);
+    // 宝箱を配置（1-2個）
+    const chestCount = 1 + Math.floor(Math.random() * 2);
     this.spawnChests(chestCount);
 
     // 階段を配置（最終階以外）
@@ -768,6 +769,9 @@ export class Game {
   private handlePlayerTurn(): void {
     const action = this.input.getNextAction();
     if (!action) return;
+
+    // MP自然回復（ターン開始時に2回復）
+    this.player.stats.restoreMp(2);
 
     let turnEnded = false;
 
@@ -1595,8 +1599,8 @@ export class Game {
       // ボス撃破時の特別報酬
       this.handleBossDefeat(enemy);
     } else {
-      // 通常の敵
-      const goldDrop = 5 + Math.floor(Math.random() * 10) + this.world.getCurrentFloor() * 2;
+      // 通常の敵（ゴールドドロップを減少）
+      const goldDrop = 3 + Math.floor(Math.random() * 7) + this.world.getCurrentFloor();
       this.player.addGold(goldDrop);
       this.metaProgression.recordGoldEarned(goldDrop);
       this.statistics.goldEarned += goldDrop;
@@ -1634,8 +1638,8 @@ export class Game {
     // デイリーチャレンジ進捗を更新
     this.dailyChallenge.updateProgress(ChallengeType.KILL_BOSSES, 1);
 
-    // 大量のゴールド（通常の10倍）
-    const goldDrop = (50 + Math.floor(Math.random() * 50)) * 10;
+    // ボスからのゴールド（調整後）
+    const goldDrop = (30 + Math.floor(Math.random() * 40)) * 8;
     this.player.addGold(goldDrop);
     this.metaProgression.recordGoldEarned(goldDrop);
     this.statistics.goldEarned += goldDrop;

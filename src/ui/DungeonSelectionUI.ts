@@ -36,6 +36,8 @@ export class DungeonSelectionUI {
     this.metaProgression = metaProgression;
     this.metaProgressionUI = metaProgressionUI;
     this.onUpgradePurchase = onUpgradePurchase;
+    // メタプログレッション設定後に再描画してロック状態を反映
+    this.render();
   }
 
   /**

@@ -19,6 +19,8 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       difficulty: 1,
     },
 
+    maxFloors: 5,
+
     mapGeneration: [{ algorithm: 'room', weight: 1.0 }],
 
     enemies: {
@@ -47,11 +49,13 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     metadata: {
       type: DungeonType.CAVE,
       name: '野獣の洞窟',
-      description: '野生の獣が住む自然の洞窟。素早い敵が多い。',
+      description: '野生の獣が住む自然の洞窟。10階層。素早い敵が多い。',
       icon: '🦁',
       color: '#8B4513',
       difficulty: 2,
     },
+
+    maxFloors: 10,
 
     mapGeneration: [
       { algorithm: 'cave', weight: 0.6 },
@@ -71,10 +75,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     },
 
     bosses: {
-      5: 'GOBLIN_KING',
-      10: 'ORC_LORD',
-      15: 'ELDER_DRAGON',
-      30: 'BEAST_LORD',
+      10: 'BEAST_LORD',
     },
 
     environmentalEffects: [
@@ -98,11 +99,13 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     metadata: {
       type: DungeonType.CRYPT,
       name: '忘れられた墓地',
-      description: 'アンデッドが徘徊する古い墓所。毒攻撃に注意。',
+      description: 'アンデッドが徘徊する古い墓所。15階層。毒攻撃に注意。',
       icon: '💀',
       color: '#4B0082',
       difficulty: 3,
     },
+
+    maxFloors: 15,
 
     mapGeneration: [
       { algorithm: 'room', weight: 0.5 },
@@ -125,10 +128,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     },
 
     bosses: {
-      5: 'GOBLIN_KING',
-      10: 'ORC_LORD',
-      15: 'ANCIENT_LICH',
-      30: 'DEATH_LORD',
+      15: 'DEATH_LORD',
     },
 
     environmentalEffects: [
@@ -155,11 +155,13 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     metadata: {
       type: DungeonType.FORTRESS,
       name: '放棄された要塞',
-      description: '訓練された兵士が守る軍事施設。高い防御力。',
-      icon: '🏰',
+      description: '訓練された兵士が守る軍事施設。20階層。高い防御力。',
+      icon: '�°',
       color: '#696969',
       difficulty: 4,
     },
+
+    maxFloors: 20,
 
     mapGeneration: [
       { algorithm: 'room', weight: 0.7 },
@@ -178,10 +180,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     },
 
     bosses: {
-      5: 'GOBLIN_KING',
-      10: 'ORC_LORD',
-      15: 'ELDER_DRAGON',
-      30: 'DEMON_LORD',
+      20: 'DEMON_LORD',
     },
 
     environmentalEffects: [
@@ -206,11 +205,13 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     metadata: {
       type: DungeonType.TOWER,
       name: '魔法使いの塔',
-      description: '魔法生物が住む神秘的な塔。強力な魔法攻撃。',
+      description: '魔法生物が住む神秘的な塔。25階層。強力な魔法攻撃。',
       icon: '🗼',
       color: '#9370DB',
       difficulty: 5,
     },
+
+    maxFloors: 25,
 
     mapGeneration: [
       { algorithm: 'bsp', weight: 0.5 },
@@ -236,10 +237,7 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
     },
 
     bosses: {
-      5: 'ORC_LORD',
-      10: 'ELDER_DRAGON',
-      15: 'ANCIENT_LICH',
-      30: 'ARCHMAGE',
+      25: 'ARCHMAGE',
     },
 
     environmentalEffects: [
@@ -273,6 +271,8 @@ export const DUNGEON_CONFIGS: Record<DungeonType, DungeonConfig> = {
       locked: true,
       unlockRequirement: '野獣の洞窟、忘れられた墓地、放棄された要塞、魔法使いの塔を全てクリア',
     },
+
+    maxFloors: 50,
 
     mapGeneration: [
       { algorithm: 'cave', weight: 0.4 },

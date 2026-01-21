@@ -70,6 +70,8 @@ export interface EnvironmentalEffectConfig {
 export interface DungeonConfig {
   metadata: DungeonMetadata;
 
+  maxFloors: number; // 最大階層数
+
   mapGeneration: MapGenerationConfig[];
 
   enemies: {

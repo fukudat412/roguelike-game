@@ -81,8 +81,49 @@ export class DungeonSelectionUI {
         continueBtn.appendChild(btnInfo);
 
         continueBtn.addEventListener('click', () => {
-          if (this.onContinue) {
-            this.onContinue();
+          if (!this.onContinue) return;
+
+          // ダンジョン選択画面を非表示
+          this.hide();
+
+          // ゲームコンテナを表示
+          const gameContainer = document.getElementById('game-container');
+          if (gameContainer) {
+            gameContainer.classList.add('active');
+
+            let initialized = false;
+            const initializeGame = () => {
+              if (!initialized) {
+                initialized = true;
+                console.log('セーブデータから再開開始');
+                this.onContinue!();
+              }
+            };
+
+            // CSS transitionの完了を確実に待つ
+            const handleTransitionEnd = (e: TransitionEvent) => {
+              // opacity の transition のみを対象
+              if (e.propertyName === 'opacity') {
+                gameContainer.removeEventListener(
+                  'transitionend',
+                  handleTransitionEnd as EventListener
+                );
+                console.log('Transition完了');
+                initializeGame();
+              }
+            };
+
+            gameContainer.addEventListener('transitionend', handleTransitionEnd as EventListener);
+
+            // フォールバック: transitionが発火しない場合のための保険（500ms）
+            setTimeout(() => {
+              gameContainer.removeEventListener(
+                'transitionend',
+                handleTransitionEnd as EventListener
+              );
+              console.log('タイムアウト、フォールバック');
+              initializeGame();
+            }, 500);
           }
         });
 

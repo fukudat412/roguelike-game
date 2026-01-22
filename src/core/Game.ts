@@ -1313,12 +1313,16 @@ export class Game {
 
   /**
    * ダッシュ移動（Shift + 移動キー）
-   * 壁、敵、アイテム、階段、宝箱に遭遇するまで移動し続ける
+   * 壁、敵、アイテム、階段、宝箱、分かれ道、部屋に遭遇するまで移動し続ける
    */
   private dashMove(direction: Vector2D): boolean {
     let moved = false;
     let stepsCount = 0;
     const maxSteps = 100; // 無限ループ防止
+
+    // 開始時の周囲の歩行可能セル数を記録
+    const startPos = this.player.getPosition();
+    const startWalkableCount = this.countWalkableCells(startPos);
 
     while (stepsCount < maxSteps) {
       const currentPos = this.player.getPosition();
@@ -1395,6 +1399,20 @@ export class Game {
       this.updateCameraAndFOV(nextPos);
       moved = true;
       stepsCount++;
+
+      // 移動後に分岐点・部屋をチェック（最初の一歩は除外）
+      if (stepsCount > 0) {
+        // 分かれ道チェック（来た方向と進行方向以外に進める場所がある）
+        if (this.isJunction(nextPos, direction)) {
+          break;
+        }
+
+        // 部屋チェック（周囲の歩行可能セルが増えた場合）
+        const currentWalkableCount = this.countWalkableCells(nextPos);
+        if (currentWalkableCount > startWalkableCount && currentWalkableCount >= 5) {
+          break;
+        }
+      }
     }
 
     if (moved) {
@@ -1402,6 +1420,61 @@ export class Game {
     }
 
     return moved;
+  }
+
+  /**
+   * 分岐点かどうかをチェック
+   * 来た方向と進行方向以外に歩行可能な方向があるか
+   */
+  private isJunction(position: Vector2D, direction: Vector2D): boolean {
+    // 来た方向（逆方向）
+    const reverseDirection = new Vector2D(-direction.x, -direction.y);
+
+    // チェックする方向（4方向）
+    const directions = [Vector2D.UP, Vector2D.DOWN, Vector2D.LEFT, Vector2D.RIGHT];
+
+    // 進行方向と逆方向以外に歩行可能な方向をカウント
+    let alternativeRoutes = 0;
+    for (const dir of directions) {
+      // 進行方向と逆方向はスキップ
+      if (dir.equals(direction) || dir.equals(reverseDirection)) {
+        continue;
+      }
+
+      const checkPos = position.add(dir);
+      if (this.map.isInBoundsVec(checkPos) && this.map.isWalkableAt(checkPos)) {
+        alternativeRoutes++;
+      }
+    }
+
+    // 代替ルートが1つでもあれば分岐点
+    return alternativeRoutes > 0;
+  }
+
+  /**
+   * 周囲8方向の歩行可能なセル数をカウント
+   */
+  private countWalkableCells(position: Vector2D): number {
+    let count = 0;
+    const directions = [
+      new Vector2D(-1, -1),
+      new Vector2D(0, -1),
+      new Vector2D(1, -1),
+      new Vector2D(-1, 0),
+      new Vector2D(1, 0),
+      new Vector2D(-1, 1),
+      new Vector2D(0, 1),
+      new Vector2D(1, 1),
+    ];
+
+    for (const dir of directions) {
+      const checkPos = position.add(dir);
+      if (this.map.isInBoundsVec(checkPos) && this.map.isWalkableAt(checkPos)) {
+        count++;
+      }
+    }
+
+    return count;
   }
 
   /**

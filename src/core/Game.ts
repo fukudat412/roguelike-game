@@ -36,7 +36,7 @@ import { rollRandomItem, getItemData } from '@/data/items';
 import { getRandomEnemyForFloor, isBossFloor, getBossForFloor } from '@/data/enemies';
 import { AStar } from '@/ai/pathfinding/AStar';
 import { ItemAffixManager } from '@/items/ItemAffix';
-import { StatusEffectType } from '@/combat/StatusEffect';
+import { StatusEffectType, StatusEffect } from '@/combat/StatusEffect';
 import { SaveManager, GameSaveData } from '@/utils/SaveManager';
 import { EnhancedSaveManager } from '@/utils/EnhancedSaveManager';
 import { SoundManager, SoundType } from '@/utils/SoundManager';
@@ -45,6 +45,7 @@ import { DailyChallenge, ChallengeType } from './DailyChallenge';
 import { DungeonType } from '@/world/DungeonType';
 import { EnemyDatabase } from '@/data/enemies';
 import { DungeonSelectionUI } from '@/ui/DungeonSelectionUI';
+import { Skill, SkillDatabase } from '@/character/Skill';
 
 export class Game {
   private renderer: Renderer;
@@ -2608,10 +2609,27 @@ export class Game {
     // ダンジョンタイプを取得
     const dungeonType = saveData.world.dungeonType as DungeonType;
 
-    // ゲームを初期化（セーブデータは使わず、基本初期化のみ）
-    this.initialize(dungeonType);
+    // 最小限の初期化（setupFloorを呼ばない）
+    this.statistics = { ...saveData.statistics }; // 統計はセーブデータから
+    this.world = new World(dungeonType);
 
-    // セーブデータを復元
+    // プレイヤーを仮作成（位置は後で復元される）
+    this.player = new Player(0, 0);
+    this.player.setMetaProgression(this.metaProgression);
+    CombatSystem.setMetaProgression(this.metaProgression);
+
+    // メタプログレッションの永続ボーナスを適用
+    // 注: これはセーブ時に既に適用されているステータスに上乗せされないよう、
+    // deserializeGameStateの前に適用する必要がある
+    // 実際にはセーブデータに保存されたステータスをそのまま使うので、ここでは適用しない
+
+    // スキル選択UIを設定
+    this.skillSelectionUI.setPlayer(this.player, skill => {
+      this.uiManager.addMessage(`スキル「${skill.data.name}」を習得した！`, MessageType.INFO);
+      eventBus.emit(GameEvents.UI_UPDATE);
+    });
+
+    // セーブデータを復元（マップ、エンティティ、プレイヤー状態など）
     this.deserializeGameState(saveData);
 
     // ゲームを開始
@@ -2657,18 +2675,72 @@ export class Game {
     this.player.stats.speed = saveData.player.speed;
     this.player.skillPoints = saveData.player.skillPoints;
 
-    // ステータス効果を復元（簡易版）
-    // 注: 完全な復元には StatusEffectManager の再構築が必要
+    // ステータス効果を復元
+    if (saveData.player.statusEffects && saveData.player.statusEffects.length > 0) {
+      for (const effectData of saveData.player.statusEffects) {
+        const effect = new StatusEffect(effectData.type, effectData.turnsRemaining);
+        effect.turnsRemaining = effectData.turnsRemaining;
+        this.player.statusEffects.addEffect(effect);
+      }
+    }
 
-    // スキルのクールダウンを復元（簡易版）
-    // 注: 完全な復元にはスキルデータベースとのマッピングが必要
+    // スキルを復元
+    this.player.skills = [];
+    if (saveData.player.skills && saveData.player.skills.length > 0) {
+      for (const skillData of saveData.player.skills) {
+        // SkillDatabaseから名前で検索
+        const skillEntry = Object.values(SkillDatabase).find(s => s.data.name === skillData.name);
+        if (skillEntry) {
+          const skill = new Skill(skillEntry.data);
+          skill.currentCooldown = skillData.currentCooldown || 0;
+          this.player.skills.push(skill);
+        }
+      }
+    }
 
-    // インベントリを復元（簡易版）
+    // インベントリを復元
     this.player.inventory.clear();
-    // 注: アイテムの完全な復元には ItemFactory が必要
+    if (saveData.player.inventory && saveData.player.inventory.length > 0) {
+      for (const itemData of saveData.player.inventory) {
+        const data = getItemData(itemData.id);
+        if (data) {
+          const item = new Item(0, 0, data);
+          item.stackable = itemData.stackable || false;
+          item.stackCount = itemData.stackCount || 1;
+          this.player.inventory.addItem(item);
+        }
+      }
+    }
 
-    // 装備を復元（簡易版）
-    // 注: 装備の完全な復元には Equipment の再構築が必要
+    // 装備を復元
+    if (saveData.player.equipment) {
+      // 武器
+      if (saveData.player.equipment.weapon) {
+        const weaponData = getItemData(saveData.player.equipment.weapon.id);
+        if (weaponData) {
+          const weapon = new Item(0, 0, weaponData);
+          this.player.equipment.equip(EquipmentSlot.WEAPON, weapon);
+        }
+      }
+
+      // 防具
+      if (saveData.player.equipment.armor) {
+        const armorData = getItemData(saveData.player.equipment.armor.id);
+        if (armorData) {
+          const armor = new Item(0, 0, armorData);
+          this.player.equipment.equip(EquipmentSlot.ARMOR, armor);
+        }
+      }
+
+      // アクセサリ
+      if (saveData.player.equipment.accessory) {
+        const accessoryData = getItemData(saveData.player.equipment.accessory.id);
+        if (accessoryData) {
+          const accessory = new Item(0, 0, accessoryData);
+          this.player.equipment.equip(EquipmentSlot.ACCESSORY, accessory);
+        }
+      }
+    }
 
     // マップを復元
     this.restoreMap(saveData.map, saveData.world);

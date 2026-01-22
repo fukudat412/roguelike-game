@@ -117,6 +117,12 @@ export class Input {
     const key = event.key.toLowerCase();
     const action = this.keyMap.get(event.key) || this.keyMap.get(key);
 
+    // 修飾キー（Shift, Ctrl, Alt）は常に記録
+    if (key === 'shift' || key === 'control' || key === 'alt') {
+      this.keysPressed.add(key);
+      return;
+    }
+
     // アクションが登録されていない場合は何もしない
     if (!action) return;
 

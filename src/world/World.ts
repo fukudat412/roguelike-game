@@ -140,6 +140,14 @@ export class World {
   }
 
   /**
+   * セーブデータから階層を復元
+   */
+  restoreFloor(floorNumber: number, map: GameMap): void {
+    this.floors.set(floorNumber, map);
+    this.currentFloor = floorNumber;
+  }
+
+  /**
    * 次の階層へ
    */
   descendFloor(): GameMap {

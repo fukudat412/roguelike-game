@@ -16,6 +16,8 @@ import { SkillSelectionUI } from '@/ui/SkillSelectionUI';
 import { AchievementNotificationUI } from '@/ui/AchievementNotificationUI';
 import { GameMap } from '@/world/Map';
 import { World } from '@/world/World';
+import { TileFactory, TileType, Tile } from '@/world/Tile';
+import { Cell } from '@/world/Cell';
 import { RoomGenerator } from '@/world/generators/RoomGenerator';
 import { CaveGenerator } from '@/world/generators/CaveGenerator';
 import { BSPGenerator } from '@/world/generators/BSPGenerator';
@@ -65,7 +67,7 @@ export class Game {
   private player!: Player;
   private enemies: Enemy[] = [];
   private items: Item[] = [];
-  private stairs!: Stairs;
+  private stairs!: Stairs | null;
   private shop!: Shop | null;
   private chests: Chest[] = [];
 
@@ -964,7 +966,7 @@ export class Game {
     const playerPos = this.player.getPosition();
 
     // プレイヤーの位置に階段があるかチェック
-    if (!this.stairs.getPosition().equals(playerPos)) {
+    if (!this.stairs || !this.stairs.getPosition().equals(playerPos)) {
       this.uiManager.addMessage('ここには階段がない', MessageType.INFO);
       return;
     }
@@ -2685,32 +2687,58 @@ export class Game {
    * マップを復元
    */
   private restoreMap(mapData: any, worldData: any): void {
-    // 階層を変更
-    this.map = this.world.changeFloor(worldData.currentFloor);
+    // 新しいマップを作成（サイズのみ）
+    const restoredMap = new GameMap(mapData.width, mapData.height);
 
-    // セルの探索状態を復元
+    // 各セルをセーブデータから復元
     for (const cellData of mapData.cells) {
-      const cell = this.map.getCell(cellData.x, cellData.y);
-      if (cell) {
-        cell.explored = cellData.explored;
-      }
+      const tile = TileFactory.createTile(cellData.tileType as TileType);
+      const cell = new Cell(new Vector2D(cellData.x, cellData.y), tile);
+      cell.explored = cellData.explored;
+      restoredMap.setCell(cellData.x, cellData.y, cell);
     }
+
+    // Worldに復元したマップを登録
+    this.world.restoreFloor(worldData.currentFloor, restoredMap);
+
+    // this.mapを更新
+    this.map = restoredMap;
   }
 
   /**
-   * エンティティを復元（簡易版）
+   * エンティティを復元
    */
   private restoreEntities(entitiesData: any): void {
     // 敵を復元
     this.enemies = [];
     for (const enemyData of entitiesData.enemies) {
-      // 注: 完全な復元にはEnemyFactoryとEnemyDatabaseが必要
-      // 現状は新しい敵として再生成
+      // EnemyDatabaseから敵テンプレートを検索
+      const template = Object.values(EnemyDatabase).find(t => t.name === enemyData.name);
+      if (template) {
+        const enemy = new Enemy(enemyData.x, enemyData.y, template, enemyData.isElite || false);
+        // ステータスを復元
+        enemy.stats.hp = enemyData.hp;
+        enemy.stats.maxHp = enemyData.maxHp;
+        enemy.stats.attack = enemyData.attack;
+        enemy.stats.defense = enemyData.defense;
+        enemy.stats.speed = enemyData.speed;
+        enemy.experienceValue = enemyData.experienceValue;
+        enemy.isBoss = enemyData.isBoss || false;
+        this.enemies.push(enemy);
+      }
     }
 
     // アイテムを復元
     this.items = [];
-    // 注: 完全な復元にはItemFactoryが必要
+    for (const itemData of entitiesData.items) {
+      const data = getItemData(itemData.id);
+      if (data) {
+        const item = new Item(itemData.x, itemData.y, data);
+        item.stackable = itemData.stackable || false;
+        item.stackCount = itemData.stackCount || 1;
+        this.items.push(item);
+      }
+    }
 
     // 階段を復元
     if (entitiesData.stairs) {
@@ -2721,14 +2749,40 @@ export class Game {
         stairsData.direction,
         stairsData.targetFloor
       );
+    } else {
+      this.stairs = null;
     }
 
     // 宝箱を復元
     this.chests = [];
-    // 注: 完全な復元にはChestFactoryが必要
+    for (const chestData of entitiesData.chests) {
+      const template = ChestTemplates[chestData.type as ChestType];
+      if (template) {
+        const chest = new Chest(chestData.x, chestData.y, template);
+        chest.isOpened = chestData.isOpened || false;
+        this.chests.push(chest);
+      }
+    }
 
-    // ショップは復元しない（階層ごとに再生成）
-    this.shop = null;
+    // ショップを復元
+    if (entitiesData.shop) {
+      const shopData = entitiesData.shop;
+      this.shop = new Shop(shopData.x, shopData.y);
+
+      // ショップのアイテムを復元
+      this.shop.inventory = [];
+      for (const itemData of shopData.inventory) {
+        const data = getItemData(itemData.id);
+        if (data) {
+          const item = new Item(shopData.x, shopData.y, data);
+          item.stackable = itemData.stackable || false;
+          item.stackCount = itemData.stackCount || 1;
+          this.shop.inventory.push(item);
+        }
+      }
+    } else {
+      this.shop = null;
+    }
   }
 
   /**

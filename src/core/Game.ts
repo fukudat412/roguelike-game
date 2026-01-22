@@ -1323,6 +1323,7 @@ export class Game {
     // 開始時の周囲の歩行可能セル数を記録
     const startPos = this.player.getPosition();
     const startWalkableCount = this.countWalkableCells(startPos);
+    const isStartingInCorridor = startWalkableCount < 5; // 通路からスタートかどうか
 
     while (stepsCount < maxSteps) {
       const currentPos = this.player.getPosition();
@@ -1407,10 +1408,12 @@ export class Game {
           break;
         }
 
-        // 部屋チェック（周囲の歩行可能セルが増えた場合）
-        const currentWalkableCount = this.countWalkableCells(nextPos);
-        if (currentWalkableCount > startWalkableCount && currentWalkableCount >= 5) {
-          break;
+        // 部屋チェック（通路からスタートした場合のみ有効）
+        if (isStartingInCorridor) {
+          const currentWalkableCount = this.countWalkableCells(nextPos);
+          if (currentWalkableCount > startWalkableCount && currentWalkableCount >= 5) {
+            break;
+          }
         }
       }
     }

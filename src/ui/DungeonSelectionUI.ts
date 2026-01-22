@@ -7,21 +7,24 @@ import { DungeonType } from '@/world/DungeonType';
 import { DUNGEON_CONFIGS } from '@/data/dungeonConfigs';
 import { MetaProgression } from '@/character/MetaProgression';
 import { MetaProgressionUI } from './MetaProgressionUI';
+import { EnhancedSaveManager } from '@/utils/EnhancedSaveManager';
 
 export class DungeonSelectionUI {
   private container: HTMLElement;
   private onSelect: (type: DungeonType) => void;
+  private onContinue: (() => void) | null = null;
   private metaProgression: MetaProgression | null = null;
   private metaProgressionUI: MetaProgressionUI | null = null;
   private onUpgradePurchase: ((upgrade: any) => void) | null = null;
 
-  constructor(containerId: string, onSelect: (type: DungeonType) => void) {
+  constructor(containerId: string, onSelect: (type: DungeonType) => void, onContinue?: () => void) {
     const element = document.getElementById(containerId);
     if (!element) {
       throw new Error(`Element with id ${containerId} not found`);
     }
     this.container = element;
     this.onSelect = onSelect;
+    this.onContinue = onContinue || null;
     this.render();
   }
 
@@ -54,6 +57,38 @@ export class DungeonSelectionUI {
     title.textContent = 'ダンジョンを選択してください';
     title.className = 'dungeon-selection-title';
     this.container.appendChild(title);
+
+    // セーブデータチェック
+    const hasSave = EnhancedSaveManager.hasSave(0);
+    if (hasSave) {
+      const saves = EnhancedSaveManager.listSaves();
+      const saveInfo = saves.find(s => s.slot === 0 && s.exists);
+
+      if (saveInfo) {
+        // 続きからボタン
+        const continueBtn = document.createElement('button');
+        continueBtn.className = 'continue-game-btn';
+
+        const btnTitle = document.createElement('div');
+        btnTitle.className = 'continue-btn-title';
+        btnTitle.textContent = '📖 続きから';
+
+        const btnInfo = document.createElement('div');
+        btnInfo.className = 'continue-btn-info';
+        btnInfo.textContent = `${saveInfo.floor}階 | Lv.${saveInfo.playerLevel} | HP: ${saveInfo.playerHp}/${saveInfo.playerMaxHp}`;
+
+        continueBtn.appendChild(btnTitle);
+        continueBtn.appendChild(btnInfo);
+
+        continueBtn.addEventListener('click', () => {
+          if (this.onContinue) {
+            this.onContinue();
+          }
+        });
+
+        this.container.appendChild(continueBtn);
+      }
+    }
 
     // カードコンテナ
     const cardsContainer = document.createElement('div');

@@ -1125,6 +1125,36 @@
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     }
 
+    .continue-game-btn {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: 3px solid #34d399;
+      padding: 20px 40px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 30px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .continue-game-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+      border-color: #6ee7b7;
+    }
+
+    .continue-btn-title {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .continue-btn-info {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
     .dungeon-cards {
       display: flex;
       gap: 30px;
@@ -1243,6 +1273,21 @@
       }
       to {
         opacity: 0;
+      }
+    }
+
+    @keyframes fadeInOut {
+      0% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      10%, 90% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-10px);
       }
     }
 

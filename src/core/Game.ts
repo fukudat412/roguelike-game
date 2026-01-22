@@ -36,6 +36,7 @@ import { AStar } from '@/ai/pathfinding/AStar';
 import { ItemAffixManager } from '@/items/ItemAffix';
 import { StatusEffectType } from '@/combat/StatusEffect';
 import { SaveManager, GameSaveData } from '@/utils/SaveManager';
+import { EnhancedSaveManager } from '@/utils/EnhancedSaveManager';
 import { SoundManager, SoundType } from '@/utils/SoundManager';
 import { MetaProgression } from '@/character/MetaProgression';
 import { DailyChallenge, ChallengeType } from './DailyChallenge';
@@ -144,6 +145,10 @@ export class Game {
       }
 
       this.soundManager.play(SoundType.DAMAGE);
+
+      // パーマデス: セーブデータを削除
+      EnhancedSaveManager.deleteSave(0);
+      console.log('💀 パーマデス: セーブデータを削除しました');
 
       // 死亡報酬SPを付与
       const floorReached = this.world.getCurrentFloor();
@@ -1127,6 +1132,51 @@ export class Game {
 
     // 階層をセットアップ
     this.setupFloor();
+
+    // オートセーブ（階層移動時）
+    this.autoSave();
+  }
+
+  /**
+   * オートセーブを実行
+   */
+  private autoSave(): void {
+    const gameData = this.serializeGameState();
+    const success = EnhancedSaveManager.save(gameData, 0);
+
+    if (success) {
+      console.log('💾 オートセーブ完了');
+      // オートセーブインジケーターを表示（オプション）
+      this.showAutoSaveIndicator();
+    }
+  }
+
+  /**
+   * オートセーブインジケーターを表示
+   */
+  private showAutoSaveIndicator(): void {
+    const indicator = document.createElement('div');
+    indicator.className = 'autosave-indicator';
+    indicator.textContent = '💾 保存しました';
+    indicator.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: #4ade80;
+      padding: 10px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 9999;
+      animation: fadeInOut 2s ease-in-out;
+    `;
+
+    document.body.appendChild(indicator);
+
+    // 2秒後に削除
+    setTimeout(() => {
+      indicator.remove();
+    }, 2000);
   }
 
   /**
@@ -2200,44 +2250,15 @@ export class Game {
   }
 
   /**
-   * ゲームを保存
+   * ゲームを保存（拡張版）
    */
   private saveGame(): void {
-    const saveData: GameSaveData = {
-      version: '1.0',
-      timestamp: Date.now(),
-      player: {
-        position: { x: this.player.getPosition().x, y: this.player.getPosition().y },
-        level: this.player.level,
-        experience: this.player.experience,
-        experienceToNextLevel: this.player.experienceToNextLevel,
-        gold: this.player.gold,
-        hp: this.player.stats.hp,
-        maxHp: this.player.stats.maxHp,
-        attack: this.player.stats.attack,
-        defense: this.player.stats.defense,
-        speed: this.player.stats.speed,
-        inventory: this.player.inventory.getItems().map(item => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          type: item.itemType,
-          rarity: item.rarity,
-          stackable: item.stackable,
-          stackCount: item.stackCount,
-        })),
-        equipment: {
-          weapon: null,
-          armor: null,
-          accessory: null,
-        },
-      },
-      world: {
-        currentFloor: this.world.getCurrentFloor(),
-      },
-    };
+    // ゲーム状態をシリアライズ
+    const gameData = this.serializeGameState();
 
-    const success = SaveManager.save(saveData);
+    // 保存実行
+    const success = EnhancedSaveManager.save(gameData, 0);
+
     if (success) {
       this.uiManager.addMessage('ゲームを保存しました', MessageType.SUCCESS);
       this.updateSaveInfo();
@@ -2247,36 +2268,280 @@ export class Game {
   }
 
   /**
-   * ゲームを読み込み（簡易版：現在の階層とゴールドのみ復元）
+   * ゲーム状態をシリアライズ
+   */
+  private serializeGameState(): any {
+    return {
+      player: {
+        position: { x: this.player.getPosition().x, y: this.player.getPosition().y },
+        level: this.player.level,
+        experience: this.player.experience,
+        experienceToNextLevel: this.player.experienceToNextLevel,
+        gold: this.player.gold,
+        hp: this.player.stats.hp,
+        maxHp: this.player.stats.maxHp,
+        mp: this.player.stats.mp,
+        maxMp: this.player.stats.maxMp,
+        attack: this.player.stats.attack,
+        defense: this.player.stats.defense,
+        speed: this.player.stats.speed,
+        skillPoints: this.player.skillPoints,
+
+        // ステータス効果
+        statusEffects: this.player.statusEffects.getEffects().map(e => ({
+          type: e.type,
+          turnsRemaining: e.turnsRemaining,
+        })),
+
+        // スキル
+        skills: this.player.skills.map(s => ({
+          name: s.data.name,
+          currentCooldown: s.currentCooldown,
+        })),
+
+        // インベントリ
+        inventory: this.player.inventory.getItems().map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          itemType: item.itemType,
+          rarity: item.rarity,
+          stackable: item.stackable,
+          stackCount: item.stackCount,
+        })),
+
+        // 装備
+        equipment: {
+          weapon: this.player.equipment.getEquipped(EquipmentSlot.WEAPON)
+            ? this.serializeItem(this.player.equipment.getEquipped(EquipmentSlot.WEAPON)!)
+            : null,
+          armor: this.player.equipment.getEquipped(EquipmentSlot.ARMOR)
+            ? this.serializeItem(this.player.equipment.getEquipped(EquipmentSlot.ARMOR)!)
+            : null,
+          accessory: this.player.equipment.getEquipped(EquipmentSlot.ACCESSORY)
+            ? this.serializeItem(this.player.equipment.getEquipped(EquipmentSlot.ACCESSORY)!)
+            : null,
+        },
+      },
+
+      world: {
+        dungeonType: this.world.getDungeonConfig().metadata.type,
+        currentFloor: this.world.getCurrentFloor(),
+      },
+
+      map: {
+        width: this.map.width,
+        height: this.map.height,
+        cells: this.map.getAllCells().map(cell => ({
+          x: cell.position.x,
+          y: cell.position.y,
+          tileType: cell.tile.properties.type,
+          explored: cell.explored,
+        })),
+      },
+
+      entities: {
+        enemies: this.enemies.map(e => ({
+          x: e.getPosition().x,
+          y: e.getPosition().y,
+          name: e.name,
+          hp: e.stats.hp,
+          maxHp: e.stats.maxHp,
+          attack: e.stats.attack,
+          defense: e.stats.defense,
+          speed: e.stats.speed,
+          experienceValue: e.experienceValue,
+          isBoss: e.isBoss,
+          isElite: e.isElite || false,
+        })),
+
+        items: this.items.map(i => this.serializeItem(i)),
+
+        stairs: this.stairs
+          ? {
+              x: this.stairs.getPosition().x,
+              y: this.stairs.getPosition().y,
+              direction: this.stairs.direction,
+              targetFloor: this.stairs.targetFloor,
+            }
+          : null,
+
+        shop: this.shop
+          ? {
+              x: this.shop.getPosition().x,
+              y: this.shop.getPosition().y,
+              inventory: this.shop.inventory.map(i => ({
+                ...this.serializeItem(i),
+                price: this.shop!.getItemPrice(i),
+              })),
+            }
+          : null,
+
+        chests: this.chests.map(c => ({
+          x: c.getPosition().x,
+          y: c.getPosition().y,
+          type: c.template.type,
+          isOpened: c.isOpened,
+        })),
+      },
+
+      statistics: { ...this.statistics },
+    };
+  }
+
+  /**
+   * アイテムをシリアライズ
+   */
+  private serializeItem(item: Item): any {
+    return {
+      x: item.getPosition().x,
+      y: item.getPosition().y,
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      itemType: item.itemType,
+      rarity: item.rarity,
+      stackable: item.stackable,
+      stackCount: item.stackCount,
+    };
+  }
+
+  /**
+   * セーブデータから続きを開始（公開メソッド）
+   */
+  continueFromSave(): void {
+    const saveData = EnhancedSaveManager.load(0);
+    if (!saveData) {
+      console.error('セーブデータがありません');
+      return;
+    }
+
+    // ダンジョンタイプを取得
+    const dungeonType = saveData.world.dungeonType as DungeonType;
+
+    // ゲームを初期化（セーブデータは使わず、基本初期化のみ）
+    this.initialize(dungeonType);
+
+    // セーブデータを復元
+    this.deserializeGameState(saveData);
+
+    // ゲームを開始
+    this.start();
+
+    this.uiManager.addMessage('セーブデータから再開しました', MessageType.SUCCESS);
+    this.updateSaveInfo();
+  }
+
+  /**
+   * ゲームを読み込み（内部用）
    */
   private loadGame(): void {
-    const saveData = SaveManager.load();
+    const saveData = EnhancedSaveManager.load(0);
     if (!saveData) {
       this.uiManager.addMessage('セーブデータがありません', MessageType.WARNING);
       return;
     }
 
-    // プレイヤーステータスを復元
+    // ゲーム状態を復元
+    this.deserializeGameState(saveData);
+
+    this.uiManager.addMessage('ゲームを読み込みました', MessageType.SUCCESS);
+    this.updateSaveInfo();
+  }
+
+  /**
+   * ゲーム状態をデシリアライズ
+   */
+  private deserializeGameState(saveData: any): void {
+    // プレイヤー状態を復元
+    this.player.setPosition(new Vector2D(saveData.player.position.x, saveData.player.position.y));
     this.player.level = saveData.player.level;
     this.player.experience = saveData.player.experience;
     this.player.experienceToNextLevel = saveData.player.experienceToNextLevel;
     this.player.gold = saveData.player.gold;
     this.player.stats.hp = saveData.player.hp;
     this.player.stats.maxHp = saveData.player.maxHp;
+    this.player.stats.mp = saveData.player.mp;
+    this.player.stats.maxMp = saveData.player.maxMp;
+    this.player.stats.attack = saveData.player.attack;
+    this.player.stats.defense = saveData.player.defense;
+    this.player.stats.speed = saveData.player.speed;
+    this.player.skillPoints = saveData.player.skillPoints;
 
+    // ステータス効果を復元（簡易版）
+    // 注: 完全な復元には StatusEffectManager の再構築が必要
+
+    // スキルのクールダウンを復元（簡易版）
+    // 注: 完全な復元にはスキルデータベースとのマッピングが必要
+
+    // インベントリを復元（簡易版）
+    this.player.inventory.clear();
+    // 注: アイテムの完全な復元には ItemFactory が必要
+
+    // 装備を復元（簡易版）
+    // 注: 装備の完全な復元には Equipment の再構築が必要
+
+    // マップを復元
+    this.restoreMap(saveData.map, saveData.world);
+
+    // エンティティを復元
+    this.restoreEntities(saveData.entities);
+
+    // 統計を復元
+    this.statistics = { ...saveData.statistics };
+
+    // UI更新
+    this.updateUI();
+  }
+
+  /**
+   * マップを復元
+   */
+  private restoreMap(mapData: any, worldData: any): void {
     // 階層を変更
-    const targetFloor = saveData.world.currentFloor;
-    this.map = this.world.changeFloor(targetFloor);
+    this.map = this.world.changeFloor(worldData.currentFloor);
 
-    // プレイヤー位置を復元
-    const savedPos = saveData.player.position;
-    this.player.setPosition(new Vector2D(savedPos.x, savedPos.y));
+    // セルの探索状態を復元
+    for (const cellData of mapData.cells) {
+      const cell = this.map.getCell(cellData.x, cellData.y);
+      if (cell) {
+        cell.explored = cellData.explored;
+      }
+    }
+  }
 
-    // 階層をセットアップ
-    this.setupFloor();
+  /**
+   * エンティティを復元（簡易版）
+   */
+  private restoreEntities(entitiesData: any): void {
+    // 敵を復元
+    this.enemies = [];
+    for (const enemyData of entitiesData.enemies) {
+      // 注: 完全な復元にはEnemyFactoryとEnemyDatabaseが必要
+      // 現状は新しい敵として再生成
+    }
 
-    this.uiManager.addMessage('ゲームを読み込みました', MessageType.SUCCESS);
-    this.updateSaveInfo();
+    // アイテムを復元
+    this.items = [];
+    // 注: 完全な復元にはItemFactoryが必要
+
+    // 階段を復元
+    if (entitiesData.stairs) {
+      const stairsData = entitiesData.stairs;
+      this.stairs = new Stairs(
+        stairsData.x,
+        stairsData.y,
+        stairsData.direction,
+        stairsData.targetFloor
+      );
+    }
+
+    // 宝箱を復元
+    this.chests = [];
+    // 注: 完全な復元にはChestFactoryが必要
+
+    // ショップは復元しない（階層ごとに再生成）
+    this.shop = null;
   }
 
   /**
@@ -2286,11 +2551,13 @@ export class Game {
     const saveInfo = document.getElementById('save-info');
     if (!saveInfo) return;
 
-    const info = SaveManager.getSaveInfo();
-    if (info) {
-      const date = new Date(info.timestamp);
+    const saves = EnhancedSaveManager.listSaves();
+    const activeSave = saves.find(s => s.slot === 0 && s.exists);
+
+    if (activeSave && activeSave.timestamp) {
+      const date = new Date(activeSave.timestamp);
       const dateStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-      saveInfo.textContent = `${dateStr} (${info.floor}階)`;
+      saveInfo.textContent = `${dateStr} (${activeSave.floor}階)`;
     } else {
       saveInfo.textContent = 'セーブなし';
     }

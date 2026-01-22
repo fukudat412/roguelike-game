@@ -28,6 +28,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // ダンジョン選択UIを表示
   const dungeonSelection = new DungeonSelectionUI(
     'dungeon-selection',
+    // 新しいゲームを開始
     (dungeonType: DungeonType) => {
       console.log(`ダンジョン選択: ${dungeonType}`);
 
@@ -47,6 +48,19 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log('  待機: スペースキー');
       } catch (error) {
         console.error('ゲーム初期化エラー:', error);
+      }
+    },
+    // 続きから
+    () => {
+      console.log('セーブデータから続きを開始');
+
+      try {
+        // セーブデータをロードして続きから開始
+        game.continueFromSave();
+
+        console.log('セーブデータから再開しました');
+      } catch (error) {
+        console.error('セーブデータのロードエラー:', error);
       }
     }
   );

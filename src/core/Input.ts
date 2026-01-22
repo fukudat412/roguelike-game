@@ -175,6 +175,13 @@ export class Input {
   }
 
   /**
+   * Shiftキーが押されているかチェック
+   */
+  isShiftPressed(): boolean {
+    return this.keysPressed.has('shift');
+  }
+
+  /**
    * アクションを移動ベクトルに変換
    */
   static actionToDirection(action: Action): Vector2D | null {

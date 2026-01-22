@@ -898,7 +898,12 @@ export class Game {
     // 移動アクション
     const direction = Input.actionToDirection(action);
     if (direction) {
-      turnEnded = this.movePlayer(direction);
+      // Shiftキーが押されている場合はダッシュ移動
+      if (this.input.isShiftPressed()) {
+        turnEnded = this.dashMove(direction);
+      } else {
+        turnEnded = this.movePlayer(direction);
+      }
     }
 
     // ターン終了
@@ -1304,6 +1309,112 @@ export class Game {
     this.updateUI();
 
     return true;
+  }
+
+  /**
+   * ダッシュ移動（Shift + 移動キー）
+   * 壁、敵、アイテム、階段、宝箱に遭遇するまで移動し続ける
+   */
+  private dashMove(direction: Vector2D): boolean {
+    let moved = false;
+    let stepsCount = 0;
+    const maxSteps = 100; // 無限ループ防止
+
+    while (stepsCount < maxSteps) {
+      const currentPos = this.player.getPosition();
+      const nextPos = currentPos.add(direction);
+
+      // マップ境界チェック
+      if (!this.map.isInBoundsVec(nextPos)) {
+        break;
+      }
+
+      // 壁チェック
+      if (!this.map.isWalkableAt(nextPos)) {
+        break;
+      }
+
+      // 敵との衝突チェック
+      const enemyAtPosition = this.enemies.find(
+        e => e.isAlive() && e.getPosition().equals(nextPos)
+      );
+      if (enemyAtPosition) {
+        // 敵に遭遇したら攻撃して停止
+        this.soundManager.play(SoundType.ATTACK);
+        CombatSystem.attack(this.player, enemyAtPosition);
+        moved = true;
+        break;
+      }
+
+      // アイテムチェック
+      const itemAtPosition = this.items.find(item => item.getPosition().equals(nextPos));
+      if (itemAtPosition) {
+        // アイテムの上に移動して停止
+        this.player.setPosition(nextPos);
+        this.updateCameraAndFOV(nextPos);
+        this.uiManager.addMessage('アイテムを発見した！(Gで拾う)', MessageType.INFO);
+        moved = true;
+        break;
+      }
+
+      // 階段チェック
+      if (this.stairs && this.stairs.getPosition().equals(nextPos)) {
+        // 階段の上に移動して停止
+        this.player.setPosition(nextPos);
+        this.updateCameraAndFOV(nextPos);
+        this.uiManager.addMessage('階段を発見した！(Enterで次の階へ)', MessageType.INFO);
+        moved = true;
+        break;
+      }
+
+      // 宝箱チェック
+      const chestAtPosition = this.chests.find(
+        chest => !chest.isOpened && chest.getPosition().equals(nextPos)
+      );
+      if (chestAtPosition) {
+        // 宝箱の上に移動して停止
+        this.player.setPosition(nextPos);
+        this.updateCameraAndFOV(nextPos);
+        this.uiManager.addMessage('宝箱を発見した！(Gで開ける)', MessageType.INFO);
+        moved = true;
+        break;
+      }
+
+      // ショップチェック
+      if (this.shop && this.shop.getPosition().equals(nextPos)) {
+        // ショップの上に移動して停止
+        this.player.setPosition(nextPos);
+        this.updateCameraAndFOV(nextPos);
+        this.uiManager.addMessage('店を発見した！(Tで取引)', MessageType.INFO);
+        moved = true;
+        break;
+      }
+
+      // 通常の移動
+      this.player.setPosition(nextPos);
+      this.updateCameraAndFOV(nextPos);
+      moved = true;
+      stepsCount++;
+    }
+
+    if (moved) {
+      this.updateUI();
+    }
+
+    return moved;
+  }
+
+  /**
+   * カメラとFOVを更新（ヘルパーメソッド）
+   */
+  private updateCameraAndFOV(position: Vector2D): void {
+    // カメラ追従
+    this.renderer.setCameraPosition(position);
+
+    // FOV更新（視界範囲ボーナス適用）
+    const baseVisionRange = 8;
+    const visionRange = baseVisionRange + this.metaProgression.getVisionRangeBonus();
+    this.map.updateFOV(position, visionRange);
   }
 
   /**

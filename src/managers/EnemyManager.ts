@@ -289,14 +289,24 @@ export class EnemyManager implements IEntityManager<Enemy> {
 
   /**
    * 敵をプレイヤーに向かって移動させる（A*パスファインディング使用）
+   * プレイヤーに隣接している場合は攻撃する
    * @param enemy - 移動させる敵
    */
   moveEnemyTowardsPlayer(enemy: Enemy): void {
     const start = enemy.getPosition();
     const goal = this.player.getPosition();
+    const distance = start.distanceTo(goal);
+
+    // プレイヤーに隣接している場合は攻撃
+    if (distance <= 1.5) {
+      // 隣接している（1マス以内）
+      const damage = Math.max(1, enemy.getAttack() - this.player.getDefense() / 2);
+      const actualDamage = Math.floor(damage * (0.85 + Math.random() * 0.3));
+      this.player.stats.takeDamage(actualDamage);
+      return; // 攻撃したので移動しない
+    }
 
     // 距離が遠すぎる場合はシンプルな移動に切り替え
-    const distance = start.distanceTo(goal);
     if (distance > 15) {
       this.simpleEnemyMove(enemy);
       return;

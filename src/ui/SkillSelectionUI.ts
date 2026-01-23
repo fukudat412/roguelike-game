@@ -14,7 +14,7 @@ import {
   BerserkSkill,
   IceWallSkill,
   LifeStealSkill,
-} from '@/character/Skill';
+} from '@/character/skills';
 
 export class SkillSelectionUI {
   private panel: HTMLElement | null;

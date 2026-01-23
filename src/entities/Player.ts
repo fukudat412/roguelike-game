@@ -19,7 +19,7 @@ import {
   BerserkSkill,
   IceWallSkill,
   LifeStealSkill,
-} from '@/character/Skill';
+} from '@/character/skills';
 
 import { MetaProgression } from '@/character/MetaProgression';
 

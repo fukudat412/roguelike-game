@@ -315,34 +315,43 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-## Phase 7: Skill.ts の分割 ⬜
+## Phase 7: Skill.ts の分割 ✅
 
 **目的**: Skill.ts（458行）を各スキルごとのファイルに分割
+**結果**: 1ファイル（458行）→ 10ファイル（合計約450行）
 
-### タスク 7.1: スキル基底クラスの分離 ⬜
+### タスク 7.1: スキル基底クラスの分離 ✅
 
 **作成ファイル**:
-- `src/character/skills/SkillBase.ts`
-- `src/character/skills/index.ts`
+- [x] `src/character/skills/SkillBase.ts`（94行、基底クラス・enum・interface）
+- [x] `src/character/skills/index.ts`（42行、統合エクスポート + SkillDatabase）
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
-### タスク 7.2: 各スキルクラスの分離 ⬜
+### タスク 7.2: 各スキルクラスの分離 ✅
 
 **作成ファイル**（8種類）:
-- `src/character/skills/PowerStrikeSkill.ts`
-- `src/character/skills/AreaSlashSkill.ts`
-- `src/character/skills/HealingPrayerSkill.ts`
-- `src/character/skills/FireballSkill.ts`
-- `src/character/skills/TeleportSkill.ts`
-- `src/character/skills/BerserkSkill.ts`
-- `src/character/skills/IceWallSkill.ts`
-- `src/character/skills/LifeStealSkill.ts`
+- [x] `src/character/skills/PowerStrikeSkill.ts`（57行）
+- [x] `src/character/skills/AreaSlashSkill.ts`（63行）
+- [x] `src/character/skills/HealingPrayerSkill.ts`（36行）
+- [x] `src/character/skills/FireballSkill.ts`（63行）
+- [x] `src/character/skills/TeleportSkill.ts`（29行）
+- [x] `src/character/skills/BerserkSkill.ts`（30行）
+- [x] `src/character/skills/IceWallSkill.ts`（54行）
+- [x] `src/character/skills/LifeStealSkill.ts`（62行）
 
 **削除ファイル**:
-- `src/character/Skill.ts`
+- [x] `src/character/Skill.ts`（削除）
 
-**状態**: ⬜ 未着手
+**変更ファイル**（import更新）:
+- [x] `src/ui/SkillSelectionUI.ts`
+- [x] `src/core/GameStateSerializer.ts`
+- [x] `src/core/Game.ts`
+- [x] `src/entities/Player.ts`
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
@@ -368,10 +377,10 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 | Phase 4 (4.1-4.2) | ✅ 完了 | 2026-01-23 |
 | Phase 5 (5.1-5.2) | ✅ 完了 | 2026-01-23 |
 | Phase 6 (6.1-6.3) | ✅ 完了 | 2026-01-23 |
-| Phase 7 | ⬜ 未着手 | - |
+| Phase 7 (7.1-7.2) | ✅ 完了 | 2026-01-23 |
 | Phase 8 | ⬜ 未着手 | - |
 
-**全体進捗**: 6/8 Phase完了 (75%)
+**全体進捗**: 7/8 Phase完了 (87.5%)
 
 ---
 

@@ -15,7 +15,7 @@ import { Vector2D } from '@/utils/Vector2D';
 import { EquipmentSlot } from '@/entities/components/Equipment';
 import { TileType, TileFactory } from '@/world/Tile';
 import { EnemyDatabase } from '@/data/enemies';
-import { Skill, SkillDatabase } from '@/character/Skill';
+import { Skill, SkillDatabase } from '@/character/skills';
 import { StatusEffect } from '@/combat/StatusEffect';
 import { getItemData } from '@/data/items';
 

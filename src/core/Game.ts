@@ -44,7 +44,7 @@ import { DailyChallenge, ChallengeType } from './DailyChallenge';
 import { DungeonType } from '@/world/DungeonType';
 import { EnemyDatabase } from '@/data/enemies';
 import { DungeonSelectionUI } from '@/ui/DungeonSelectionUI';
-import { Skill, SkillDatabase } from '@/character/Skill';
+import { Skill, SkillDatabase } from '@/character/skills';
 import { EnemyManager } from '@/managers/EnemyManager';
 import { ItemManager } from '@/managers/ItemManager';
 import { ChestManager } from '@/managers/ChestManager';

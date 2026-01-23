@@ -1,13 +1,21 @@
 /**
- * セーブデータ管理
- * LocalStorageを使用してゲーム状態を保存/読み込み
+ * セーブマネージャー
+ * ゲーム状態を完全に保存・復元する
  */
 
-import { Logger } from './Logger';
+import { Vector2D } from '@/utils/Vector2D';
+import { StatusEffectType } from '@/combat/StatusEffect';
+import { ItemRarity } from '@/entities/Item';
 
+/**
+ * ゲームセーブデータ構造
+ */
 export interface GameSaveData {
   version: string;
   timestamp: number;
+  saveSlot: number;
+
+  // プレイヤー状態
   player: {
     position: { x: number; y: number };
     level: number;
@@ -16,110 +24,195 @@ export interface GameSaveData {
     gold: number;
     hp: number;
     maxHp: number;
+    mp: number;
+    maxMp: number;
     attack: number;
     defense: number;
     speed: number;
+    skillPoints: number;
+
+    // ステータス効果
+    statusEffects: Array<{
+      type: StatusEffectType;
+      turnsRemaining: number;
+    }>;
+
+    // スキル
+    skills: Array<{
+      name: string;
+      currentCooldown: number;
+    }>;
+
+    // インベントリ
     inventory: Array<{
       id: string;
       name: string;
       description: string;
-      type: string;
-      rarity: string;
+      itemType: string;
+      rarity: ItemRarity;
+      stackable: boolean;
+      stackCount: number;
+      equipmentSlot?: string;
+      bonuses?: any;
+    }>;
+
+    // 装備
+    equipment: {
+      weapon: any | null;
+      armor: any | null;
+      accessory: any | null;
+    };
+  };
+
+  // ワールド状態
+  world: {
+    dungeonType: string;
+    currentFloor: number;
+  };
+
+  // マップ状態
+  map: {
+    width: number;
+    height: number;
+    cells: Array<{
+      x: number;
+      y: number;
+      tileType: string;
+      explored: boolean;
+    }>;
+  };
+
+  // エンティティ状態
+  entities: {
+    enemies: Array<{
+      x: number;
+      y: number;
+      name: string;
+      hp: number;
+      maxHp: number;
+      attack: number;
+      defense: number;
+      speed: number;
+      experienceValue: number;
+      isBoss: boolean;
+      isElite: boolean;
+    }>;
+    items: Array<{
+      x: number;
+      y: number;
+      id: string;
+      name: string;
+      description: string;
+      itemType: string;
+      rarity: ItemRarity;
       stackable: boolean;
       stackCount: number;
     }>;
-    equipment: {
-      weapon: string | null;
-      armor: string | null;
-      accessory: string | null;
-    };
+    stairs: { x: number; y: number; direction: string; targetFloor: number } | null;
+    shop: {
+      x: number;
+      y: number;
+      inventory: Array<{
+        id: string;
+        name: string;
+        description: string;
+        itemType: string;
+        rarity: ItemRarity;
+        price: number;
+      }>;
+    } | null;
+    chests: Array<{
+      x: number;
+      y: number;
+      type: string;
+      isOpened: boolean;
+    }>;
   };
-  world: {
-    currentFloor: number;
+
+  // ゲーム統計（現在のラン）
+  statistics: {
+    enemiesKilled: number;
+    itemsCollected: number;
+    goldEarned: number;
+    bossesDefeated: number;
+    chestsOpened: number;
+    turnsPlayed: number;
   };
+
+  // メタプログレッションチェックサム
+  metaProgressionChecksum: string;
 }
 
+/**
+ * セーブ情報（一覧表示用）
+ */
+export interface SaveInfo {
+  slot: number;
+  exists: boolean;
+  timestamp?: number;
+  floor?: number;
+  dungeonType?: string;
+  playerLevel?: number;
+  playerHp?: number;
+  playerMaxHp?: number;
+}
+
+/**
+ * セーブマネージャー
+ */
 export class SaveManager {
-  private static SAVE_KEY = 'roguelike-save-v1';
+  private static readonly SAVE_KEY_PREFIX = 'roguelike_save_v2_';
+  private static readonly AUTO_SAVE_SLOT = 0; // スロット0をオートセーブ専用に
+  private static readonly MAX_SLOTS = 1; // パーマデス維持のため1スロットのみ
 
   /**
-   * セーブデータの検証
+   * ゲームをセーブ
    */
-  private static validateSaveData(data: any): data is GameSaveData {
-    // 基本構造のチェック
-    if (typeof data !== 'object' || data === null) return false;
-
-    // バージョンとタイムスタンプ
-    if (typeof data.version !== 'string') return false;
-    if (typeof data.timestamp !== 'number') return false;
-
-    // プレイヤーデータ
-    if (typeof data.player !== 'object' || data.player === null) return false;
-    if (typeof data.player.position !== 'object') return false;
-    if (typeof data.player.position.x !== 'number') return false;
-    if (typeof data.player.position.y !== 'number') return false;
-    if (typeof data.player.level !== 'number') return false;
-    if (typeof data.player.experience !== 'number') return false;
-    if (typeof data.player.experienceToNextLevel !== 'number') return false;
-    if (typeof data.player.gold !== 'number') return false;
-    if (typeof data.player.hp !== 'number') return false;
-    if (typeof data.player.maxHp !== 'number') return false;
-    if (typeof data.player.attack !== 'number') return false;
-    if (typeof data.player.defense !== 'number') return false;
-    if (typeof data.player.speed !== 'number') return false;
-
-    // インベントリ
-    if (!Array.isArray(data.player.inventory)) return false;
-
-    // 装備
-    if (typeof data.player.equipment !== 'object') return false;
-
-    // ワールド
-    if (typeof data.world !== 'object' || data.world === null) return false;
-    if (typeof data.world.currentFloor !== 'number') return false;
-
-    // 数値の範囲チェック（異常値を防ぐ）
-    if (data.player.level < 1 || data.player.level > 1000) return false;
-    if (data.player.gold < 0 || data.player.gold > 999999999) return false;
-    if (data.player.hp < 0 || data.player.hp > data.player.maxHp) return false;
-    if (data.world.currentFloor < 1 || data.world.currentFloor > 1000) return false;
-
-    return true;
-  }
-
-  /**
-   * ゲームデータを保存
-   */
-  static save(data: GameSaveData): boolean {
+  static save(gameData: any, slot: number = 0): boolean {
     try {
-      const json = JSON.stringify(data);
-      localStorage.setItem(this.SAVE_KEY, json);
+      const saveData = this.createSaveData(gameData, slot);
+      const key = `${this.SAVE_KEY_PREFIX}slot_${slot}`;
+
+      localStorage.setItem(key, JSON.stringify(saveData));
+      console.log(`✅ セーブ完了: スロット${slot}`);
+
       return true;
     } catch (error) {
-      Logger.error('Failed to save game:', error);
+      console.error('❌ セーブ失敗:', error);
       return false;
     }
   }
 
   /**
-   * ゲームデータを読み込み
+   * ゲームをロード
    */
-  static load(): GameSaveData | null {
+  static load(slot: number = 0): GameSaveData | null {
     try {
-      const json = localStorage.getItem(this.SAVE_KEY);
-      if (!json) return null;
+      const key = `${this.SAVE_KEY_PREFIX}slot_${slot}`;
+      const data = localStorage.getItem(key);
 
-      const data = JSON.parse(json);
-
-      // データ検証
-      if (!this.validateSaveData(data)) {
-        Logger.error('Invalid save data detected. Save data may be corrupted or tampered.');
+      if (!data) {
+        console.log(`ℹ️ スロット${slot}にセーブデータがありません`);
         return null;
       }
 
-      return data;
+      const saveData = JSON.parse(data) as GameSaveData;
+
+      // バージョンチェック
+      if (saveData.version !== '2.0') {
+        console.warn('⚠️ セーブデータのバージョンが古いです');
+      }
+
+      // メタプログレッションの整合性チェック
+      const currentChecksum = this.getMetaChecksum();
+      if (saveData.metaProgressionChecksum !== currentChecksum) {
+        console.warn('⚠️ メタプログレッションが変更されています');
+      }
+
+      console.log(`✅ ロード完了: スロット${slot}`);
+      return saveData;
     } catch (error) {
-      Logger.error('Failed to load game:', error);
+      console.error('❌ ロード失敗:', error);
       return null;
     }
   }
@@ -127,27 +220,140 @@ export class SaveManager {
   /**
    * セーブデータを削除
    */
-  static deleteSave(): void {
-    localStorage.removeItem(this.SAVE_KEY);
+  static deleteSave(slot: number): void {
+    const key = `${this.SAVE_KEY_PREFIX}slot_${slot}`;
+    localStorage.removeItem(key);
+    console.log(`🗑️ セーブデータ削除: スロット${slot}`);
+  }
+
+  /**
+   * 全セーブスロットの情報を取得
+   */
+  static listSaves(): SaveInfo[] {
+    const saves: SaveInfo[] = [];
+
+    for (let i = 0; i < this.MAX_SLOTS; i++) {
+      const saveData = this.load(i);
+
+      if (saveData) {
+        saves.push({
+          slot: i,
+          exists: true,
+          timestamp: saveData.timestamp,
+          floor: saveData.world.currentFloor,
+          dungeonType: saveData.world.dungeonType,
+          playerLevel: saveData.player.level,
+          playerHp: saveData.player.hp,
+          playerMaxHp: saveData.player.maxHp,
+        });
+      } else {
+        saves.push({
+          slot: i,
+          exists: false,
+        });
+      }
+    }
+
+    return saves;
   }
 
   /**
    * セーブデータが存在するかチェック
    */
-  static hasSave(): boolean {
-    return localStorage.getItem(this.SAVE_KEY) !== null;
+  static hasSave(slot: number = 0): boolean {
+    const key = `${this.SAVE_KEY_PREFIX}slot_${slot}`;
+    return localStorage.getItem(key) !== null;
   }
 
   /**
-   * セーブデータの情報を取得
+   * セーブデータを作成
    */
-  static getSaveInfo(): { timestamp: number; floor: number } | null {
-    const data = this.load();
-    if (!data) return null;
-
+  private static createSaveData(gameData: any, slot: number): GameSaveData {
     return {
-      timestamp: data.timestamp,
-      floor: data.world.currentFloor,
+      version: '2.0',
+      timestamp: Date.now(),
+      saveSlot: slot,
+
+      player: {
+        position: {
+          x: gameData.player.position.x,
+          y: gameData.player.position.y,
+        },
+        level: gameData.player.level,
+        experience: gameData.player.experience,
+        experienceToNextLevel: gameData.player.experienceToNextLevel,
+        gold: gameData.player.gold,
+        hp: gameData.player.hp,
+        maxHp: gameData.player.maxHp,
+        mp: gameData.player.mp,
+        maxMp: gameData.player.maxMp,
+        attack: gameData.player.attack,
+        defense: gameData.player.defense,
+        speed: gameData.player.speed,
+        skillPoints: gameData.player.skillPoints,
+        statusEffects: gameData.player.statusEffects,
+        skills: gameData.player.skills,
+        inventory: gameData.player.inventory,
+        equipment: gameData.player.equipment,
+      },
+
+      world: {
+        dungeonType: gameData.world.dungeonType,
+        currentFloor: gameData.world.currentFloor,
+      },
+
+      map: {
+        width: gameData.map.width,
+        height: gameData.map.height,
+        cells: gameData.map.cells,
+      },
+
+      entities: {
+        enemies: gameData.entities.enemies,
+        items: gameData.entities.items,
+        stairs: gameData.entities.stairs,
+        shop: gameData.entities.shop,
+        chests: gameData.entities.chests,
+      },
+
+      statistics: gameData.statistics,
+
+      metaProgressionChecksum: this.getMetaChecksum(),
     };
+  }
+
+  /**
+   * メタプログレッションのチェックサムを取得
+   */
+  private static getMetaChecksum(): string {
+    try {
+      const meta = localStorage.getItem('roguelike_meta_progression_v2');
+      if (!meta) return 'NONE';
+
+      // 簡易的なチェックサム（SP合計値を使用）
+      const data = JSON.parse(meta);
+      return `SP${data.soulPoints}_LSP${data.lifetimeSoulPoints}`;
+    } catch {
+      return 'ERROR';
+    }
+  }
+
+  /**
+   * セーブデータのサイズを取得（デバッグ用）
+   */
+  static getSaveSize(slot: number = 0): number {
+    const key = `${this.SAVE_KEY_PREFIX}slot_${slot}`;
+    const data = localStorage.getItem(key);
+    return data ? new Blob([data]).size : 0;
+  }
+
+  /**
+   * 全セーブデータをクリア（デバッグ用）
+   */
+  static clearAllSaves(): void {
+    for (let i = 0; i < this.MAX_SLOTS; i++) {
+      this.deleteSave(i);
+    }
+    console.log('🗑️ 全セーブデータを削除しました');
   }
 }

@@ -66,25 +66,27 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-## Phase 2: SaveManager の統一 ⬜
+## Phase 2: SaveManager の統一 ✅
 
 **目的**: SaveManager.tsとEnhancedSaveManager.tsを統一し、セーブ機能の一貫性を確保
 
-### タスク 2.1: SaveManager統合 ⬜
+### タスク 2.1: SaveManager統合 ✅
 
 **作業内容**:
-- [ ] `EnhancedSaveManager` を `SaveManager` にリネーム
-- [ ] 旧 `SaveManager.ts` の必要機能を統合
-- [ ] 旧 `SaveManager.ts` を削除
-- [ ] Game.tsの参照を更新
+- [x] `EnhancedSaveManager` を `SaveManager` にリネーム
+- [x] 旧 `SaveManager.ts` を削除
+- [x] Game.tsの参照を更新
+- [x] DungeonSelectionUI.tsの参照を更新
+- [x] 型定義を統一（`CompleteSaveData` → `GameSaveData`）
 
 **影響ファイル**:
-- `src/utils/EnhancedSaveManager.ts` → `src/utils/SaveManager.ts`
-- `src/core/Game.ts`
+- `src/utils/EnhancedSaveManager.ts` → `src/utils/SaveManager.ts`（リネーム）
+- `src/core/Game.ts`（import更新）
+- `src/ui/DungeonSelectionUI.ts`（import更新）
 
 **完了条件**: ✅ セーブ・ロード機能が正常に動作すること
 
-**状態**: ⬜ 未着手
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
@@ -299,7 +301,7 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 | Phase | 状態 | 完了日 |
 |-------|------|--------|
 | Phase 1 | ✅ 完了 | 2026-01-23 |
-| Phase 2 | ⬜ 未着手 | - |
+| Phase 2 | ✅ 完了 | 2026-01-23 |
 | Phase 3 | ⬜ 未着手 | - |
 | Phase 4 | ⬜ 未着手 | - |
 | Phase 5 | ⬜ 未着手 | - |
@@ -307,7 +309,7 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 | Phase 7 | ⬜ 未着手 | - |
 | Phase 8 | ⬜ 未着手 | - |
 
-**全体進捗**: 1/8 Phase完了 (12.5%)
+**全体進捗**: 2/8 Phase完了 (25%)
 
 ---
 

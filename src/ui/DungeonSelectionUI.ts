@@ -7,7 +7,7 @@ import { DungeonType } from '@/world/DungeonType';
 import { DUNGEON_CONFIGS } from '@/data/dungeonConfigs';
 import { MetaProgression } from '@/character/MetaProgression';
 import { MetaProgressionUI } from './MetaProgressionUI';
-import { EnhancedSaveManager } from '@/utils/EnhancedSaveManager';
+import { SaveManager, SaveInfo } from '@/utils/SaveManager';
 
 export class DungeonSelectionUI {
   private container: HTMLElement;
@@ -59,10 +59,10 @@ export class DungeonSelectionUI {
     this.container.appendChild(title);
 
     // セーブデータチェック
-    const hasSave = EnhancedSaveManager.hasSave(0);
+    const hasSave = SaveManager.hasSave(0);
     if (hasSave) {
-      const saves = EnhancedSaveManager.listSaves();
-      const saveInfo = saves.find(s => s.slot === 0 && s.exists);
+      const saves = SaveManager.listSaves();
+      const saveInfo = saves.find((s: SaveInfo) => s.slot === 0 && s.exists);
 
       if (saveInfo) {
         // 続きからボタン

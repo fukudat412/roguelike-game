@@ -38,7 +38,6 @@ import { AStar } from '@/ai/pathfinding/AStar';
 import { ItemAffixManager } from '@/items/ItemAffix';
 import { StatusEffectType, StatusEffect } from '@/combat/StatusEffect';
 import { SaveManager, GameSaveData } from '@/utils/SaveManager';
-import { EnhancedSaveManager } from '@/utils/EnhancedSaveManager';
 import { SoundManager, SoundType } from '@/utils/SoundManager';
 import { MetaProgression } from '@/character/MetaProgression';
 import { DailyChallenge, ChallengeType } from './DailyChallenge';
@@ -150,7 +149,7 @@ export class Game {
       this.soundManager.play(SoundType.DAMAGE);
 
       // パーマデス: セーブデータを削除
-      EnhancedSaveManager.deleteSave(0);
+      SaveManager.deleteSave(0);
       console.log('💀 パーマデス: セーブデータを削除しました');
 
       // 死亡報酬SPを付与
@@ -268,7 +267,7 @@ export class Game {
     if (deleteSaveButton) {
       deleteSaveButton.addEventListener('click', () => {
         if (confirm('セーブデータを削除しますか？')) {
-          SaveManager.deleteSave();
+          SaveManager.deleteSave(0);
           this.updateSaveInfo();
           this.uiManager.addMessage('セーブデータを削除しました', MessageType.INFO);
         }
@@ -1150,7 +1149,7 @@ export class Game {
    */
   private autoSave(): void {
     const gameData = this.serializeGameState();
-    const success = EnhancedSaveManager.save(gameData, 0);
+    const success = SaveManager.save(gameData, 0);
 
     if (success) {
       console.log('💾 オートセーブ完了');
@@ -2447,7 +2446,7 @@ export class Game {
     const gameData = this.serializeGameState();
 
     // 保存実行
-    const success = EnhancedSaveManager.save(gameData, 0);
+    const success = SaveManager.save(gameData, 0);
 
     if (success) {
       this.uiManager.addMessage('ゲームを保存しました', MessageType.SUCCESS);
@@ -2600,7 +2599,7 @@ export class Game {
    * セーブデータから続きを開始（公開メソッド）
    */
   continueFromSave(): void {
-    const saveData = EnhancedSaveManager.load(0);
+    const saveData = SaveManager.load(0);
     if (!saveData) {
       console.error('セーブデータがありません');
       return;
@@ -2643,7 +2642,7 @@ export class Game {
    * ゲームを読み込み（内部用）
    */
   private loadGame(): void {
-    const saveData = EnhancedSaveManager.load(0);
+    const saveData = SaveManager.load(0);
     if (!saveData) {
       this.uiManager.addMessage('セーブデータがありません', MessageType.WARNING);
       return;
@@ -2864,7 +2863,7 @@ export class Game {
     const saveInfo = document.getElementById('save-info');
     if (!saveInfo) return;
 
-    const saves = EnhancedSaveManager.listSaves();
+    const saves = SaveManager.listSaves();
     const activeSave = saves.find(s => s.slot === 0 && s.exists);
 
     if (activeSave && activeSave.timestamp) {

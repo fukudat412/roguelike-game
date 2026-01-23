@@ -47,6 +47,7 @@ import { DungeonSelectionUI } from '@/ui/DungeonSelectionUI';
 import { Skill, SkillDatabase } from '@/character/Skill';
 import { EnemyManager } from '@/managers/EnemyManager';
 import { ItemManager } from '@/managers/ItemManager';
+import { ChestManager } from '@/managers/ChestManager';
 
 export class Game {
   private renderer: Renderer;
@@ -71,6 +72,7 @@ export class Game {
   private enemyManager!: EnemyManager;
   private items: Item[] = [];
   private itemManager!: ItemManager;
+  private chestManager!: ChestManager;
   private stairs!: Stairs | null;
   private shop!: Shop | null;
   private chests: Chest[] = [];
@@ -379,6 +381,15 @@ export class Game {
       this.uiManager,
       this.soundManager
     );
+    this.chestManager = new ChestManager(
+      this.map,
+      this.player,
+      this.chests,
+      this.items,
+      this.uiManager,
+      this.soundManager,
+      this.itemManager
+    );
 
     const currentFloor = this.world.getCurrentFloor();
 
@@ -413,7 +424,7 @@ export class Game {
 
     // 宝箱を配置（1-2個）
     const chestCount = 1 + Math.floor(Math.random() * 2);
-    this.spawnChests(chestCount);
+    this.chestManager.spawnChests(chestCount);
 
     // 階段を配置（最終階以外）
     const MAX_FLOOR = 30;
@@ -1602,7 +1613,18 @@ export class Game {
     );
 
     if (chestAtPosition) {
-      return this.openChest(chestAtPosition);
+      return this.chestManager.openChest(chestAtPosition, {
+        onChestOpened: () => {
+          // 統計を更新
+          this.statistics.chestsOpened++;
+
+          // デイリーチャレンジ進捗を更新
+          this.dailyChallenge.updateProgress(ChallengeType.OPEN_CHESTS, 1);
+
+          // メタプログレッションに記録
+          this.metaProgression.recordChestOpened();
+        },
+      });
     }
 
     // 宝箱がなければアイテムをチェック

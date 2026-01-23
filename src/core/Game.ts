@@ -48,6 +48,7 @@ import { Skill, SkillDatabase } from '@/character/Skill';
 import { EnemyManager } from '@/managers/EnemyManager';
 import { ItemManager } from '@/managers/ItemManager';
 import { ChestManager } from '@/managers/ChestManager';
+import { GameStateSerializer } from './GameStateSerializer';
 import { FloorManager } from '@/managers/FloorManager';
 
 export class Game {
@@ -1178,7 +1179,18 @@ export class Game {
    * オートセーブを実行
    */
   private autoSave(): void {
-    const gameData = this.serializeGameState();
+    const serializer = new GameStateSerializer(
+      this.player,
+      this.world,
+      this.map,
+      this.enemies,
+      this.items,
+      this.stairs,
+      this.shop,
+      this.chests,
+      this.statistics
+    );
+    const gameData = serializer.serialize();
     const success = SaveManager.save(gameData, 0);
 
     if (success) {
@@ -2486,7 +2498,18 @@ export class Game {
    */
   private saveGame(): void {
     // ゲーム状態をシリアライズ
-    const gameData = this.serializeGameState();
+    const serializer = new GameStateSerializer(
+      this.player,
+      this.world,
+      this.map,
+      this.enemies,
+      this.items,
+      this.stairs,
+      this.shop,
+      this.chests,
+      this.statistics
+    );
+    const gameData = serializer.serialize();
 
     // 保存実行
     const success = SaveManager.save(gameData, 0);
@@ -2500,9 +2523,7 @@ export class Game {
   }
 
   /**
-   * ゲーム状態をシリアライズ
-   */
-  private serializeGameState(): any {
+   * セーブ情報を更新
     return {
       player: {
         position: { x: this.player.getPosition().x, y: this.player.getPosition().y },
@@ -2672,7 +2693,30 @@ export class Game {
     });
 
     // セーブデータを復元（マップ、エンティティ、プレイヤー状態など）
-    this.deserializeGameState(saveData);
+    const serializer = new GameStateSerializer(
+      this.player,
+      this.world,
+      this.map,
+      this.enemies,
+      this.items,
+      this.stairs,
+      this.shop,
+      this.chests,
+      this.statistics
+    );
+    const restored = serializer.deserialize(saveData);
+
+    // 復元されたデータを反映
+    this.map = restored.map;
+    this.enemies = restored.enemies;
+    this.items = restored.items;
+    this.stairs = restored.stairs;
+    this.shop = restored.shop;
+    this.chests = restored.chests;
+    this.statistics = restored.statistics;
+
+    // UI更新
+    this.updateUI();
 
     // ゲームを開始
     this.start();
@@ -2692,7 +2736,30 @@ export class Game {
     }
 
     // ゲーム状態を復元
-    this.deserializeGameState(saveData);
+    const serializer = new GameStateSerializer(
+      this.player,
+      this.world,
+      this.map,
+      this.enemies,
+      this.items,
+      this.stairs,
+      this.shop,
+      this.chests,
+      this.statistics
+    );
+    const restored = serializer.deserialize(saveData);
+
+    // 復元されたデータを反映
+    this.map = restored.map;
+    this.enemies = restored.enemies;
+    this.items = restored.items;
+    this.stairs = restored.stairs;
+    this.shop = restored.shop;
+    this.chests = restored.chests;
+    this.statistics = restored.statistics;
+
+    // UI更新
+    this.updateUI();
 
     this.uiManager.addMessage('ゲームを読み込みました', MessageType.SUCCESS);
     this.updateSaveInfo();

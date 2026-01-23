@@ -8,3 +8,5 @@ export {
   AchievementSystem,
   type Achievement,
 } from './AchievementSystem';
+
+export { UpgradeType, UpgradeDatabase, UpgradeSystem, type Upgrade } from './UpgradeSystem';

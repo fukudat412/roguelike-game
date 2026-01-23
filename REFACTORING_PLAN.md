@@ -206,19 +206,25 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-## Phase 5: Game.ts の分割 - スキル・プレイヤーアクション ⬜
+## Phase 5: Game.ts の分割 - スキル・プレイヤーアクション 🔄
 
 **目的**: スキル実行とプレイヤーアクション処理を分離
 
-### タスク 5.1: SkillExecutor の抽出 ⬜
+### タスク 5.1: SkillExecutor の抽出 ✅
 
 **移行メソッド**:
-- `useSkill()`
+- [x] `useSkill()` - スキル使用ロジック
 
 **作成ファイル**:
-- `src/managers/SkillExecutor.ts`
+- `src/managers/SkillExecutor.ts`（新規作成）
+
+**変更ファイル**:
+- `src/managers/index.ts`（SkillExecutorエクスポート追加）
+- `src/core/Game.ts`（SkillExecutor使用に変更）
 
 **完了条件**: ✅ 全スキルが正常に使用できること
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 

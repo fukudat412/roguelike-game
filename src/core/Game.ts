@@ -48,6 +48,7 @@ import { Skill, SkillDatabase } from '@/character/Skill';
 import { EnemyManager } from '@/managers/EnemyManager';
 import { ItemManager } from '@/managers/ItemManager';
 import { ChestManager } from '@/managers/ChestManager';
+import { SkillExecutor } from '@/managers/SkillExecutor';
 import { GameStateSerializer } from './GameStateSerializer';
 import { FloorManager } from '@/managers/FloorManager';
 
@@ -76,6 +77,7 @@ export class Game {
   private itemManager!: ItemManager;
   private chestManager!: ChestManager;
   private floorManager!: FloorManager;
+  private skillExecutor!: SkillExecutor;
   private stairs!: Stairs | null;
   private shop!: Shop | null;
   private chests: Chest[] = [];
@@ -394,6 +396,13 @@ export class Game {
       this.itemManager
     );
     this.floorManager = new FloorManager(this.world, this.map, this.player, this.uiManager);
+    this.skillExecutor = new SkillExecutor(
+      this.player,
+      this.enemies,
+      this.uiManager,
+      this.soundManager,
+      this.metaProgression
+    );
 
     const currentFloor = this.world.getCurrentFloor();
 
@@ -1084,38 +1093,11 @@ export class Game {
    * スキルを使用
    */
   private useSkill(skillIndex: number): boolean {
-    const skill = this.player.getSkill(skillIndex);
-    if (!skill) {
-      return false;
-    }
-
-    if (!skill.canUse(this.player)) {
-      if (skill.currentCooldown > 0) {
-        this.uiManager.addMessage(
-          `${skill.data.name}はクールダウン中です (残り${skill.currentCooldown}ターン)`,
-          MessageType.WARNING
-        );
-      } else {
-        this.uiManager.addMessage(
-          `MPが足りません (必要: ${skill.data.mpCost}, 現在: ${this.player.stats.mp})`,
-          MessageType.WARNING
-        );
-      }
-      this.soundManager.play(SoundType.ERROR);
-      return false;
-    }
-
-    const success = skill.use(this.player, this.enemies);
+    const success = this.skillExecutor.useSkill(skillIndex);
     if (success) {
-      // メタプログレッションに記録
-      this.metaProgression.recordSkillUsed();
-
-      this.soundManager.play(SoundType.SKILL);
       this.updateUI();
-      return true; // ターン消費
     }
-
-    return false;
+    return success;
   }
 
   /**

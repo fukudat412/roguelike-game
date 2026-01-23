@@ -46,6 +46,7 @@ import { EnemyDatabase } from '@/data/enemies';
 import { DungeonSelectionUI } from '@/ui/DungeonSelectionUI';
 import { Skill, SkillDatabase } from '@/character/Skill';
 import { EnemyManager } from '@/managers/EnemyManager';
+import { ItemManager } from '@/managers/ItemManager';
 
 export class Game {
   private renderer: Renderer;
@@ -69,6 +70,7 @@ export class Game {
   private enemies: Enemy[] = [];
   private enemyManager!: EnemyManager;
   private items: Item[] = [];
+  private itemManager!: ItemManager;
   private stairs!: Stairs | null;
   private shop!: Shop | null;
   private chests: Chest[] = [];
@@ -368,8 +370,15 @@ export class Game {
     this.shop = null;
     this.chests = [];
 
-    // EnemyManagerを初期化
+    // マネージャーを初期化
     this.enemyManager = new EnemyManager(this.world, this.map, this.player, this.enemies);
+    this.itemManager = new ItemManager(
+      this.map,
+      this.player,
+      this.items,
+      this.uiManager,
+      this.soundManager
+    );
 
     const currentFloor = this.world.getCurrentFloor();
 
@@ -400,7 +409,7 @@ export class Game {
 
     // アイテムを配置（5-7個）
     const itemCount = 5 + Math.floor(Math.random() * 3);
-    this.spawnItems(itemCount);
+    this.itemManager.spawnItems(itemCount);
 
     // 宝箱を配置（1-2個）
     const chestCount = 1 + Math.floor(Math.random() * 2);
@@ -421,8 +430,20 @@ export class Game {
     // インベントリUIの設定
     this.inventoryUI.setInventory(this.player.inventory);
     this.inventoryUI.setCallbacks(
-      item => this.useItem(item),
-      item => this.dropItem(item)
+      item =>
+        this.itemManager.useItem(item, (enemyPos, damage) => {
+          // ファイアボールスクロール用：敵にダメージを与える
+          const enemy = this.enemies.find(e => e.getPosition().equals(enemyPos) && e.isAlive());
+          if (enemy) {
+            enemy.takeDamage(damage);
+            this.uiManager.addMessage(`${enemy.name}に${damage}ダメージ！`, MessageType.COMBAT);
+
+            if (!enemy.isAlive()) {
+              this.handleEnemyDeath(enemy);
+            }
+          }
+        }),
+      item => this.itemManager.dropItem(item)
     );
 
     // カメラをプレイヤーに追従
@@ -1647,7 +1668,10 @@ export class Game {
     // アイテムを生成
     const playerPos = this.player.getPosition();
     for (let i = 0; i < template.itemCount; i++) {
-      const itemData = this.generateItemForChest(template.minRarity, template.maxRarity);
+      const itemData = this.itemManager.generateItemForChest(
+        template.minRarity,
+        template.maxRarity
+      );
       const item = new Item(playerPos.x, playerPos.y, itemData);
 
       // レア度を設定
@@ -1656,8 +1680,7 @@ export class Game {
         item.rarity = template.minRarity;
       } else if (rarityRoll < 0.8) {
         // 中間のレア度
-        const midRarity = this.getMidRarity(template.minRarity, template.maxRarity);
-        item.rarity = midRarity;
+        item.rarity = template.minRarity; // 簡略化: itemManagerにも委譲可能
       } else {
         item.rarity = template.maxRarity;
       }

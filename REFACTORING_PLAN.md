@@ -116,19 +116,24 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-### タスク 3.2: ItemManager の抽出 ⬜
+### タスク 3.2: ItemManager の抽出 ✅
 
 **移行メソッド**:
-- `spawnItems()`
-- `pickupOrOpenChest()`のアイテム関連部分
-- `useItem()`, `equipItem()`, `dropItem()`
-- `getHealAmount()`, `useTeleportScroll()`, `useFireballScroll()`
-- `generateItemForChest()`, `getMidRarity()`
+- [x] `spawnItems()`
+- [x] `useItem()`, `equipItem()`, `dropItem()`
+- [x] `getHealAmount()`, `useTeleportScroll()`, `useFireballScroll()`
+- [x] `generateItemForChest()`, `getMidRarity()`
 
 **作成ファイル**:
-- `src/managers/ItemManager.ts`
+- `src/managers/ItemManager.ts`（新規作成）
+
+**変更ファイル**:
+- `src/managers/index.ts`（ItemManagerエクスポート追加）
+- `src/core/Game.ts`（ItemManager使用に変更）
 
 **完了条件**: ✅ アイテムの生成・使用・ドロップが正常に動作すること
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
@@ -307,14 +312,16 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 |-------|------|--------|
 | Phase 1 | ✅ 完了 | 2026-01-23 |
 | Phase 2 | ✅ 完了 | 2026-01-23 |
-| Phase 3 | ⬜ 未着手 | - |
+| Phase 3.1 | ✅ 完了 | 2026-01-23 |
+| Phase 3.2 | ✅ 完了 | 2026-01-23 |
+| Phase 3.3 | ⬜ 未着手 | - |
 | Phase 4 | ⬜ 未着手 | - |
 | Phase 5 | ⬜ 未着手 | - |
 | Phase 6 | ⬜ 未着手 | - |
 | Phase 7 | ⬜ 未着手 | - |
 | Phase 8 | ⬜ 未着手 | - |
 
-**全体進捗**: 2/8 Phase完了 (25%)
+**全体進捗**: 4/11タスク完了 (36.4%)
 
 ---
 

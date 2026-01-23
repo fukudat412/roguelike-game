@@ -249,10 +249,11 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-## Phase 6: MetaProgression の分割 🔄
+## Phase 6: MetaProgression の分割 ✅
 
 **目的**: MetaProgression.ts（1896行）を責務ごとに分割
-**現在の状態**: 591行（約69%削減）、Phase 6.1-6.2完了、6.3が残り
+**結果**: 579行（約70%削減、1317行削減）
+**完了**: Phase 6.1-6.3 全完了
 
 ### タスク 6.1: AchievementSystem の抽出 ✅
 
@@ -292,16 +293,25 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-### タスク 6.3: MetaStatistics の抽出 ⬜
+### タスク 6.3: MetaStatistics の抽出 ✅
 
 **移行内容**:
-- 統計記録メソッド（recordKill, recordFloor等）
-- 統計取得メソッド
+- [x] 統計記録メソッド（13種類）
+  - recordNewRun, recordKill, recordDeath, recordFloor, recordDamage
+  - recordGoldEarned, recordGoldSpent, recordItemCollected, recordChestOpened, recordSkillUsed
+  - recordDungeonClear, recordDeathReward, addSoulPoints
+- [x] 統計取得メソッド（MetaStatisticsクラス）
+  - getDungeonClearCount, isFinalBossDefeated, getTotalDungeonClears
+  - getStatisticsSummary
 
 **作成ファイル**:
-- `src/character/progression/MetaStatistics.ts`
+- `src/character/progression/MetaStatistics.ts`（221行、新規作成）
 
-**状態**: ⬜ 未着手
+**変更ファイル**:
+- `src/character/progression/index.ts`（MetaStatisticsエクスポート追加）
+- `src/character/MetaProgression.ts`（約12行削減、591→579行）
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
@@ -357,11 +367,11 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 | Phase 3 (3.1-3.3) | ✅ 完了 | 2026-01-23 |
 | Phase 4 (4.1-4.2) | ✅ 完了 | 2026-01-23 |
 | Phase 5 (5.1-5.2) | ✅ 完了 | 2026-01-23 |
-| Phase 6 (6.1-6.2完了) | 🔄 進行中 | 6.3が残り |
+| Phase 6 (6.1-6.3) | ✅ 完了 | 2026-01-23 |
 | Phase 7 | ⬜ 未着手 | - |
 | Phase 8 | ⬜ 未着手 | - |
 
-**全体進捗**: 5/8 Phase完了 + Phase 6 進行中 (約68%)
+**全体進捗**: 6/8 Phase完了 (75%)
 
 ---
 

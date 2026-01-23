@@ -18,6 +18,8 @@ import {
   type Upgrade,
 } from './progression/UpgradeSystem';
 
+import { MetaStatistics } from './progression/MetaStatistics';
+
 // 実績システムとアップグレードシステムを再エクスポート（互換性のため）
 export { AchievementType, AchievementDatabase, type Achievement };
 export { UpgradeType, UpgradeDatabase, type Upgrade };
@@ -200,66 +202,73 @@ export class MetaProgression {
   // ========== 統計記録メソッド ==========
 
   recordNewRun(): void {
-    this.data.totalRuns++;
+    MetaStatistics.recordNewRun(this.data);
     this.saveToStorage();
   }
 
   recordKill(isBoss: boolean = false): void {
-    this.data.totalKills++;
-    if (isBoss) {
-      this.data.totalBossesKilled++;
+    const needsCheck = MetaStatistics.recordKill(this.data, isBoss);
+    if (needsCheck) {
+      this.checkAndUnlockAchievements();
     }
-    this.checkAndUnlockAchievements();
     this.saveToStorage();
   }
 
   recordDeath(): void {
-    this.data.totalDeaths++;
+    MetaStatistics.recordDeath(this.data);
     this.saveToStorage();
   }
 
   recordFloor(floor: number): void {
-    if (floor > this.data.maxFloorReached) {
-      this.data.maxFloorReached = floor;
+    const needsCheck = MetaStatistics.recordFloor(this.data, floor);
+    if (needsCheck) {
       this.checkAndUnlockAchievements();
       this.saveToStorage();
     }
   }
 
   recordDamage(damage: number): void {
-    if (damage > this.data.maxDamageDealt) {
-      this.data.maxDamageDealt = damage;
+    const needsCheck = MetaStatistics.recordDamage(this.data, damage);
+    if (needsCheck) {
       this.checkAndUnlockAchievements();
       this.saveToStorage();
     }
   }
 
   recordGoldEarned(amount: number): void {
-    this.data.totalGoldEarned += amount;
-    this.checkAndUnlockAchievements();
+    const needsCheck = MetaStatistics.recordGoldEarned(this.data, amount);
+    if (needsCheck) {
+      this.checkAndUnlockAchievements();
+    }
     this.saveToStorage();
   }
 
   recordGoldSpent(amount: number): void {
-    this.data.totalGoldSpent += amount;
+    MetaStatistics.recordGoldSpent(this.data, amount);
     this.saveToStorage();
   }
 
   recordItemCollected(): void {
-    this.data.totalItemsCollected++;
-    this.checkAndUnlockAchievements();
+    const needsCheck = MetaStatistics.recordItemCollected(this.data);
+    if (needsCheck) {
+      this.checkAndUnlockAchievements();
+    }
     this.saveToStorage();
   }
 
   recordChestOpened(): void {
-    this.data.totalChestsOpened++;
-    this.checkAndUnlockAchievements();
+    const needsCheck = MetaStatistics.recordChestOpened(this.data);
+    if (needsCheck) {
+      this.checkAndUnlockAchievements();
+    }
     this.saveToStorage();
   }
 
   recordSkillUsed(): void {
-    this.data.totalSkillsUsed++;
-    this.checkAndUnlockAchievements();
+    const needsCheck = MetaStatistics.recordSkillUsed(this.data);
+    if (needsCheck) {
+      this.checkAndUnlockAchievements();
+    }
     this.saveToStorage();
   }
 
@@ -267,26 +276,14 @@ export class MetaProgression {
    * ダンジョンクリア記録とSP獲得
    */
   recordDungeonClear(dungeonType: string, difficulty: number, maxFloors: number): number {
-    this.data.totalDungeonsCleared++;
-
-    // ダンジョン別クリア回数
-    if (!this.data.dungeonClearCounts[dungeonType]) {
-      this.data.dungeonClearCounts[dungeonType] = 0;
-    }
-    this.data.dungeonClearCounts[dungeonType]++;
-
-    // 最終ボス撃破記録
-    if (!this.data.defeatedFinalBosses.includes(dungeonType)) {
-      this.data.defeatedFinalBosses.push(dungeonType);
-    }
-
-    // SP獲得計算: 難易度 × 階層数 × 10
-    const spReward = difficulty * maxFloors * 10;
-    this.addSoulPoints(spReward);
-
+    const spReward = MetaStatistics.recordDungeonClear(
+      this.data,
+      dungeonType,
+      difficulty,
+      maxFloors
+    );
     this.checkAndUnlockAchievements();
     this.saveToStorage();
-
     return spReward;
   }
 
@@ -294,8 +291,7 @@ export class MetaProgression {
    * 死亡時SP獲得（到達階層に応じて）
    */
   recordDeathReward(floorReached: number): number {
-    const spReward = Math.max(10, floorReached * 5);
-    this.addSoulPoints(spReward);
+    const spReward = MetaStatistics.recordDeathReward(this.data, floorReached);
     this.saveToStorage();
     return spReward;
   }
@@ -303,8 +299,7 @@ export class MetaProgression {
   // ========== SP管理 ==========
 
   addSoulPoints(amount: number): void {
-    this.data.soulPoints += amount;
-    this.data.lifetimeSoulPoints += amount;
+    MetaStatistics.addSoulPoints(this.data, amount);
   }
 
   spendSoulPoints(amount: number): boolean {
@@ -582,7 +577,7 @@ export class MetaProgression {
    * SPを追加（デバッグ用）
    */
   addSoulPointsDebug(amount: number): void {
-    this.addSoulPoints(amount);
+    MetaStatistics.addSoulPointsDebug(this.data, amount);
     this.saveToStorage();
     console.log(`${amount} SP を追加しました（現在: ${this.data.soulPoints} SP）`);
   }

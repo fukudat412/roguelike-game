@@ -253,17 +253,22 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 **目的**: MetaProgression.ts（1896行）を責務ごとに分割
 
-### タスク 6.1: AchievementSystem の抽出 ⬜
+### タスク 6.1: AchievementSystem の抽出 ✅
 
 **移行内容**:
-- `AchievementType` enum
-- `Achievement` インターフェース
-- `AchievementDatabase`
-- 実績チェック・解禁関連メソッド
+- [x] `AchievementType` enum
+- [x] `Achievement` インターフェース
+- [x] `AchievementDatabase`
+- [x] 実績チェック・解禁関連メソッド（AchievementSystemクラス）
 
 **作成ファイル**:
-- `src/character/progression/AchievementSystem.ts`
-- `src/character/progression/index.ts`
+- `src/character/progression/AchievementSystem.ts`（新規作成）
+- `src/character/progression/index.ts`（新規作成）
+
+**変更ファイル**:
+- `src/character/MetaProgression.ts`（約416行削減）
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 

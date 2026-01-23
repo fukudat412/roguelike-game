@@ -90,24 +90,29 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-## Phase 3: Game.ts の分割 - エンティティマネージャー ⬜
+## Phase 3: Game.ts の分割 - エンティティマネージャー 🔄
 
 **目的**: Game.tsから敵・アイテム・宝箱の管理ロジックを分離
 
-### タスク 3.1: EnemyManager の抽出 ⬜
+### タスク 3.1: EnemyManager の抽出 ✅
 
 **移行メソッド**:
-- `spawnEnemies()`, `spawnEnemiesForDungeon()`
-- `spawnBoss()`, `spawnDungeonBoss()`
-- `scaleEnemyStats()`
-- `moveEnemyTowardsPlayer()`, `simpleEnemyMove()`
-- `handleEnemyTurn()`の敵処理部分
+- [x] `spawnEnemies()`, `spawnEnemiesForDungeon()`
+- [x] `spawnBoss()`, `spawnDungeonBoss()`
+- [x] `scaleEnemyStats()`
+- [x] `moveEnemyTowardsPlayer()`, `simpleEnemyMove()`
+- [x] `handleEnemyTurn()`での使用箇所を委譲
 
 **作成ファイル**:
-- `src/managers/EnemyManager.ts`
-- `src/managers/index.ts`
+- `src/managers/EnemyManager.ts`（新規作成）
+- `src/managers/index.ts`（新規作成）
+
+**変更ファイル**:
+- `src/core/Game.ts`（EnemyManager使用に変更）
 
 **完了条件**: ✅ 敵の生成・AI・死亡処理が正常に動作すること
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 

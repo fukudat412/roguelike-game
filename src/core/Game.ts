@@ -45,6 +45,7 @@ import { DungeonType } from '@/world/DungeonType';
 import { EnemyDatabase } from '@/data/enemies';
 import { DungeonSelectionUI } from '@/ui/DungeonSelectionUI';
 import { Skill, SkillDatabase } from '@/character/Skill';
+import { EnemyManager } from '@/managers/EnemyManager';
 
 export class Game {
   private renderer: Renderer;
@@ -66,6 +67,7 @@ export class Game {
   private map!: GameMap;
   private player!: Player;
   private enemies: Enemy[] = [];
+  private enemyManager!: EnemyManager;
   private items: Item[] = [];
   private stairs!: Stairs | null;
   private shop!: Shop | null;
@@ -366,13 +368,16 @@ export class Game {
     this.shop = null;
     this.chests = [];
 
+    // EnemyManagerを初期化
+    this.enemyManager = new EnemyManager(this.world, this.map, this.player, this.enemies);
+
     const currentFloor = this.world.getCurrentFloor();
 
     // ボスフロアチェック
     const dungeonConfig = this.world.getDungeonConfig();
     if (dungeonConfig.bosses[currentFloor]) {
       // ボス戦（ダンジョン設定に基づく）
-      this.spawnDungeonBoss();
+      this.enemyManager.spawnDungeonBoss();
       this.uiManager.addMessage(`【警告】ボス階層に到達した！`, MessageType.WARNING);
 
       // ボス階警告オーバーレイを表示
@@ -385,7 +390,7 @@ export class Game {
       const enemyCount = Math.floor(rawCount * dungeonConfig.enemies.spawnMultiplier);
       const finalCount = Math.min(enemyCount, 20); // 上限20体
 
-      this.spawnEnemiesForDungeon(finalCount);
+      this.enemyManager.spawnEnemiesForDungeon(finalCount);
 
       // 店を配置（30%の確率）
       if (Math.random() < 0.3) {
@@ -722,7 +727,7 @@ export class Game {
 
     // ボスの周りに少数の雑魚敵も配置（3-5体）
     const minionCount = 3 + Math.floor(Math.random() * 3);
-    this.spawnEnemies(minionCount);
+    this.enemyManager.spawnEnemies(minionCount);
   }
 
   /**
@@ -1512,7 +1517,7 @@ export class Game {
       }
 
       // シンプルなAI: プレイヤーに近づく
-      this.moveEnemyTowardsPlayer(enemy);
+      this.enemyManager.moveEnemyTowardsPlayer(enemy);
     }
 
     // プレイヤーターンに戻す

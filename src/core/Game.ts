@@ -48,6 +48,7 @@ import { Skill, SkillDatabase } from '@/character/Skill';
 import { EnemyManager } from '@/managers/EnemyManager';
 import { ItemManager } from '@/managers/ItemManager';
 import { ChestManager } from '@/managers/ChestManager';
+import { FloorManager } from '@/managers/FloorManager';
 
 export class Game {
   private renderer: Renderer;
@@ -73,6 +74,7 @@ export class Game {
   private items: Item[] = [];
   private itemManager!: ItemManager;
   private chestManager!: ChestManager;
+  private floorManager!: FloorManager;
   private stairs!: Stairs | null;
   private shop!: Shop | null;
   private chests: Chest[] = [];
@@ -390,6 +392,7 @@ export class Game {
       this.soundManager,
       this.itemManager
     );
+    this.floorManager = new FloorManager(this.world, this.map, this.player, this.uiManager);
 
     const currentFloor = this.world.getCurrentFloor();
 
@@ -414,7 +417,7 @@ export class Game {
 
       // 店を配置（30%の確率）
       if (Math.random() < 0.3) {
-        this.spawnShop();
+        this.shop = this.floorManager.spawnShop();
       }
     }
 
@@ -429,7 +432,7 @@ export class Game {
     // 階段を配置（最終階以外）
     const MAX_FLOOR = 30;
     if (currentFloor < MAX_FLOOR) {
-      this.spawnStairs();
+      this.stairs = this.floorManager.spawnStairs();
     } else {
       // 最終階メッセージ
       this.uiManager.addMessage(
@@ -1000,11 +1003,8 @@ export class Game {
    * 階段を使う
    */
   private useStairs(): void {
-    const playerPos = this.player.getPosition();
-
-    // プレイヤーの位置に階段があるかチェック
-    if (!this.stairs || !this.stairs.getPosition().equals(playerPos)) {
-      this.uiManager.addMessage('ここには階段がない', MessageType.INFO);
+    // FloorManagerで階段の検証
+    if (!this.floorManager.canUseStairs(this.stairs)) {
       return;
     }
 
@@ -1147,9 +1147,8 @@ export class Game {
    * 次の階層へ降りる
    */
   private descendToNextFloor(): void {
-    const currentFloor = this.world.getCurrentFloor();
-    const dungeonConfig = this.world.getDungeonConfig();
-    const MAX_FLOOR = dungeonConfig.maxFloors;
+    const currentFloor = this.floorManager.getCurrentFloor();
+    const MAX_FLOOR = this.floorManager.getMaxFloor();
 
     // 最大階層チェック
     if (currentFloor >= MAX_FLOOR) {
@@ -1165,14 +1164,8 @@ export class Game {
     // デイリーチャレンジ進捗を更新
     this.dailyChallenge.updateProgress(ChallengeType.REACH_FLOOR, nextFloor);
 
-    this.uiManager.addMessage(`階段を降りて${nextFloor}階へ進んだ`, MessageType.INFO);
-
-    // 新しい階層を生成
-    this.map = this.world.descendFloor();
-
-    // プレイヤーを新しい開始位置に配置
-    const startPos = this.world.getRandomStartPosition();
-    this.player.setPosition(startPos);
+    // FloorManagerで階層遷移（マップ生成とプレイヤー配置）
+    this.map = this.floorManager.descendToNextFloor();
 
     // 階層をセットアップ
     this.setupFloor();

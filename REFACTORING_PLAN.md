@@ -228,20 +228,24 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-### タスク 5.2: PlayerActionHandler の抽出 ⬜
+### タスク 5.2: PlayerActionHandler の抽出 ✅
 
 **移行メソッド**:
-- `movePlayer()`, `dashMove()`
-- `isJunction()`, `countWalkableCells()`
-- `updateCameraAndFOV()`
-- `interactWithShop()`, `buyItemFromShop()`
+- [x] `movePlayer()`, `dashMove()` - プレイヤー移動とダッシュ
+- [x] `isJunction()`, `countWalkableCells()` - ダッシュの補助メソッド
+- [x] `updateCameraAndFOV()` - カメラとFOV更新
+- [x] `interactWithShop()`, `buyItemFromShop()` - 店との取引
 
 **作成ファイル**:
-- `src/managers/PlayerActionHandler.ts`
+- `src/managers/PlayerActionHandler.ts`（新規作成）
+
+**変更ファイル**:
+- `src/managers/index.ts`（PlayerActionHandlerエクスポート追加）
+- `src/core/Game.ts`（PlayerActionHandler使用に変更）
 
 **完了条件**: ✅ プレイヤーの移動・ダッシュ・店取引が正常に動作すること
 
-**状態**: ⬜ 未着手
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
@@ -340,12 +344,12 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 | Phase 2 | ✅ 完了 | 2026-01-23 |
 | Phase 3 (3.1-3.3) | ✅ 完了 | 2026-01-23 |
 | Phase 4 (4.1-4.2) | ✅ 完了 | 2026-01-23 |
-| Phase 5 | ⬜ 未着手 | - |
+| Phase 5 (5.1-5.2) | ✅ 完了 | 2026-01-23 |
 | Phase 6 | ⬜ 未着手 | - |
 | Phase 7 | ⬜ 未着手 | - |
 | Phase 8 | ⬜ 未着手 | - |
 
-**全体進捗**: 4/8 Phase完了 (50%)
+**全体進捗**: 5/8 Phase完了 (62.5%)
 
 ---
 

@@ -49,6 +49,7 @@ import { EnemyManager } from '@/managers/EnemyManager';
 import { ItemManager } from '@/managers/ItemManager';
 import { ChestManager } from '@/managers/ChestManager';
 import { SkillExecutor } from '@/managers/SkillExecutor';
+import { PlayerActionHandler } from '@/managers/PlayerActionHandler';
 import { GameStateSerializer } from './GameStateSerializer';
 import { FloorManager } from '@/managers/FloorManager';
 
@@ -78,6 +79,7 @@ export class Game {
   private chestManager!: ChestManager;
   private floorManager!: FloorManager;
   private skillExecutor!: SkillExecutor;
+  private playerActionHandler!: PlayerActionHandler;
   private stairs!: Stairs | null;
   private shop!: Shop | null;
   private chests: Chest[] = [];
@@ -402,6 +404,20 @@ export class Game {
       this.uiManager,
       this.soundManager,
       this.metaProgression
+    );
+    this.playerActionHandler = new PlayerActionHandler(
+      this.player,
+      this.map,
+      this.renderer,
+      this.uiManager,
+      this.shopUI,
+      this.soundManager,
+      this.metaProgression,
+      this.enemies,
+      this.items,
+      this.stairs,
+      this.shop,
+      this.chests
     );
 
     const currentFloor = this.world.getCurrentFloor();
@@ -1027,66 +1043,14 @@ export class Game {
    * 店で取引
    */
   private interactWithShop(): boolean {
-    const playerPos = this.player.getPosition();
-
-    // 店が存在しないか、隣接していない
-    if (!this.shop) {
-      this.uiManager.addMessage('近くに商人がいない', MessageType.INFO);
-      return false;
-    }
-
-    const shopPos = this.shop.getPosition();
-    const distance = playerPos.distanceTo(shopPos);
-
-    if (distance > 1.5) {
-      this.uiManager.addMessage('商人に近づく必要がある', MessageType.INFO);
-      return false;
-    }
-
-    // 店のインベントリを表示
-    if (this.shop.inventory.length === 0) {
-      this.uiManager.addMessage('商人は売り物を持っていない', MessageType.INFO);
-      return false;
-    }
-
-    // 店のUIを開く
-    this.shopUI.setShop(this.shop, this.player.gold);
-    this.shopUI.setCallback(item => this.buyItemFromShop(item));
-    this.shopUI.open();
-
-    return false; // UIを開くだけなのでターン消費しない
+    return this.playerActionHandler.interactWithShop(item => this.buyItemFromShop(item));
   }
 
   /**
    * 店からアイテムを購入
    */
   private buyItemFromShop(item: Item): void {
-    if (!this.shop) return;
-
-    const price = this.shop.getItemPrice(item);
-    const result = this.shop.buyItem(item, this.player.gold);
-
-    if (result.success) {
-      this.player.spendGold(price);
-      const added = this.player.inventory.addItem(item);
-
-      if (added) {
-        this.soundManager.play(SoundType.PURCHASE);
-        this.uiManager.addMessage(result.message, MessageType.SUCCESS);
-        // 店のUIを更新
-        this.shopUI.updatePlayerGold(this.player.gold);
-        this.updateUI();
-      } else {
-        // インベントリがいっぱいの場合、購入をキャンセル
-        this.player.addGold(price);
-        this.shop.inventory.unshift(item);
-        this.soundManager.play(SoundType.ERROR);
-        this.uiManager.addMessage('インベントリがいっぱいです', MessageType.WARNING);
-      }
-    } else {
-      this.soundManager.play(SoundType.ERROR);
-      this.uiManager.addMessage(result.message, MessageType.WARNING);
-    }
+    this.playerActionHandler.buyItemFromShop(item, () => this.updateUI());
   }
 
   /**
@@ -1292,49 +1256,11 @@ export class Game {
    * プレイヤー移動
    */
   private movePlayer(direction: Vector2D): boolean {
-    const currentPos = this.player.getPosition();
-    const newPos = currentPos.add(direction);
-
-    // マップ境界チェック
-    if (!this.map.isInBoundsVec(newPos)) {
-      return false;
+    const moved = this.playerActionHandler.movePlayer(direction);
+    if (moved) {
+      this.updateUI();
     }
-
-    // 壁チェック
-    if (!this.map.isWalkableAt(newPos)) {
-      return false;
-    }
-
-    // 敵との衝突チェック
-    const enemyAtPosition = this.enemies.find(e => e.isAlive() && e.getPosition().equals(newPos));
-
-    if (enemyAtPosition) {
-      // 攻撃
-      this.soundManager.play(SoundType.ATTACK);
-      CombatSystem.attack(this.player, enemyAtPosition);
-      return true;
-    }
-
-    // 移動
-    this.player.setPosition(newPos);
-
-    // カメラ追従
-    this.renderer.setCameraPosition(newPos);
-
-    // FOV更新（視界範囲ボーナス適用）
-    const baseVisionRange = 8;
-    const visionRange = baseVisionRange + this.metaProgression.getVisionRangeBonus();
-    this.map.updateFOV(newPos, visionRange);
-
-    // 階段の上に立った時にメッセージを表示
-    if (this.stairs && this.stairs.getPosition().equals(newPos)) {
-      this.uiManager.addMessage('階段を発見した！(Enterで次の階へ)', MessageType.INFO);
-    }
-
-    // UI更新
-    this.updateUI();
-
-    return true;
+    return moved;
   }
 
   /**
@@ -1342,112 +1268,10 @@ export class Game {
    * 壁、敵、アイテム、階段、宝箱、分かれ道、部屋に遭遇するまで移動し続ける
    */
   private dashMove(direction: Vector2D): boolean {
-    let moved = false;
-    let stepsCount = 0;
-    const maxSteps = 100; // 無限ループ防止
-
-    // 開始時の周囲の歩行可能セル数を記録
-    const startPos = this.player.getPosition();
-    const startWalkableCount = this.countWalkableCells(startPos);
-    const isStartingInCorridor = startWalkableCount < 5; // 通路からスタートかどうか
-
-    while (stepsCount < maxSteps) {
-      const currentPos = this.player.getPosition();
-      const nextPos = currentPos.add(direction);
-
-      // マップ境界チェック
-      if (!this.map.isInBoundsVec(nextPos)) {
-        break;
-      }
-
-      // 壁チェック
-      if (!this.map.isWalkableAt(nextPos)) {
-        break;
-      }
-
-      // 敵との衝突チェック
-      const enemyAtPosition = this.enemies.find(
-        e => e.isAlive() && e.getPosition().equals(nextPos)
-      );
-      if (enemyAtPosition) {
-        // 敵に遭遇したら攻撃して停止
-        this.soundManager.play(SoundType.ATTACK);
-        CombatSystem.attack(this.player, enemyAtPosition);
-        moved = true;
-        break;
-      }
-
-      // アイテムチェック
-      const itemAtPosition = this.items.find(item => item.getPosition().equals(nextPos));
-      if (itemAtPosition) {
-        // アイテムの上に移動して停止
-        this.player.setPosition(nextPos);
-        this.updateCameraAndFOV(nextPos);
-        this.uiManager.addMessage('アイテムを発見した！(Gで拾う)', MessageType.INFO);
-        moved = true;
-        break;
-      }
-
-      // 階段チェック
-      if (this.stairs && this.stairs.getPosition().equals(nextPos)) {
-        // 階段の上に移動して停止
-        this.player.setPosition(nextPos);
-        this.updateCameraAndFOV(nextPos);
-        this.uiManager.addMessage('階段を発見した！(Enterで次の階へ)', MessageType.INFO);
-        moved = true;
-        break;
-      }
-
-      // 宝箱チェック
-      const chestAtPosition = this.chests.find(
-        chest => !chest.isOpened && chest.getPosition().equals(nextPos)
-      );
-      if (chestAtPosition) {
-        // 宝箱の上に移動して停止
-        this.player.setPosition(nextPos);
-        this.updateCameraAndFOV(nextPos);
-        this.uiManager.addMessage('宝箱を発見した！(Gで開ける)', MessageType.INFO);
-        moved = true;
-        break;
-      }
-
-      // ショップチェック
-      if (this.shop && this.shop.getPosition().equals(nextPos)) {
-        // ショップの上に移動して停止
-        this.player.setPosition(nextPos);
-        this.updateCameraAndFOV(nextPos);
-        this.uiManager.addMessage('店を発見した！(Tで取引)', MessageType.INFO);
-        moved = true;
-        break;
-      }
-
-      // 通常の移動
-      this.player.setPosition(nextPos);
-      this.updateCameraAndFOV(nextPos);
-      moved = true;
-      stepsCount++;
-
-      // 移動後に分岐点・部屋をチェック（最初の一歩は除外）
-      if (stepsCount > 0) {
-        // 分かれ道チェック（来た方向と進行方向以外に進める場所がある）
-        if (this.isJunction(nextPos, direction)) {
-          break;
-        }
-
-        // 部屋チェック（通路からスタートした場合のみ有効）
-        if (isStartingInCorridor) {
-          const currentWalkableCount = this.countWalkableCells(nextPos);
-          if (currentWalkableCount > startWalkableCount && currentWalkableCount >= 5) {
-            break;
-          }
-        }
-      }
-    }
-
+    const moved = this.playerActionHandler.dashMove(direction);
     if (moved) {
       this.updateUI();
     }
-
     return moved;
   }
 

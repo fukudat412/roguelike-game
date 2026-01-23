@@ -3,11 +3,11 @@
  * インベントリの表示と操作
  */
 
+import { BaseUIPanel } from './BaseUIPanel';
 import { Inventory } from '@/entities/components/Inventory';
 import { Item, ItemRarity } from '@/entities/Item';
 
-export class InventoryUI {
-  private panel: HTMLElement | null;
+export class InventoryUI extends BaseUIPanel {
   private listElement: HTMLElement | null;
   private useButton: HTMLButtonElement | null;
   private dropButton: HTMLButtonElement | null;
@@ -15,14 +15,14 @@ export class InventoryUI {
 
   private inventory: Inventory | null = null;
   private selectedIndex: number = -1;
-  private isOpen: boolean = false;
 
   private onUseCallback: ((item: Item) => void) | null = null;
   private onDropCallback: ((item: Item) => void) | null = null;
   private listClickHandler: ((e: Event) => void) | null = null;
 
   constructor() {
-    this.panel = document.getElementById('inventory-panel');
+    super('inventory-panel');
+
     this.listElement = document.getElementById('inventory-list');
     this.useButton = document.getElementById('use-item-btn') as HTMLButtonElement;
     this.dropButton = document.getElementById('drop-item-btn') as HTMLButtonElement;
@@ -81,23 +81,16 @@ export class InventoryUI {
   /**
    * インベントリを開く
    */
-  open(): void {
-    if (!this.inventory || !this.panel) return;
-
-    this.isOpen = true;
-    this.panel.style.display = 'block';
-    this.render();
+  override open(): void {
+    if (!this.inventory) return;
+    super.open();
   }
 
   /**
-   * インベントリを閉じる
+   * クローズ時の処理
    */
-  close(): void {
-    if (!this.panel) return;
-
-    this.isOpen = false;
+  protected override onClose(): void {
     this.selectedIndex = -1;
-    this.panel.style.display = 'none';
   }
 
   /**
@@ -121,7 +114,7 @@ export class InventoryUI {
   /**
    * インベントリを描画
    */
-  private render(): void {
+  protected render(): void {
     if (!this.inventory || !this.listElement) return;
 
     this.listElement.textContent = '';

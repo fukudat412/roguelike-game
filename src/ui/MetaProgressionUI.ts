@@ -3,6 +3,7 @@
  * タブベースのインターフェースで統計、実績、アップグレードを表示
  */
 
+import { BaseUIPanel } from './BaseUIPanel';
 import {
   MetaProgression,
   Upgrade,
@@ -19,15 +20,13 @@ enum Tab {
   UPGRADES,
 }
 
-export class MetaProgressionUI {
-  private panel: HTMLElement | null;
-  private isOpen: boolean = false;
+export class MetaProgressionUI extends BaseUIPanel {
   private metaProgression: MetaProgression | null = null;
   private onPurchaseCallback: ((upgrade: Upgrade) => void) | null = null;
   private currentTab: Tab = Tab.STATS;
 
   constructor() {
-    this.panel = document.getElementById('meta-progression-panel');
+    super('meta-progression-panel');
     this.setupEventListeners();
   }
 
@@ -63,21 +62,14 @@ export class MetaProgressionUI {
   /**
    * UIを開く
    */
-  open(): void {
-    if (!this.panel) return;
-    this.panel.style.display = 'block';
-    this.isOpen = true;
-    this.render();
+  override open(): void {
+    super.open();
   }
 
   /**
-   * UIを閉じる
+   * UIを閉じる（BaseUIPanelのclose()を使用）
    */
-  close(): void {
-    if (!this.panel) return;
-    this.panel.style.display = 'none';
-    this.isOpen = false;
-  }
+  // close()メソッドは不要（BaseUIPanelから継承）
 
   /**
    * 表示を切り替え
@@ -93,7 +85,7 @@ export class MetaProgressionUI {
   /**
    * UIを描画
    */
-  private render(): void {
+  protected render(): void {
     if (!this.metaProgression || !this.panel) return;
 
     // パネルをクリア

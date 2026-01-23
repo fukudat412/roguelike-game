@@ -355,15 +355,43 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 
 ---
 
-## Phase 8: UI層の統合 ⬜
+## Phase 8: UI層の統合 ✅
 
 **目的**: UIクラスをBaseUIPanelから継承させて重複を排除
+**結果**: 共通の基底クラスを作成し、3つのUIクラスで重複を削減
 
-### タスク 8.1: InventoryUI のリファクタリング ⬜
-### タスク 8.2: ShopUI のリファクタリング ⬜
-### タスク 8.3: MetaProgressionUI のリファクタリング ⬜
+### タスク 8.1: InventoryUI のリファクタリング ✅
 
-**状態**: ⬜ 未着手
+**作成ファイル**:
+- [x] `src/ui/BaseUIPanel.ts`（53行、基底クラス）
+
+**変更内容**:
+- [x] BaseUIPanelから継承
+- [x] panel, isOpenをprotectedに（BaseUIPanelから継承）
+- [x] open(), close()メソッドをオーバーライド
+- [x] render()をprotectedに変更
+
+**状態**: ✅ 完了（2026-01-23）
+
+### タスク 8.2: ShopUI のリファクタリング ✅
+
+**変更内容**:
+- [x] BaseUIPanelから継承
+- [x] panel, isOpenをprotectedに（BaseUIPanelから継承）
+- [x] open(), close()メソッドをオーバーライド
+- [x] render()をprotectedに変更
+
+**状態**: ✅ 完了（2026-01-23）
+
+### タスク 8.3: MetaProgressionUI のリファクタリング ✅
+
+**変更内容**:
+- [x] BaseUIPanelから継承
+- [x] panel, isOpenをprotectedに（BaseUIPanelから継承）
+- [x] open()メソッドをオーバーライド
+- [x] render()をprotectedに変更
+
+**状態**: ✅ 完了（2026-01-23）
 
 ---
 
@@ -378,9 +406,9 @@ Game.ts（2890行）を中心とした巨大ファイルを機能ごとに分割
 | Phase 5 (5.1-5.2) | ✅ 完了 | 2026-01-23 |
 | Phase 6 (6.1-6.3) | ✅ 完了 | 2026-01-23 |
 | Phase 7 (7.1-7.2) | ✅ 完了 | 2026-01-23 |
-| Phase 8 | ⬜ 未着手 | - |
+| Phase 8 (8.1-8.3) | ✅ 完了 | 2026-01-23 |
 
-**全体進捗**: 7/8 Phase完了 (87.5%)
+**全体進捗**: 8/8 Phase完了 (100%) 🎉
 
 ---
 

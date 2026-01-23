@@ -3,11 +3,11 @@
  * 商人との取引UI
  */
 
+import { BaseUIPanel } from './BaseUIPanel';
 import { Shop } from '@/entities/Shop';
 import { Item, ItemRarity } from '@/entities/Item';
 
-export class ShopUI {
-  private panel: HTMLElement | null;
+export class ShopUI extends BaseUIPanel {
   private listElement: HTMLElement | null;
   private buyButton: HTMLButtonElement | null;
   private closeButton: HTMLButtonElement | null;
@@ -16,14 +16,14 @@ export class ShopUI {
   private shop: Shop | null = null;
   private playerGold: number = 0;
   private selectedIndex: number = -1;
-  private isOpen: boolean = false;
 
   private onBuyCallback: ((item: Item) => void) | null = null;
   private keydownHandler: ((e: KeyboardEvent) => void) | null = null;
   private listClickHandler: ((e: Event) => void) | null = null;
 
   constructor() {
-    this.panel = document.getElementById('shop-panel');
+    super('shop-panel');
+
     this.listElement = document.getElementById('shop-list');
     this.buyButton = document.getElementById('buy-item-btn') as HTMLButtonElement;
     this.closeButton = document.getElementById('close-shop-btn') as HTMLButtonElement;
@@ -88,22 +88,15 @@ export class ShopUI {
   /**
    * 店を開く
    */
-  open(): void {
-    if (!this.shop || !this.panel) return;
-
-    this.panel.style.display = 'block';
-    this.isOpen = true;
-    this.render();
+  override open(): void {
+    if (!this.shop) return;
+    super.open();
   }
 
   /**
-   * 店を閉じる
+   * クローズ時の処理
    */
-  close(): void {
-    if (!this.panel) return;
-
-    this.panel.style.display = 'none';
-    this.isOpen = false;
+  protected override onClose(): void {
     this.selectedIndex = -1;
   }
 
@@ -117,7 +110,7 @@ export class ShopUI {
   /**
    * 店を描画
    */
-  private render(): void {
+  protected render(): void {
     if (!this.shop || !this.listElement || !this.goldDisplay) return;
 
     this.listElement.textContent = '';
